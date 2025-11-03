@@ -36,10 +36,7 @@ import { useToast } from 'vue-toastification'
 const authStore = useAuthStore()
 const toast = useToast()
 
-
-
-
-const username = ref('admin')
+const username = ref('admin'
 const password = ref('password123')
 const loading = ref(false)
 const errorMsg = ref(null)
