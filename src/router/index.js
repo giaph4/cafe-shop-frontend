@@ -121,6 +121,12 @@ const routes = [
                 component: Users,
                 // SỬA LỖI: Cho phép Manager vào trang Nhân viên
                 meta: { title: 'Nhân viên', icon: 'UserCog', roles: [ROLES.ADMIN, ROLES.MANAGER] }
+            },
+            {
+                path: 'profile',
+                name: 'Profile',
+                component: () => import('@/views/Profile.vue'),
+                meta: { title: 'Thông tin cá nhân', icon: 'User', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
             }
         ]
     },

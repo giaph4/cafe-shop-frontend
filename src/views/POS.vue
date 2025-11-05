@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { ShoppingCart } from '@/components/icons'
 import { getAllTables } from '@/api/tableService.js' // Thêm .js
@@ -94,8 +94,12 @@ onMounted(() => {
     fetchTables()
 })
 
-// (Theo dõi Pinia store để refresh bàn khi modal đóng)
-// (Sẽ thêm sau nếu cần)
+// Theo dõi Pinia store để refresh bàn khi modal đóng
+watch(() => posStore.isModalOpen, (newValue, oldValue) => {
+    if (oldValue === true && newValue === false) {
+        fetchTables() // Refresh danh sách bàn khi modal đóng
+    }
+})
 </script>
 
 <style scoped>

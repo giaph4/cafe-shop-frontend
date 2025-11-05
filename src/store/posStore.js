@@ -76,14 +76,15 @@ export const usePosStore = defineStore('pos', () => {
     /**
      * (Hàm Nội bộ) Tạo đơn hàng mới trước khi thêm món
      */
-    async function _createOrderFirst(itemData) {
+    async function _createOrderFirst(itemData, customerId = null) {
         if (!currentTable.value) return;
         isLoading.value = true;
         try {
             const createRequest = {
                 tableId: currentTable.value.id, // Sẽ là null nếu là "Mang đi"
                 type: currentTable.value.id ? 'AT_TABLE' : 'TAKE_AWAY',
-                items: [itemData] // Thêm món đầu tiên ngay khi tạo
+                items: [itemData], // Thêm món đầu tiên ngay khi tạo
+                customerId: customerId // Thêm customerId vào request
             }
             // API: POST /api/v1/orders
             const response = await orderService.createOrder(createRequest)
@@ -100,10 +101,10 @@ export const usePosStore = defineStore('pos', () => {
     /**
      * [ACTION] Thêm món (hoặc tạo đơn nếu chưa có)
      */
-    async function addItem(itemData) {
+    async function addItem(itemData, customerId = null) {
         if (isCreating.value) {
             // Nếu là đơn mới, gọi API tạo đơn
-            await _createOrderFirst(itemData)
+            await _createOrderFirst(itemData, customerId)
         } else if (isEditing.value) {
             // Nếu là đơn cũ, gọi API thêm món
             try {
@@ -147,6 +148,12 @@ export const usePosStore = defineStore('pos', () => {
             const response = await orderService.removeItemFromOrder(activeOrder.value.id, orderDetailId)
             activeOrder.value = response.data
             toast.success('Đã xóa món')
+
+            // Nếu không còn món nào trong đơn, tự động hủy đơn
+            if (activeOrder.value.orderDetails.length === 0) {
+                await cancelOrder()
+                toast.info('Đơn hàng đã được hủy vì không còn món nào.')
+            }
         } catch (error) {
             toast.error('Lỗi khi xóa món')
         } finally {
@@ -212,7 +219,7 @@ export const usePosStore = defineStore('pos', () => {
             // (Nên chúng ta bỏ qua việc gán customerId ở đây)
 
             // API: POST /api/v1/orders/{orderId}/payment
-            const response = await orderService.payOrder(activeOrder.value.id, { paymentMethod })
+            const response = await orderService.payOrder(activeOrder.value.id, { paymentMethod, customerId })
             activeOrder.value = response.data // Đơn hàng đã PAID
             toast.success(`Thanh toán thành công đơn #${response.data.id}`)
             closePosModal() // Đóng modal
@@ -225,6 +232,27 @@ export const usePosStore = defineStore('pos', () => {
             } else {
                 toast.error('Lỗi khi thanh toán: ' + msg)
             }
+            return false // Báo thất bại
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    /**
+     * [ACTION] Hủy đơn hàng
+     */
+    async function cancelOrder() {
+        isLoading.value = true
+        try {
+            // API: POST /api/v1/orders/{orderId}/cancel
+            const response = await orderService.cancelOrder(activeOrder.value.id)
+            activeOrder.value = response.data // Đơn hàng đã CANCELLED
+            toast.success(`Đã hủy đơn #${response.data.id}`)
+            closePosModal() // Đóng modal
+            return true // Báo thành công
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Lỗi khi hủy đơn hàng'
+            toast.error(msg)
             return false // Báo thất bại
         } finally {
             isLoading.value = false
@@ -253,5 +281,6 @@ export const usePosStore = defineStore('pos', () => {
         applyVoucher,
         removeVoucher,
         pay,
+        cancelOrder,
     }
 })

@@ -2,6 +2,7 @@
     <div class="app-page-container">
         <div class="page-header">
             <h1 class="page-title">Quản lý Nhân viên</h1>
+            <el-button type="primary" @click="openRegisterModal">Thêm Nhân viên</el-button>
         </div>
 
         <el-card class="box-card">
@@ -42,6 +43,8 @@
         <UserFormModal v-model:visible="modalVisible" :user="selectedUser" :all-roles="allRoles"
             @success="handleModalSuccess" />
 
+        <UserRegisterModal v-model:visible="registerModalVisible" @success="handleRegisterSuccess" />
+
     </div>
 </template>
 
@@ -53,6 +56,7 @@ import { useToast } from 'vue-toastification'
 import { getUsers } from '@/api/userService'
 import { getAllRoles } from '@/api/roleService' // (Cần API này ở backend)
 import UserFormModal from '@/components/UserFormModal.vue'
+import UserRegisterModal from '@/components/UserRegisterModal.vue'
 
 const toast = useToast()
 
@@ -69,6 +73,7 @@ const serverOptions = ref({
 
 // --- State cho Modal ---
 const modalVisible = ref(false)
+const registerModalVisible = ref(false)
 const selectedUser = ref(null)
 const allRoles = ref([]) // Danh sách tất cả các role
 
@@ -132,9 +137,18 @@ const openEditModal = (user) => {
     modalVisible.value = true
 }
 
+const openRegisterModal = () => {
+    registerModalVisible.value = true
+}
+
 // Khi modal sửa thành công
 const handleModalSuccess = () => {
     fetchUsers() // Tải lại bảng
+}
+
+const handleRegisterSuccess = () => {
+    registerModalVisible.value = false // Đóng modal đăng ký
+    fetchUsers() // Tải lại bảng sau khi đăng ký thành công
 }
 
 // --- Helper (Tô màu Tag) ---
