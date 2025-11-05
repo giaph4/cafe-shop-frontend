@@ -1,106 +1,110 @@
-// src/store/auth.js (File này của bạn đang bị thiếu hoặc sai)
-// Bạn phải sửa file này của mình!
-
+// src/store/auth.js (Đã nâng cấp)
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import * as authService from '@/api/authService' // Giả sử bạn có file này
-import * as userService from '@/api/userService' // File bạn vừa cung cấp
-import apiClient from '@/api/axios' // File axios
+import router from '@/router'
+import { jwtDecode } from 'jwt-decode'
+import * as authService from '@/api/authService.js' // <-- THAY ĐỔI: Import service mới
 
-export const useAuthStore = defineStore('auth', () => {
-    const router = useRouter()
-
-    // Dữ liệu user đang bị rỗng (null) -> Trang Profile "ko hiện"
-    const user = ref(JSON.parse(localStorage.getItem('user')))
-    const token = ref(localStorage.getItem('token'))
-
-    const isAuthenticated = computed(() => !!token.value)
-
-    function setAxiosToken(token) {
-        if (token) {
-            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
-        } else {
-            delete apiClient.defaults.headers.common['Authorization']
+// Hàm helper giải mã token (giữ nguyên)
+function decodeToken(token) {
+    if (!token) return null
+    try {
+        const decoded = jwtDecode(token)
+        return {
+            userId: decoded.userId,
+            username: decoded.sub,
+            fullName: decoded.fullName,
+            roles: decoded.authorities.map(auth => auth.authority)
         }
-    }
-
-    // GỌI HÀM NÀY KHI APP KHỞI ĐỘNG
-    // Nếu có token, nó sẽ tự động lấy lại thông tin user
-    async function init() {
-        const localToken = localStorage.getItem('token')
-        const localUser = localStorage.getItem('user')
-
-        if (localToken && localUser) {
-            token.value = localToken
-            user.value = JSON.parse(localUser)
-            setAxiosToken(localToken)
-        }
-    }
-
-    async function login(credentials) {
-        try {
-            // 1. Gọi API đăng nhập
-            const response = await authService.login(credentials)
-
-            // 2. Lấy token và ID từ kết quả đăng nhập
-            // (Giả sử backend trả về: { token: "...", user: { id: 1, ... } })
-            const authToken = response.data.token
-            const userId = response.data.user.id // LẤY ID TỪ ĐÂY
-
-            token.value = authToken
-            localStorage.setItem('token', authToken)
-            setAxiosToken(authToken)
-
-            // 3. *** BƯỚC QUAN TRỌNG NHẤT (ĐANG BỊ THIẾU) ***
-            // Dùng ID vừa có để gọi hàm bạn chỉ ra
-            await fetchUserProfile(userId)
-
-            router.push('/') // Chuyển về trang chủ
-
-        } catch (error) {
-            console.error('Đăng nhập thất bại:', error)
-            throw error
-        }
-    }
-
-    // HÀM QUAN TRỌNG ĐỂ LẤY THÔNG TIN USER
-    async function fetchUserProfile(id) {
-        if (!id) {
-            console.error('Không có ID để fetch user')
-            return logout()
-        }
-
-        try {
-            // 4. Dùng hàm bạn chỉ để lấy full thông tin (roles, status...)
-            const response = await userService.getUserById(id)
-
-            // 5. Lưu thông tin vào 'user'
-            user.value = response.data
-            localStorage.setItem('user', JSON.stringify(response.data))
-
-        } catch (error) {
-            console.error('Không thể lấy thông tin user:', error)
-            logout()
-        }
-    }
-
-    function logout() {
-        user.value = null
-        token.value = null
-        localStorage.removeItem('user')
+    } catch (error) {
+        console.error('Invalid token:', error)
         localStorage.removeItem('token')
-        setAxiosToken(null)
-        router.push('/login')
+        localStorage.removeItem('user')
+        return null
     }
+}
 
-    return {
-        user,
-        token,
-        isAuthenticated,
-        login,
-        logout,
-        fetchUserProfile, // Dùng cho 2 modal
-        init, // Dùng cho App.vue
+export const useAuthStore = defineStore('auth', {
+    state: () => ({
+        token: localStorage.getItem('token') || null,
+        user: decodeToken(localStorage.getItem('token')),
+    }),
+
+    getters: {
+        isAuthenticated: (state) => !!state.token,
+        isAdmin: (state) => state.user?.roles?.includes('ROLE_ADMIN'),
+        isManager: (state) => state.user?.roles?.includes('ROLE_MANAGER') || state.user?.roles?.includes('ROLE_ADMIN'),
+        isStaff: (state) => state.user?.roles?.includes('ROLE_STAFF') || state.user?.roles?.includes('ROLE_MANAGER') || state.user?.roles?.includes('ROLE_ADMIN'),
+        userFullName: (state) => state.user?.fullName || state.user?.username || 'User',
+    },
+
+    actions: {
+        /**
+         * (HÀM MỚI) Xử lý sau khi login/register thành công
+         */
+        _handleAuthSuccess(tokenString) { // Renamed argument for clarity
+            // 1. Lưu token vào state và localStorage
+            this.token = tokenString
+            localStorage.setItem('token', tokenString)
+
+            // 2. Cài đặt token cho Axios (Đã được xử lý bởi Request Interceptor trong axios.js)
+
+            // 3. Giải mã token và lưu thông tin user vào state và localStorage
+            this.user = decodeToken(tokenString)
+            localStorage.setItem('user', JSON.stringify(this.user))
+
+            // 4. Điều hướng về trang chủ
+            router.push('/')
+        },
+
+        /**
+         * (CẬP NHẬT) Action Đăng nhập
+         */
+        async login(credentials) {
+            try {
+                const response = await authService.login(credentials)
+                const { token } = response.data
+
+                this._handleAuthSuccess(token) // Gọi hàm xử lý chung
+
+                return response
+            } catch (error) {
+                console.error('Login failed:', error)
+                this.logout()
+                throw error
+            }
+        },
+
+        /**
+         * (MỚI) Action Đăng ký
+         */
+        async register(userData) {
+            try {
+                // 1. Gọi API register
+                const response = await authService.register(userData)
+
+                // API trả về token y hệt login [cite: giaph4/cafe-shop-backend/cafe-shop-backend-0a2a327b746e18257452b0f82b74bc84858fdcc6/src/main/java/com/giapho/coffee_shop_backend/service/AuthenticationService.java]
+                const { token } = response.data
+
+                // 2. Xử lý thành công (coi như đã login)
+                this._handleAuthSuccess(token)
+
+                return response
+            } catch (error) {
+                console.error('Register failed:', error)
+                throw error // Ném lỗi để form Register bắt
+            }
+        },
+
+        /**
+         * (GIỮ NGUYÊN) Action Đăng xuất
+         */
+        logout() {
+            this.token = null
+            this.user = null
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            // Axios header will be cleared automatically by interceptor when token is null
+            router.replace('/login')
+        },
     }
 })
