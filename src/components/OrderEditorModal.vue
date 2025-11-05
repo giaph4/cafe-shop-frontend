@@ -52,6 +52,14 @@
                     </div>
                   </div>
                 </div>
+                <div class="order-actions-bottom">
+                  <el-button v-if="posStore.isEditing" type="danger" plain @click="posStore.cancelOrder()">
+                    Hủy Đơn
+                  </el-button>
+                  <el-button v-if="posStore.isEditing" type="primary" @click="onConfirmOrderDetails()">
+                    Xác nhận
+                  </el-button>
+                </div>
               </el-tab-pane>
 
               <el-tab-pane label="Thanh toán" name="payment" :disabled="posStore.orderItems.length === 0">
@@ -80,12 +88,20 @@
 
                   <el-form-item label="Chọn phương thức thanh toán">
                     <div class="payment-methods">
-                      <el-button size="large" @click="onPay('CASH')" :icon="DollarSign">Tiền mặt (CASH)</el-button>
-                      <el-button size="large" @click="onPay('TRANSFER')" :icon="Landmark">Chuyển khoản
+                      <el-button size="large" @click="selectedPaymentMethod = 'CASH'" :icon="DollarSign"
+                        :type="selectedPaymentMethod === 'CASH' ? 'primary' : ''">Tiền mặt (CASH)</el-button>
+                      <el-button size="large" @click="selectedPaymentMethod = 'TRANSFER'" :icon="Landmark"
+                        :type="selectedPaymentMethod === 'TRANSFER' ? 'primary' : ''">Chuyển khoản
                         (TRANSFER)</el-button>
-                      <el-button size="large" @click="onPay('CARD')" :icon="CreditCard">Thẻ (CARD)</el-button>
+                      <el-button size="large" @click="selectedPaymentMethod = 'CARD'" :icon="CreditCard"
+                        :type="selectedPaymentMethod === 'CARD' ? 'primary' : ''">Thẻ (CARD)</el-button>
                     </div>
                   </el-form-item>
+                </div>
+                <div class="payment-actions-bottom">
+                  <el-button type="primary" size="large" :disabled="!selectedPaymentMethod" @click="onPay(selectedPaymentMethod)">
+                    Thanh Toán
+                  </el-button>
                 </div>
               </el-tab-pane>
             </el-tabs>
@@ -109,6 +125,10 @@
         </el-col>
       </el-row>
     </div>
+    <template #footer>
+      <div class="dialog-footer">
+      </div>
+    </template>
   </el-dialog>
 </template>
 
@@ -133,6 +153,7 @@ const customers = ref([])
 const customerSearchLoading = ref(false)
 const selectedCustomerId = ref(null)
 const voucherInput = ref('')
+const selectedPaymentMethod = ref(null) // Thêm state cho phương thức thanh toán đã chọn
 
 onMounted(async () => {
   try {
@@ -199,6 +220,16 @@ const searchCustomers = (query) => {
   }
 }
 
+const onConfirmOrderDetails = () => {
+  if (!posStore.currentTable?.id) {
+    // Nếu là đơn mang đi, chuyển sang tab thanh toán
+    activeTab.value = 'payment'
+  } else {
+    // Nếu là đơn tại bàn, đóng modal
+    posStore.closePosModal()
+  }
+}
+
 const onPay = async (paymentMethod) => {
   const success = await posStore.pay(paymentMethod, selectedCustomerId.value)
   if (success) {
@@ -211,6 +242,13 @@ watch(() => posStore.voucher, (newVoucher) => {
     voucherInput.value = newVoucher
   } else {
     voucherInput.value = ''
+  }
+})
+
+watch(() => posStore.isModalOpen, (newValue) => {
+  if (!newValue) {
+    // Reset selectedPaymentMethod when modal closes
+    selectedPaymentMethod.value = null
   }
 })
 </script>
@@ -411,5 +449,22 @@ watch(() => posStore.voucher, (newVoucher) => {
 
 .w-100 {
   width: 100%;
+}
+
+.order-actions-bottom {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #e4e7ed;
+  margin-top: 20px;
+}
+
+.payment-actions-bottom {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e4e7ed;
+  margin-top: 20px;
 }
 </style>

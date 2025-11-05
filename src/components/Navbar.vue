@@ -13,8 +13,8 @@
                 </span>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item command="profile" disabled>
-                            Đổi mật khẩu (Sắp có)
+                        <el-dropdown-item command="profile">
+                            Thông tin cá nhân
                         </el-dropdown-item>
                         <el-dropdown-item command="logout" divided>
                             Đăng xuất
@@ -28,15 +28,17 @@
 
 <script setup>
 import { useAuthStore } from '@/store/auth'
+import { useRouter } from 'vue-router' // Import useRouter
 import { UserCircle, ChevronDown } from '@/components/icons' // Import icon
 
 const authStore = useAuthStore()
+const router = useRouter() // Khởi tạo router
 
 const handleCommand = (command) => {
     if (command === 'logout') {
         authStore.logout()
     } else if (command === 'profile') {
-        console.log('Chuyển đến trang đổi mật khẩu...')
+        router.push('/profile') // Chuyển hướng đến trang profile
     }
 }
 </script>
