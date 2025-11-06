@@ -23,7 +23,9 @@ import {
     DollarSign,
     Ticket,
     Search,
-    Notebook
+    Notebook,
+    Image,
+    X
 } from 'lucide-vue-next'
 
 export {
@@ -50,5 +52,7 @@ export {
     DollarSign,
     Ticket,
     Search,
-    Notebook
+    Notebook,
+    Image,
+    X
 }

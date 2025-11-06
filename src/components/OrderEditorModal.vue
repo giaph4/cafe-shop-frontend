@@ -53,12 +53,33 @@
                   </div>
                 </div>
                 <div class="order-actions-bottom">
+                  <el-button v-if="posStore.isQuickOrder && posStore.orderItems.length > 0" type="primary" @click="activeTab = 'selectTable'">
+                    Tiếp theo: Chọn bàn
+                  </el-button>
                   <el-button v-if="posStore.isEditing" type="danger" plain @click="posStore.cancelOrder()">
                     Hủy Đơn
                   </el-button>
                   <el-button v-if="posStore.isEditing" type="primary" @click="onConfirmOrderDetails()">
                     Xác nhận
                   </el-button>
+                </div>
+              </el-tab-pane>
+
+              <el-tab-pane v-if="posStore.isQuickOrder" label="Chọn bàn" name="selectTable" :disabled="posStore.orderItems.length === 0">
+                <div class="table-selection">
+                  <el-alert type="info" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                      Bạn đã chọn {{ posStore.orderItems.length }} món. Vui lòng chọn bàn để tạo đơn hàng.
+                    </template>
+                  </el-alert>
+                  <div class="table-grid-modal">
+                    <el-card v-for="table in availableTables" :key="table.id" class="table-card-modal"
+                      :class="getTableClass(table.status)" shadow="hover" @click="onSelectTable(table)">
+                      <div class="table-name">{{ table.name }}</div>
+                      <div class="table-status">{{ getStatusText(table.status) }}</div>
+                      <div class="table-capacity">{{ table.capacity }} chỗ</div>
+                    </el-card>
+                  </div>
                 </div>
               </el-tab-pane>
 
@@ -137,6 +158,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { usePosStore } from '@/store/posStore.js'
 import { getAvailableProducts } from '@/api/productService.js'
 import { searchCustomersSimple } from '@/api/customerService.js'
+import { getAllTables } from '@/api/tableService.js'
 import { formatCurrency } from '@/utils/formatters.js'
 import { useToast } from 'vue-toastification'
 // SỬA LỖI: Import icons từ 2 thư viện riêng biệt
@@ -154,6 +176,7 @@ const customerSearchLoading = ref(false)
 const selectedCustomerId = ref(null)
 const voucherInput = ref('')
 const selectedPaymentMethod = ref(null) // Thêm state cho phương thức thanh toán đã chọn
+const availableTables = ref([]) // Danh sách bàn để chọn
 
 onMounted(async () => {
   try {
@@ -165,6 +188,9 @@ onMounted(async () => {
 })
 
 const modalTitle = computed(() => {
+  if (posStore.isQuickOrder && !posStore.activeOrder) {
+    return 'Bán hàng nhanh - Chọn món trước'
+  }
   const table = posStore.currentTable?.name || 'Đơn hàng'
   const orderId = posStore.activeOrder?.id
   return orderId ? `Đơn hàng #${orderId} - ${table}` : `Đơn hàng mới - ${table}`
@@ -249,12 +275,47 @@ watch(() => posStore.isModalOpen, (newValue) => {
   if (!newValue) {
     // Reset selectedPaymentMethod when modal closes
     selectedPaymentMethod.value = null
+  } else if (posStore.isQuickOrder) {
+    // Load tables when quick order modal opens
+    loadTables()
   }
 })
+
+const loadTables = async () => {
+  try {
+    const response = await getAllTables()
+    availableTables.value = response.data.filter(t => t.status === 'EMPTY' || t.status === 'SERVING')
+  } catch (error) {
+    toast.error('Lỗi khi tải danh sách bàn')
+  }
+}
+
+const getStatusText = (status) => {
+  if (status === 'SERVING') return 'Đang phục vụ'
+  if (status === 'RESERVED') return 'Đã đặt'
+  return 'Còn trống'
+}
+
+const getTableClass = (status) => {
+  if (status === 'SERVING') return 'status-serving'
+  if (status === 'RESERVED') return 'status-reserved'
+  return 'status-empty'
+}
+
+const onSelectTable = async (table) => {
+  if (table.status === 'RESERVED') {
+    toast.warning(`Bàn ${table.name} đã được đặt, không thể tạo đơn.`)
+    return
+  }
+  
+  const success = await posStore.assignTableAndCreateOrder(table)
+  if (success) {
+    activeTab.value = 'payment'
+  }
+}
 </script>
 
-<style scoped>
-/* (Style giữ nguyên như cũ, không cần thay đổi) */
+<style>
 :deep(.order-editor-modal .el-dialog__body) {
   padding: 10px 20px 20px 20px;
   background-color: #f0f2f5;
@@ -466,5 +527,57 @@ watch(() => posStore.isModalOpen, (newValue) => {
   padding-top: 20px;
   border-top: 1px solid #e4e7ed;
   margin-top: 20px;
+}
+
+.table-selection {
+  max-height: calc(80vh - 200px);
+  overflow-y: auto;
+}
+
+.table-grid-modal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.table-card-modal {
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.table-card-modal:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.table-card-modal.status-empty {
+  border-color: var(--el-color-success-light-3);
+  background-color: var(--el-color-success-light-9);
+}
+
+.table-card-modal.status-empty .table-status {
+  color: var(--el-color-success);
+}
+
+.table-card-modal.status-serving {
+  border-color: var(--el-color-danger-light-3);
+  background-color: var(--el-color-danger-light-9);
+}
+
+.table-card-modal.status-serving .table-status {
+  color: var(--el-color-danger);
+}
+
+.table-card-modal.status-reserved {
+  border-color: var(--el-color-warning-light-3);
+  background-color: var(--el-color-warning-light-9);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.table-card-modal.status-reserved .table-status {
+  color: var(--el-color-warning);
 }
 </style>

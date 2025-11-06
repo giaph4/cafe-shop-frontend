@@ -81,17 +81,29 @@ export const usePosStore = defineStore('pos', () => {
         isLoading.value = true;
         try {
             const createRequest = {
-                tableId: currentTable.value.id, // Sẽ là null nếu là "Mang đi"
                 type: currentTable.value.id ? 'AT_TABLE' : 'TAKE_AWAY',
                 items: [itemData], // Thêm món đầu tiên ngay khi tạo
-                customerId: customerId // Thêm customerId vào request
             }
+            
+            // Chỉ thêm tableId nếu có (không phải TAKE_AWAY)
+            if (currentTable.value.id) {
+                createRequest.tableId = currentTable.value.id
+            }
+            
+            // Chỉ thêm customerId nếu có
+            if (customerId) {
+                createRequest.customerId = customerId
+            }
+            
             // API: POST /api/v1/orders
+            console.log('Creating order with request:', createRequest)
             const response = await orderService.createOrder(createRequest)
             activeOrder.value = response.data
             toast.success(`Đã tạo đơn #${response.data.id} cho ${currentTable.value.name}`)
         } catch (error) {
-            toast.error('Lỗi khi tạo đơn hàng mới')
+            const errorMsg = error.response?.data?.message || 'Lỗi khi tạo đơn hàng mới'
+            toast.error(errorMsg)
+            console.error('Create order error:', error.response?.data || error)
             throw error // Ném lỗi để modal biết
         } finally {
             isLoading.value = false
@@ -239,7 +251,7 @@ export const usePosStore = defineStore('pos', () => {
     }
 
     /**
-     * [ACTION] Hủy đơn hàng
+     * [ACTION] Hủy Đơn
      */
     async function cancelOrder() {
         isLoading.value = true
@@ -254,6 +266,41 @@ export const usePosStore = defineStore('pos', () => {
             const msg = error.response?.data?.message || 'Lỗi khi hủy đơn hàng'
             toast.error(msg)
             return false // Báo thất bại
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    /**
+     * [ACTION] Tạo đơn hàng trực tiếp (từ giỏ hàng tạm)
+     */
+    async function createOrder(orderData) {
+        isLoading.value = true
+        try {
+            // Tạo request object sạch (không có null values)
+            const cleanRequest = {
+                type: orderData.type,
+                items: orderData.items
+            }
+            
+            // Chỉ thêm tableId nếu có
+            if (orderData.tableId) {
+                cleanRequest.tableId = orderData.tableId
+            }
+            
+            // Chỉ thêm customerId nếu có
+            if (orderData.customerId) {
+                cleanRequest.customerId = orderData.customerId
+            }
+            
+            const response = await orderService.createOrder(cleanRequest)
+            toast.success(`Đã tạo đơn #${response.data.id}`)
+            return response.data
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message || 'Lỗi khi tạo đơn hàng'
+            console.error('Create order error:', error.response?.data || error)
+            toast.error(errorMsg)
+            throw error
         } finally {
             isLoading.value = false
         }
@@ -282,5 +329,6 @@ export const usePosStore = defineStore('pos', () => {
         removeVoucher,
         pay,
         cancelOrder,
+        createOrder,
     }
 })

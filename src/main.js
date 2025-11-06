@@ -5,6 +5,8 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'bootstrap/dist/css/bootstrap-grid.min.css' // Chỉ dùng grid system
+import './assets/styles/theme.css' // Modern Theme
+import './assets/styles/element-override.css' // Element Plus Override
 import './assets/main.css' // File CSS tùy chỉnh
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css' // CSS cho Toast (phiên bản @next)

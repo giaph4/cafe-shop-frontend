@@ -45,19 +45,21 @@ const handleCommand = (command) => {
 
 <style scoped>
 .navbar {
-    height: 60px;
+    height: 70px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #fff;
-    border-bottom: 1px solid #e4e7ed;
-    padding: 0 20px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #F5F5F5;
+    padding: 0 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .page-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #303133;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212121;
+    letter-spacing: -0.5px;
 }
 
 .user-menu {
@@ -70,22 +72,36 @@ const handleCommand = (command) => {
     display: flex;
     align-items: center;
     outline: none;
+    padding: 8px 16px;
+    border-radius: 12px;
+    transition: all 0.2s;
+    gap: 8px;
+}
+
+.el-dropdown-link:hover {
+    background: #E3F2FD;
 }
 
 .user-icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 8px;
-    color: #606266;
+    width: 28px;
+    height: 28px;
+    color: #2196F3;
 }
 
 .user-name {
-    font-weight: 500;
-    margin-right: 5px;
+    font-weight: 600;
+    color: #212121;
+    font-size: 0.95rem;
 }
 
 .arrow-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
+    color: #757575;
+    transition: transform 0.2s;
+}
+
+.el-dropdown-link:hover .arrow-icon {
+    transform: rotate(180deg);
 }
 </style>

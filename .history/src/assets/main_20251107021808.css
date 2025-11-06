@@ -1,0 +1,128 @@
+/* src/assets/main.css */
+
+/* * Thiết lập nền tảng (Reset & Font) 
+ */
+:root {
+  --el-color-primary: #409eff; /* (Bạn có thể đổi màu chủ đạo ở đây) */
+  --app-bg-color:rgb(32, 218, 193);
+  --sidebar-bg: #304156;
+  --sidebar-text: #bfcbd9;
+  --sidebar-active-text: #409eff;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--app-bg-color);
+  color: #333;
+}
+
+/* * Tùy chỉnh thanh cuộn (Scrollbar) 
+   */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* * Ghi đè một số style của Element Plus để nhất quán
+   */
+
+.el-button {
+  border-radius: 4px;
+}
+
+.el-card {
+  border-radius: 6px;
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+.el-dialog {
+  border-radius: 8px;
+}
+
+.el-table th {
+  background-color:rgb(16, 224, 138) !important;
+  font-weight: 600;
+  color: #606266;
+}
+
+/* * Các lớp tiện ích (Utility Classes) 
+   */
+.w-100 {
+  width: 100% !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Style cho các trang (Views) */
+.app-page-container {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 6px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* Đảm bảo layout của Element chiếm full-height */
+html,
+body,
+#app,
+.el-container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tùy chỉnh el-main (nội dung chính) */
+.el-main {
+  padding: 0 !important; /* Tắt padding mặc định, chúng ta tự quản lý */
+}

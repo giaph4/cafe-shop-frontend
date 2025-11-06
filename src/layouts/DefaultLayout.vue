@@ -24,28 +24,53 @@ import Navbar from '@/components/Navbar.vue'
 <style scoped>
 .app-layout {
     height: 100vh;
-    background-color: var(--app-bg-color);
+    background: #F8F9FA;
 }
 
 .main-container {
     overflow: hidden;
+    background: #F8F9FA;
 }
 
 .app-main {
-    /* 60px là chiều cao của Navbar */
-    height: calc(100vh - 60px);
+    height: calc(100vh - 70px);
     overflow-y: auto;
-    /* padding đã bị xóa bởi main.css, chúng ta sẽ thêm padding trong từng view */
+    background: #F8F9FA;
+    padding: 24px;
+}
+
+.app-main::-webkit-scrollbar {
+    width: 8px;
+}
+
+.app-main::-webkit-scrollbar-track {
+    background: #F5F5F5;
+    border-radius: 10px;
+}
+
+.app-main::-webkit-scrollbar-thumb {
+    background: #BDBDBD;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.app-main::-webkit-scrollbar-thumb:hover {
+    background: #9E9E9E;
 }
 
 /* --- Hiệu ứng chuyển trang --- */
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.fade-enter-from,
+.fade-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
 .fade-leave-to {
     opacity: 0;
+    transform: translateY(-10px);
 }
 </style>

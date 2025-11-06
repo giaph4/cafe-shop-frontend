@@ -47,7 +47,7 @@ export const getOrderById = (orderId) => {
 
 /**
  * [STAFF] Lấy đơn hàng PENDING theo Bàn
- * @param {number} tableId ID bàn
+ * @param {number} tableId ID của bàn
  */
 export const getPendingOrderByTable = (tableId) => {
     return apiClient.get(`/api/v1/orders/table/${tableId}/pending`)
@@ -57,8 +57,28 @@ export const getPendingOrderByTable = (tableId) => {
  * [STAFF] Tạo đơn hàng mới
  * @param {object} orderData - OrderCreateRequestDTO
  */
-export const createOrder = (orderData) => {
-    return apiClient.post('/api/v1/orders', orderData)
+export const createOrder = async (orderData) => {
+    try {
+        console.log('=== CREATE ORDER REQUEST ===')
+        console.log('Request Data:', orderData)
+        console.log('Request JSON:', JSON.stringify(orderData, null, 2))
+        console.log('============================')
+        
+        const response = await apiClient.post('/api/v1/orders', orderData)
+        
+        console.log('=== ORDER CREATED SUCCESS ===')
+        console.log('Response:', response.data)
+        console.log('=============================')
+        return response
+    } catch (error) {
+        console.log('=== CREATE ORDER ERROR ===')
+        console.log('Status:', error.response?.status)
+        console.log('Error Data:', error.response?.data)
+        console.log('Message:', error.response?.data?.message || error.message)
+        console.log('Full Error:', error)
+        console.log('==========================')
+        throw error
+    }
 }
 
 /**

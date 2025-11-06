@@ -1,15 +1,15 @@
 <template>
   <el-dialog
-    v-model="dialogVisible"
-    title="Chỉnh sửa thông tin cá nhân"
-    width="500px"
-    @close="handleClose"
+      v-model="dialogVisible"
+      title="Chỉnh sửa thông tin cá nhân"
+      width="500px"
+      @close="handleClose"
   >
     <el-form
-      :model="form"
-      :rules="rules"
-      ref="formRef"
-      label-width="120px"
+        :model="form"
+        :rules="rules"
+        ref="formRef"
+        label-width="120px"
     >
       <el-form-item label="Họ và tên" prop="fullName">
         <el-input v-model="form.fullName"></el-input>
@@ -34,10 +34,10 @@
       <el-form-item label="Vai trò">
         <div>
           <el-tag
-            v-for="role in form.roles"
-            :key="role.id"
-            class="me-1"
-            type="success"
+              v-for="role in form.roles"
+              :key="role.id"
+              class="me-1"
+              type="success"
           >
             {{ role.name }}
           </el-tag>
@@ -55,9 +55,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useAuthStore } from '@/store/auth'
-import { useToast } from 'vue-toastification'
+import {ref, reactive, onMounted} from 'vue'
+import {useAuthStore} from '@/store/auth'
+import {useToast} from 'vue-toastification'
 import * as userService from '@/api/userService.js'
 
 const authStore = useAuthStore()
@@ -80,14 +80,14 @@ const form = reactive({
 
 // validate
 const rules = reactive({
-  fullName: [{ required: true, message: 'Vui lòng nhập họ và tên', trigger: 'blur' }],
+  fullName: [{required: true, message: 'Vui lòng nhập họ và tên', trigger: 'blur'}],
   email: [
-    { required: true, message: 'Vui lòng nhập email', trigger: 'blur' },
-    { type: 'email', message: 'Vui lòng nhập đúng định dạng email', trigger: ['blur', 'change'] }
+    {required: true, message: 'Vui lòng nhập email', trigger: 'blur'},
+    {type: 'email', message: 'Vui lòng nhập đúng định dạng email', trigger: ['blur', 'change']}
   ],
   phone: [
-    { required: true, message: 'Vui lòng nhập số điện thoại', trigger: 'blur' },
-    { pattern: /^(\+?84|0)\d{9}$/, message: 'Số điện thoại không đúng định dạng (VD: 0987654321)', trigger: 'blur' }
+    {required: true, message: 'Vui lòng nhập số điện thoại', trigger: 'blur'},
+    {pattern: /^(\+?84|0)\d{9}$/, message: 'Số điện thoại không đúng định dạng (VD: 0987654321)', trigger: 'blur'}
   ]
 })
 
@@ -157,7 +157,7 @@ async function submitForm() {
 }
 </script>
 
-<style scoped>
+<style>
 .me-1 {
   margin-right: 6px;
 }
