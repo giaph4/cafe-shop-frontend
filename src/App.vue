@@ -53,12 +53,6 @@ router.afterEach(() => {
 <style>
 @import '@/assets/main.css';
 
-#app {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
-}
-
 .modern-app {
   background: #F8F9FA;
   min-height: 100vh;

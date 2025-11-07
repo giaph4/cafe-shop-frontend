@@ -50,7 +50,7 @@ const routes = [
                 path: 'orders',
                 name: 'Orders',
                 component: Orders,
-                meta: { title: 'Lịch sử Đơn hàng', icon: 'ShoppingCart', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Lịch sử Đơn hàng', icon: 'ShoppingCart', roles: [ROLES.MANAGER, ROLES.ADMIN, ROLES.MANAGER] }
             },
             {
                 path: 'tables',
@@ -116,7 +116,6 @@ const routes = [
                 path: 'users',
                 name: 'Users',
                 component: Users,
-                // SỬA LỖI: Cho phép Manager vào trang Nhân viên
                 meta: { title: 'Nhân viên', icon: 'UserCog', roles: [ROLES.ADMIN, ROLES.MANAGER] }
             },
             {
