@@ -12,7 +12,7 @@ export const formatCurrency = (value) => {
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND',
-        minimumFractionDigits: 0, // Bỏ .00 
+        minimumFractionDigits: 0, // Bỏ .00
     }).format(value);
 };
 

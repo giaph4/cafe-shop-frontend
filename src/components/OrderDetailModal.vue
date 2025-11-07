@@ -1,6 +1,12 @@
 <template>
-    <el-dialog :model-value="visible" @update:model-value="$emit('update:visible', $event)" title="Chi tiết Đơn hàng"
-        width="800px" @open="fetchOrderDetails">
+    <el-dialog 
+        :model-value="visible" 
+        @update:model-value="$emit('update:visible', $event)" 
+        title="Chi tiết Đơn hàng"
+        width="1000px" 
+        @open="fetchOrderDetails"
+        destroy-on-close
+        :append-to-body="true">
         <div v-loading="loading">
             <div v-if="order" class="order-detail-container">
                 <el-descriptions :column="3" border class="mb-3">
@@ -26,20 +32,20 @@
 
                 <h4 class="modal-subtitle">Danh sách món đã gọi</h4>
                 <el-table :data="order.orderDetails" style="width: 100%" border>
-                    <el-table-column type="index" label="#" width="50" />
-                    <el-table-column prop="productName" label="Tên món" />
-                    <el-table-column prop="quantity" label="SL" align="center" width="60" />
-                    <el-table-column label="Đơn giá" align="right" width="120">
+                    <el-table-column type="index" label="#" width="60" align="center" />
+                    <el-table-column prop="productName" label="Tên món" min-width="200" />
+                    <el-table-column prop="quantity" label="SỐ lượng" align="center" width="100" />
+                    <el-table-column label="Đơn giá" align="right" width="150">
                         <template #default="scope">
                             {{ formatCurrency(scope.row.priceAtOrder) }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="Thành tiền" align="right" width="120">
+                    <el-table-column label="Thành tiền" align="right" width="150">
                         <template #default="scope">
                             {{ formatCurrency(scope.row.priceAtOrder * scope.row.quantity) }}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="notes" label="Ghi chú" />
+                    <el-table-column prop="notes" label="Ghi chú" min-width="200" />
                 </el-table>
 
                 <div class="summary-wrapper">
@@ -114,7 +120,6 @@ const statusType = (status) => {
 </script>
 
 <style scoped>
-/* (Style giữ nguyên như cũ, không cần thay đổi) */
 .modal-subtitle {
     margin-top: 15px;
     margin-bottom: 10px;

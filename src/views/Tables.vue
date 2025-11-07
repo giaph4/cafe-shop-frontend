@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container">
+    <div class="app-page-container fade-in-up">
         <div class="page-header">
             <h1 class="page-title">Quản lý Bàn</h1>
             <el-button type="primary" @click="openCreateModal">
@@ -10,39 +10,80 @@
             </el-button>
         </div>
 
-        <el-card class="box-card">
-            <el-table :data="tables" v-loading="loading" style="width: 100%">
-                <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="name" label="Tên Bàn" sortable />
-                <el-table-column prop="capacity" label="Sức chứa" width="120" align="center" />
-
-                <el-table-column label="Trạng thái" width="180">
-                    <template #default="scope">
-                        <el-select :model-value="scope.row.status"
-                            @change="(newStatus) => handleStatusChange(scope.row, newStatus)"
-                            :class="getStatusClass(scope.row.status)" placeholder="Cập nhật">
-                            <el-option label="Trống (EMPTY)" value="EMPTY" />
-                            <el-option label="Đang phục vụ (SERVING)" value="SERVING" />
-                            <el-option label="Đã đặt (RESERVED)" value="RESERVED" />
-                        </el-select>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Hành động" width="180" align="right">
-                    <template #default="scope">
-                        <el-button type="primary" plain size="small" @click="openEditModal(scope.row)">
-                            Sửa
-                        </el-button>
-                        <el-popconfirm title="Bạn chắc chắn muốn xóa?" confirm-button-text="Đồng ý"
-                            cancel-button-text="Hủy" @confirm="handleDelete(scope.row.id)">
-                            <template #reference>
-                                <el-button type="danger" plain size="small">Xóa</el-button>
-                            </template>
-                        </el-popconfirm>
-                    </template>
-                </el-table-column>
-            </el-table>
+        <el-card class="box-card filter-card">
+            <el-row :gutter="20">
+                <el-col :span="8">
+                    <el-input
+                        v-model="searchQuery"
+                        placeholder="Tìm theo tên bàn..."
+                        clearable
+                    >
+                        <template #prefix>
+                            <el-icon><Search /></el-icon>
+                        </template>
+                    </el-input>
+                </el-col>
+                <el-col :span="8">
+                    <el-select
+                        v-model="filterStatus"
+                        placeholder="Lọc theo trạng thái"
+                        clearable
+                        class="w-100"
+                    >
+                        <el-option label="Tất cả trạng thái" :value="null" />
+                        <el-option label="Trống (EMPTY)" value="EMPTY" />
+                        <el-option label="Đang phục vụ (SERVING)" value="SERVING" />
+                        <el-option label="Đã đặt (RESERVED)" value="RESERVED" />
+                    </el-select>
+                </el-col>
+                <el-col :span="8">
+                    <el-select
+                        v-model="filterCapacity"
+                        placeholder="Lọc theo sức chứa"
+                        clearable
+                        class="w-100"
+                    >
+                        <el-option label="Tất cả sức chứa" :value="null" />
+                        <el-option label="1-2 người" value="1-2" />
+                        <el-option label="3-4 người" value="3-4" />
+                        <el-option label="5-6 người" value="5-6" />
+                        <el-option label="7+ người" value="7+" />
+                    </el-select>
+                </el-col>
+            </el-row>
         </el-card>
+
+        <EasyDataTable
+            :headers="headers"
+            :items="filteredTables"
+            :loading="loading"
+            table-class-name="data-table"
+            theme-color="#8B7355"
+            show-index
+        >
+            <template #item-status="item">
+                <el-select :model-value="item.status"
+                    @change="(newStatus) => handleStatusChange(item, newStatus)"
+                    :class="getStatusClass(item.status)" placeholder="Cập nhật"
+                    size="small">
+                    <el-option label="Trống" value="EMPTY" />
+                    <el-option label="Đang phục vụ" value="SERVING" />
+                    <el-option label="Đã đặt" value="RESERVED" />
+                </el-select>
+            </template>
+
+            <template #item-actions="item">
+                <el-button type="primary" plain size="small" @click="openEditModal(item)">
+                    Sửa
+                </el-button>
+                <el-popconfirm title="Bạn chắc chắn muốn xóa?" confirm-button-text="Đồng ý"
+                    cancel-button-text="Hủy" @confirm="handleDelete(item.id)">
+                    <template #reference>
+                        <el-button type="danger" plain size="small">Xóa</el-button>
+                    </template>
+                </el-popconfirm>
+            </template>
+        </EasyDataTable>
 
         <TableFormModal v-model:visible="modalVisible" :table="selectedTable" @success="handleModalSuccess" />
 
@@ -50,23 +91,63 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import EasyDataTable from 'vue3-easy-data-table'
+import 'vue3-easy-data-table/dist/style.css'
 import { useToast } from 'vue-toastification'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Search } from '@element-plus/icons-vue'
 import { getAllTables, deleteTable, updateTableStatus } from '@/api/tableService'
 import TableFormModal from '@/components/TableFormModal.vue'
 
 const toast = useToast()
 
-// --- State cho Bảng ---
 const tables = ref([])
 const loading = ref(true)
 
-// --- State cho Modal ---
 const modalVisible = ref(false)
 const selectedTable = ref(null)
 
-// --- Hàm Tải Dữ liệu ---
+const searchQuery = ref('')
+const filterStatus = ref(null)
+const filterCapacity = ref(null)
+
+const headers = [
+    { text: "ID", value: "id", width: 80 },
+    { text: "Tên Bàn", value: "name", sortable: true },
+    { text: "Sức chứa", value: "capacity", sortable: true, width: 120 },
+    { text: "Trạng thái", value: "status", width: 180 },
+    { text: "Hành động", value: "actions", width: 180 },
+]
+
+const filteredTables = computed(() => {
+    let result = tables.value
+    
+    // Filter by search
+    if (searchQuery.value) {
+        result = result.filter(t =>
+            t.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+    }
+    
+    // Filter by status
+    if (filterStatus.value) {
+        result = result.filter(t => t.status === filterStatus.value)
+    }
+    
+    // Filter by capacity
+    if (filterCapacity.value) {
+        const [min, max] = filterCapacity.value.split('-').map(v => v === '+' ? 999 : parseInt(v))
+        result = result.filter(t => {
+            if (filterCapacity.value === '7+') {
+                return t.capacity >= 7
+            }
+            return t.capacity >= min && t.capacity <= max
+        })
+    }
+    
+    return result
+})
+
 const fetchTables = async () => {
     loading.value = true
     try {
@@ -79,7 +160,6 @@ const fetchTables = async () => {
     }
 }
 
-// --- Xử lý CRUD ---
 const openCreateModal = () => {
     selectedTable.value = null
     modalVisible.value = true
@@ -107,17 +187,36 @@ const handleDelete = async (id) => {
     }
 }
 
-// (MỚI) Xử lý Cập nhật Trạng thái
+// Xử lý Cập nhật Trạng thái - Real-time update
 const handleStatusChange = async (tableRow, newStatus) => {
+    const oldStatus = tableRow.status
+    
     try {
+        // Optimistic update - Cập nhật UI ngay lập tức
+        const tableIndex = tables.value.findIndex(t => t.id === tableRow.id)
+        if (tableIndex !== -1) {
+            tables.value[tableIndex].status = newStatus
+        }
+        
+        // Call API
         await updateTableStatus(tableRow.id, newStatus)
-        // Cập nhật UI ngay lập tức để mượt mà
-        tableRow.status = newStatus
-        toast.success(`Cập nhật bàn '${tableRow.name}' thành ${newStatus}`)
+        
+        // Show success message
+        const statusText = {
+            'EMPTY': 'Trống',
+            'SERVING': 'Đang phục vụ',
+            'RESERVED': 'Đã đặt'
+        }
+        toast.success(`Cập nhật bàn '${tableRow.name}' thành ${statusText[newStatus]}`)
     } catch (error) {
+        // Rollback on error
+        const tableIndex = tables.value.findIndex(t => t.id === tableRow.id)
+        if (tableIndex !== -1) {
+            tables.value[tableIndex].status = oldStatus
+        }
+        
         const msg = error.response?.data?.message || 'Lỗi khi cập nhật trạng thái'
         toast.error(msg)
-        // (Không cần fetchTables() vì nếu lỗi thì trạng thái sẽ tự reset về giá trị cũ)
     }
 }
 
@@ -134,40 +233,36 @@ const handleModalSuccess = () => {
     fetchTables() // Tải lại bảng
 }
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchTables()
 })
 </script>
 
 <style>
-/* Style này KHÔNG 'scoped' để tùy chỉnh giao diện của el-select 
-    cho cột trạng thái
-  */
 .status-select .el-input__wrapper {
     background-color: var(--el-color-info-light-9) !important;
     border: 1px solid var(--el-color-info-light-7) !important;
     color: var(--el-color-info) !important;
     box-shadow: none !important;
-    font-weight: 500;
-    border-radius: 4px;
+    font-weight: 600;
+    border-radius: 8px;
 }
 
 .status-select.status-empty .el-input__wrapper {
     background-color: var(--el-color-success-light-9) !important;
-    border-color: var(--el-color-success-light-7) !important;
+    border-color: var(--el-color-success) !important;
     color: var(--el-color-success) !important;
 }
 
 .status-select.status-serving .el-input__wrapper {
     background-color: var(--el-color-danger-light-9) !important;
-    border-color: var(--el-color-danger-light-7) !important;
+    border-color: var(--el-color-danger) !important;
     color: var(--el-color-danger) !important;
 }
 
 .status-select.status-reserved .el-input__wrapper {
     background-color: var(--el-color-warning-light-9) !important;
-    border-color: var(--el-color-warning-light-7) !important;
+    border-color: var(--el-color-warning) !important;
     color: var(--el-color-warning) !important;
 }
 
@@ -175,10 +270,11 @@ onMounted(() => {
     padding: 20px;
 }
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.filter-card {
     margin-bottom: 20px;
+}
+
+.w-100 {
+    width: 100%;
 }
 </style>

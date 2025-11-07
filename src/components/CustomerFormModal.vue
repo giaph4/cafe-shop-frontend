@@ -44,7 +44,6 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     fullName: '',
     phone: '',
@@ -52,10 +51,8 @@ const defaultFormData = {
 }
 const formData = ref({ ...defaultFormData })
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.customer)
 
-// --- Validation Rules ---
 // Lấy regex SĐT từ CustomerDTO.java
 const validatePhone = (rule, value, callback) => {
     const phoneRegex = /^(\+?84|0)\d{9}$/
@@ -74,7 +71,6 @@ const formRules = {
     email: [{ type: 'email', message: 'Định dạng email không hợp lệ', trigger: 'blur' }],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -90,13 +86,11 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    // API backend sẽ kiểm tra SĐT/Email trùng lặp
+                                        // API backend sẽ kiểm tra SĐT/Email trùng lặp
                     await updateCustomer(props.customer.id, customerData)
                     toast.success('Cập nhật khách hàng thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createCustomer(customerData)
+                                        await createCustomer(customerData)
                     toast.success('Tạo khách hàng mới thành công!')
                 }
 
@@ -114,13 +108,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.customer thay đổi ---
 watch(() => props.customer, (newCustomer) => {
     if (newCustomer) {
         // Đang Edit: Đổ dữ liệu vào form

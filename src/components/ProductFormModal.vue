@@ -1,7 +1,13 @@
 <template>
-    <el-dialog :model-value="visible" @update:model-value="$emit('update:visible', $event)"
-        :title="isEditMode ? 'Chỉnh sửa Sản phẩm' : 'Thêm Sản phẩm mới'" width="600px" @close="onClose"
-        :close-on-click-modal="false">
+    <el-dialog 
+        :model-value="visible" 
+        @update:model-value="$emit('update:visible', $event)"
+        :title="isEditMode ? 'Chỉnh sửa Sản phẩm' : 'Thêm Sản phẩm mới'" 
+        width="600px" 
+        @close="onClose"
+        :close-on-click-modal="false"
+        destroy-on-close
+        :append-to-body="true">
         <el-form ref="formRef" :model="formData" :rules="formRules" label-position="top" v-loading="loading">
             <el-row :gutter="20">
                 <el-col :span="14">
@@ -86,7 +92,6 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     name: '',
     code: '',
@@ -100,10 +105,8 @@ const formData = ref({ ...defaultFormData })
 const imageFile = ref(null) // File ảnh mới
 const imagePreviewUrl = ref(null) // URL để preview
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.product)
 
-// --- Validation Rules ---
 const formRules = {
     name: [{ required: true, message: 'Tên sản phẩm là bắt buộc', trigger: 'blur' }],
     code: [{ required: true, message: 'Mã sản phẩm là bắt buộc', trigger: 'blur' }],
@@ -111,7 +114,6 @@ const formRules = {
     categoryId: [{ required: true, message: 'Danh mục là bắt buộc', trigger: 'change' }],
 }
 
-// --- Xử lý Ảnh ---
 const handleImageChange = (file) => {
     // Validate file size (ví dụ: < 5MB)
     const isLt5M = file.size / 1024 / 1024 < 5
@@ -129,7 +131,6 @@ const removeImage = () => {
     formData.value.imageUrl = null // Xóa ảnh hiện tại
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -148,13 +149,11 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    // API của bạn dùng PUT cho cả update info và ảnh
+                                        // API của bạn dùng PUT cho cả update info và ảnh
                     await updateProduct(props.product.id, productData, imageFile.value)
                     toast.success('Cập nhật sản phẩm thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createProduct(productData, imageFile.value)
+                                        await createProduct(productData, imageFile.value)
                     toast.success('Tạo sản phẩm mới thành công!')
                 }
 
@@ -171,7 +170,6 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     imageFile.value = null
@@ -179,11 +177,9 @@ const onClose = () => {
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props thay đổi ---
 watch(() => props.product, (newProduct) => {
     if (newProduct) {
-        // --- Đang Edit ---
-        // Tìm categoryId từ categoryName (vì bảng chỉ trả về categoryName)
+                // Tìm categoryId từ categoryName (vì bảng chỉ trả về categoryName)
         const category = props.categories.find(c => c.name === newProduct.categoryName)
 
         formData.value = {
@@ -197,8 +193,7 @@ watch(() => props.product, (newProduct) => {
         }
         imagePreviewUrl.value = newProduct.imageUrl || null
     } else {
-        // --- Đang Thêm mới ---
-        onClose()
+                onClose()
     }
 })
 </script>

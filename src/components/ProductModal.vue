@@ -86,7 +86,6 @@ const formRef = ref(null) // Tham chiếu đến form
 const loading = ref(false)
 const categories = ref([]) // Danh sách danh mục
 
-// --- State cho Form ---
 const defaultFormData = {
     name: '',
     code: '',
@@ -100,10 +99,8 @@ const formData = ref({ ...defaultFormData })
 const imageFile = ref(null) // File ảnh (nếu user chọn)
 const imagePreviewUrl = ref(null) // URL để preview ảnh
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.product)
 
-// --- Validation Rules ---
 const formRules = {
     name: [{ required: true, message: 'Tên sản phẩm là bắt buộc', trigger: 'blur' }],
     code: [{ required: true, message: 'Mã sản phẩm là bắt buộc', trigger: 'blur' }],
@@ -111,7 +108,6 @@ const formRules = {
     categoryId: [{ required: true, message: 'Danh mục là bắt buộc', trigger: 'change' }],
 }
 
-// --- Xử lý Ảnh ---
 const handleImageChange = (file) => {
     // file.raw là đối tượng File thực sự
     imageFile.value = file.raw
@@ -125,7 +121,6 @@ const removeImage = () => {
     formData.value.imageUrl = null // Xóa cả ảnh hiện tại (nếu đang edit)
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -147,12 +142,10 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    await updateProduct(props.product.id, productData, imageFile.value)
+                                        await updateProduct(props.product.id, productData, imageFile.value)
                     toast.success('Cập nhật sản phẩm thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createProduct(productData, imageFile.value)
+                                        await createProduct(productData, imageFile.value)
                     toast.success('Tạo sản phẩm mới thành công!')
                 }
 
@@ -171,7 +164,6 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     imageFile.value = null
@@ -179,7 +171,6 @@ const onClose = () => {
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.product thay đổi (khi user bấm nút Edit) ---
 watch(() => props.product, (newProduct) => {
     if (newProduct) {
         // Đang Edit: Đổ dữ liệu vào form
@@ -200,7 +191,6 @@ watch(() => props.product, (newProduct) => {
     }
 })
 
-// --- Tải danh sách danh mục khi modal được tạo ---
 onMounted(async () => {
     try {
         const response = await getAllCategories()

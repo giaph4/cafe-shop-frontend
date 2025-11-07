@@ -27,7 +27,7 @@
         </el-card>
 
         <EasyDataTable v-model:server-options="serverOptions" :server-items-length="serverItemsLength"
-            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#409EFF"
+            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#8B7355"
             buttons-pagination show-index>
             <template #item-imageUrl="{ imageUrl }">
                 <el-image v-if="imageUrl" :src="imageUrl" fit="cover" class="product-table-image" preview-teleported
@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import EasyDataTable from 'vue3-easy-data-table'
 import 'vue3-easy-data-table/dist/style.css'
 import { useToast } from 'vue-toastification'
@@ -110,7 +110,6 @@ const serverOptions = ref({
     rowsPerPage: 10,
 })
 
-// --- State cho Modals (Thêm 1 state) ---
 const formModalVisible = ref(false)
 const detailModalVisible = ref(false)
 const recipeModalVisible = ref(false) // (MỚI)
@@ -124,7 +123,6 @@ const selectedCategory = ref(null)
 const categories = ref([])
 let searchTimer = null
 
-// --- Cập nhật Headers (Tăng chiều rộng cột Hành động) ---
 const headers = [
     { text: "Ảnh", value: "imageUrl", width: 80 },
     { text: "Tên Sản phẩm", value: "name", sortable: true },
@@ -135,7 +133,6 @@ const headers = [
     { text: "Hành động", value: "actions", width: 300 }, // (Tăng chiều rộng)
 ]
 
-// --- (Các hàm fetchData, fetchCategories, debouncedSearch giữ nguyên) ---
 const fetchData = async () => {
     loading.value = true
     try {
@@ -170,7 +167,6 @@ const debouncedSearch = () => {
     }, 500)
 }
 
-// --- Cập nhật Xử lý Modal ---
 const openCreateModal = () => {
     selectedProduct.value = null
     formModalVisible.value = true
@@ -196,7 +192,6 @@ const openRecipeModal = (product) => {
     recipeModalVisible.value = true
 }
 
-// --- (Các hàm Delete, Toggle, Success, Watch giữ nguyên) ---
 const handleDelete = async (id) => {
     try {
         await deleteProduct(id)
@@ -223,10 +218,16 @@ watch(serverOptions, (newValue, oldValue) => {
     fetchData()
 }, { deep: true })
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchCategories()
     fetchData()
+})
+
+onBeforeUnmount(() => {
+    // Close all modals when navigating away
+    formModalVisible.value = false
+    detailModalVisible.value = false
+    recipeModalVisible.value = false
 })
 </script>
 

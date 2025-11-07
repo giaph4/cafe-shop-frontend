@@ -5,9 +5,52 @@
             <el-button type="primary" @click="openRegisterModal">Thêm Nhân viên</el-button>
         </div>
 
+        <el-card class="box-card filter-card">
+            <template #header>
+                <span>🔍 Tìm kiếm & Lọc</span>
+            </template>
+            <el-row :gutter="20">
+                <el-col :span="12">
+                    <el-input
+                        v-model="searchQuery"
+                        placeholder="Tìm theo tên hoặc username..."
+                        clearable
+                    >
+                        <template #prefix>
+                            <el-icon><Search /></el-icon>
+                        </template>
+                    </el-input>
+                </el-col>
+                <el-col :span="6">
+                    <el-select
+                        v-model="filterRole"
+                        placeholder="Lọc theo vai trò"
+                        clearable
+                        class="w-100"
+                    >
+                        <el-option label="Tất cả" value="" />
+                        <el-option label="Admin" value="ROLE_ADMIN" />
+                        <el-option label="Staff" value="ROLE_STAFF" />
+                    </el-select>
+                </el-col>
+                <el-col :span="6">
+                    <el-select
+                        v-model="filterStatus"
+                        placeholder="Lọc theo trạng thái"
+                        clearable
+                        class="w-100"
+                    >
+                        <el-option label="Tất cả" value="" />
+                        <el-option label="Active" value="ACTIVE" />
+                        <el-option label="Inactive" value="INACTIVE" />
+                    </el-select>
+                </el-col>
+            </el-row>
+        </el-card>
+
         <el-card class="box-card">
             <EasyDataTable v-model:server-options="serverOptions" :server-items-length="serverItemsLength"
-                :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#409EFF"
+                :headers="headers" :items="filteredItems" :loading="loading" table-class-name="data-table" theme-color="#8B7355"
                 buttons-pagination show-index>
                 <template #item-fullName="{ fullName, username }">
                     <strong>{{ fullName }}</strong>
@@ -49,35 +92,60 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import EasyDataTable from 'vue3-easy-data-table'
 import 'vue3-easy-data-table/dist/style.css'
 import { useToast } from 'vue-toastification'
+import { Search } from '@element-plus/icons-vue'
 import { getUsers } from '@/api/userService'
-import { getAllRoles } from '@/api/roleService' // (Cần API này ở backend)
 import UserFormModal from '@/components/UserFormModal.vue'
 import UserRegisterModal from '@/components/UserRegisterModal.vue'
 
 const toast = useToast()
 
-// --- State cho Bảng ---
+const searchQuery = ref('')
+const filterRole = ref('')
+const filterStatus = ref('')
+
+const filteredItems = computed(() => {
+    let result = items.value
+    
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
+        result = result.filter(item =>
+            item.fullName.toLowerCase().includes(query) ||
+            item.username.toLowerCase().includes(query)
+        )
+    }
+    
+    if (filterRole.value) {
+        result = result.filter(item =>
+            item.roles.some(role => role.name === filterRole.value)
+        )
+    }
+    
+    if (filterStatus.value) {
+        result = result.filter(item => item.status === filterStatus.value)
+    }
+    
+    return result
+})
+
 const items = ref([])
 const loading = ref(true)
 const serverItemsLength = ref(0)
 const serverOptions = ref({
     page: 1,
     rowsPerPage: 10,
-    sortBy: 'username', // Sắp xếp mặc định
+    sortBy: 'username',
     sortType: 'asc',
 })
 
-// --- State cho Modal ---
 const modalVisible = ref(false)
 const registerModalVisible = ref(false)
 const selectedUser = ref(null)
 const allRoles = ref([]) // Danh sách tất cả các role
 
-// --- Định nghĩa Cột cho Bảng ---
 const headers = [
     { text: "Nhân viên", value: "fullName" },
     { text: "Số điện thoại", value: "phone", width: 120 },
@@ -88,7 +156,6 @@ const headers = [
     { text: "Hành động", value: "actions", width: 200 },
 ]
 
-// --- Hàm Tải Dữ liệu Chính (Users) ---
 const fetchUsers = async () => {
     loading.value = true
     try {
@@ -110,7 +177,6 @@ const fetchUsers = async () => {
     }
 }
 
-// --- Hàm Tải Danh sách Roles (Cho Modal) ---
 const fetchRoles = async () => {
     try {
         // TẠM THỜI GIẢ ĐỊNH API CHƯA CÓ, HARD-CODE 3 ROLES
@@ -131,7 +197,6 @@ const fetchRoles = async () => {
     }
 }
 
-// --- Xử lý CRUD ---
 const openEditModal = (user) => {
     selectedUser.value = { ...user } // DTO Response đã có roles
     modalVisible.value = true
@@ -151,19 +216,16 @@ const handleRegisterSuccess = () => {
     fetchUsers() // Tải lại bảng sau khi đăng ký thành công
 }
 
-// --- Helper (Tô màu Tag) ---
 const getRoleType = (roleName) => {
     if (roleName === 'ROLE_ADMIN') return 'danger'
     if (roleName === 'ROLE_MANAGER') return 'warning'
     return 'primary' // ROLE_STAFF
 }
 
-// --- Theo dõi khi serverOptions thay đổi (click phân trang / sort) ---
 watch(serverOptions, (newValue, oldValue) => {
     fetchUsers()
 }, { deep: true })
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchRoles() // Tải danh sách quyền trước
     fetchUsers() // Sau đó tải danh sách nhân viên

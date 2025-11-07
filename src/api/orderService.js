@@ -1,8 +1,6 @@
 // src/api/orderService.js
 import apiClient from './axios'
 
-// --- API Quản lý (Admin List View) ---
-
 /**
  * [ADMIN] Lấy tất cả đơn hàng (phân trang)
  */
@@ -34,9 +32,6 @@ export const cancelOrder = (orderId) => {
     return apiClient.post(`/api/v1/orders/${orderId}/cancel`)
 }
 
-
-// --- API Nghiệp vụ (POS View & Staff) ---
-
 /**
  * [STAFF] Lấy chi tiết 1 đơn hàng (dùng cho cả admin và staff)
  * @param {number} orderId ID đơn hàng
@@ -59,24 +54,9 @@ export const getPendingOrderByTable = (tableId) => {
  */
 export const createOrder = async (orderData) => {
     try {
-        console.log('=== CREATE ORDER REQUEST ===')
-        console.log('Request Data:', orderData)
-        console.log('Request JSON:', JSON.stringify(orderData, null, 2))
-        console.log('============================')
-        
         const response = await apiClient.post('/api/v1/orders', orderData)
-        
-        console.log('=== ORDER CREATED SUCCESS ===')
-        console.log('Response:', response.data)
-        console.log('=============================')
         return response
     } catch (error) {
-        console.log('=== CREATE ORDER ERROR ===')
-        console.log('Status:', error.response?.status)
-        console.log('Error Data:', error.response?.data)
-        console.log('Message:', error.response?.data?.message || error.message)
-        console.log('Full Error:', error)
-        console.log('==========================')
         throw error
     }
 }

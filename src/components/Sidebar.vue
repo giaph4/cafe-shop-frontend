@@ -50,12 +50,13 @@ const activeMenu = computed(() => {
 
 <style scoped>
 .sidebar {
-    background: #FFFFFF;
+    width: 260px;
     height: 100vh;
+    background: #F8F6F3;
+    border-right: 1px solid #E8E6E3;
     display: flex;
     flex-direction: column;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
-    border-right: 1px solid #F5F5F5;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
 }
 
 .logo {
@@ -84,7 +85,7 @@ const activeMenu = computed(() => {
 .logo span {
     font-size: 1.25rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    background: linear-gradient(135deg, #8B7355 0%, #6F5B45 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -96,7 +97,7 @@ const activeMenu = computed(() => {
     overflow-y: auto;
     overflow-x: hidden;
     padding: 12px;
-    background: #FFFFFF !important;
+    background: #F8F6F3 !important;
 }
 
 .sidebar-menu::-webkit-scrollbar {
@@ -127,16 +128,16 @@ const activeMenu = computed(() => {
 }
 
 .el-menu-item:hover {
-    background: #E3F2FD !important;
-    color: #2196F3 !important;
+    background: #EAE7E3 !important;
+    color: #8B7355 !important;
     transform: translateX(4px);
 }
 
 .el-menu-item.is-active {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+    background: linear-gradient(135deg, #8B7355 0%, #6F5B45 100%) !important;
     color: #FFFFFF !important;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
 }
 
 .el-menu-item.is-active .menu-icon {

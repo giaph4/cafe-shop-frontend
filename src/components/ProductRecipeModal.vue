@@ -1,10 +1,17 @@
 <template>
-    <el-dialog :model-value="visible" @update:model-value="$emit('update:visible', $event)"
-        :title="`Công thức cho: ${productName}`" width="700px" @open="onOpen" @close="onClose"
-        :close-on-click-modal="false">
+    <el-dialog 
+        :model-value="visible" 
+        @update:model-value="$emit('update:visible', $event)"
+        :title="`Công thức cho: ${productName}`" 
+        width="1100px" 
+        @open="onOpen" 
+        @close="onClose"
+        :close-on-click-modal="false"
+        destroy-on-close
+        :append-to-body="true">
         <div v-loading="loading" class="recipe-editor">
             <el-table :data="recipeItems" style="width: 100%" border>
-                <el-table-column label="Nguyên vật liệu" min-width="250">
+                <el-table-column label="NGUYÊN VẬT LIỆU" min-width="400">
                     <template #default="scope">
                         <el-select v-model="scope.row.ingredientId" placeholder="Chọn nguyên vật liệu" class="w-100"
                             filterable @change="(id) => onIngredientSelect(scope.row, id)">
@@ -14,21 +21,21 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="Số lượng" width="150">
+                <el-table-column label="SỐ LƯỢNG" width="200" align="center">
                     <template #default="scope">
-                        <el-input-number v-model="scope.row.quantityNeeded" :min="0.001" :precision="3" />
+                        <el-input-number v-model="scope.row.quantityNeeded" :min="0.004" :precision="3" />
                     </template>
                 </el-table-column>
 
-                <el-table-column label="Đơn vị" width="100" align="center">
+                <el-table-column label="ĐƠN VỊ" width="180" align="center">
                     <template #default="scope">
-                        <span style="color: #606266;">{{ scope.row.ingredientUnit || 'N/A' }}</span>
+                        <span style="color: #606266; font-weight: 500;">{{ scope.row.ingredientUnit || 'N/A' }}</span>
                     </template>
                 </el-table-column>
 
-                <el-table-column label="Xóa" width="70" align="center">
+                <el-table-column label="XÓA" width="150" align="center">
                     <template #default="scope">
-                        <el-button type="danger" plain circle :icon="Trash2" @click="removeRow(scope.$index)" />
+                        <el-button type="danger" plain :icon="Trash2" @click="removeRow(scope.$index)">Xóa</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -50,8 +57,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
+import { Plus, Delete as Trash2 } from '@element-plus/icons-vue'
 import { getProductRecipe, setProductRecipe } from '@/api/productService.js'
 import { getAllIngredientsSimple } from '@/api/ingredientService.js'
 
@@ -68,7 +76,6 @@ const loading = ref(false)
 const allIngredients = ref([]) // Danh sách tất cả NVL (cho dropdown)
 const recipeItems = ref([]) // Danh sách NVL trong công thức
 
-// --- Tải dữ liệu khi Modal mở ---
 const onOpen = async () => {
     if (!props.productId) return
     loading.value = true
@@ -97,7 +104,6 @@ const onOpen = async () => {
     }
 }
 
-// --- Xử lý Bảng động ---
 const addRow = () => {
     recipeItems.value.push({
         ingredientId: null,
@@ -126,7 +132,6 @@ const isIngredientSelected = (optionId, currentId) => {
     return recipeItems.value.some(item => item.ingredientId === optionId)
 }
 
-// --- Gửi Form (Lưu) ---
 const submitRecipe = async () => {
     loading.value = true
 
@@ -162,7 +167,6 @@ const submitRecipe = async () => {
     }
 }
 
-// --- Reset khi đóng ---
 const onClose = () => {
     recipeItems.value = []
     // (Không cần clear allIngredients)

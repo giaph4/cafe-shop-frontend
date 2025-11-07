@@ -68,10 +68,8 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const formData = ref(null)
 
-// --- Validation Rules ---
 // Dựa trên UserUpdateRequestDTO.java
 const validatePhone = (rule, value, callback) => {
     const phoneRegex = /^(\+?84|0)\d{9}$/
@@ -93,7 +91,6 @@ const formRules = {
     roleIds: [{ required: true, type: 'array', min: 1, message: 'Phải có ít nhất 1 quyền', trigger: 'change' }],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -127,13 +124,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = null
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.user thay đổi ---
 watch(() => props.user, (newUser) => {
     if (newUser) {
         // Đang Edit: Đổ dữ liệu vào form

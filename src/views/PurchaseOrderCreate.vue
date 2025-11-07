@@ -1,7 +1,10 @@
 <template>
-    <div class="app-page-container po-create-page">
+    <div class="app-page-container po-create-page fade-in-up">
         <div class="page-header">
-            <h1 class="page-title">Tạo Phiếu Nhập hàng mới</h1>
+            <h1 class="page-title">
+                <el-icon style="margin-right: 8px; font-size: 1.5rem;"><DocumentAdd /></el-icon>
+                Tạo Phiếu Nhập hàng mới
+            </h1>
             <el-button @click="$router.back()">
                 <el-icon style="margin-right: 8px;">
                     <Back />
@@ -49,7 +52,7 @@
                 </template>
 
                 <el-table :data="form.items" style="width: 100%" border>
-                    <el-table-column label="Nguyên vật liệu" min-width="250">
+                    <el-table-column label="NGUYÊN VẬT LIỆU" min-width="200">
                         <template #default="scope">
                             <el-form-item :prop="'items.' + scope.$index + '.ingredientId'" :rules="rules.ingredientId">
                                 <el-select v-model="scope.row.ingredientId" placeholder="Chọn nguyên vật liệu"
@@ -61,16 +64,16 @@
                         </template>
                     </el-table-column>
 
-                    <el-table-column label="Số lượng" width="150">
+                    <el-table-column label="SỐ LƯỢNG" width="180" align="center">
                         <template #default="scope">
                             <el-form-item :prop="'items.' + scope.$index + '.quantity'" :rules="rules.quantity">
-                                <el-input-number v-model="scope.row.quantity" :min="0.001" :precision="3"
+                                <el-input-number v-model="scope.row.quantity" :min="2" :precision="3"
                                     @change="() => calculateTotal()" />
                             </el-form-item>
                         </template>
                     </el-table-column>
 
-                    <el-table-column label="Đơn giá (VND)" width="200">
+                    <el-table-column label="ĐƠN GIÁ (VND)" width="200" align="center">
                         <template #default="scope">
                             <el-form-item :prop="'items.' + scope.$index + '.unitPrice'" :rules="rules.unitPrice">
                                 <el-input-number v-model="scope.row.unitPrice" :min="0" :step="1000"
@@ -79,22 +82,30 @@
                         </template>
                     </el-table-column>
 
-                    <el-table-column label="Thành tiền" width="150" align="right">
+                    <el-table-column label="THÀNH TIỀN" width="180" align="right">
                         <template #default="scope">
-                            <span class="total-cell">{{ formatCurrency(scope.row.quantity * scope.row.unitPrice)
-                                }}</span>
+                            <span class="total-cell">{{ formatCurrency(scope.row.quantity * scope.row.unitPrice) }}</span>
                         </template>
                     </el-table-column>
 
-                    <el-table-column label="Xóa" width="80" align="center">
+                    <el-table-column label="XÓA" width="100" align="center">
                         <template #default="scope">
-                            <el-button type="danger" plain circle :icon="Delete" @click="removeItem(scope.$index)" />
+                            <el-button 
+                                type="danger" 
+                                plain 
+                                :icon="Delete" 
+                                @click="removeItem(scope.$index)"
+                                class="hover-scale"
+                            >
+                                Xóa
+                            </el-button>
                         </template>
                     </el-table-column>
                 </el-table>
 
                 <div class="total-summary">
-                    <h3>Tổng cộng: {{ formatCurrency(totalAmount) }}</h3>
+                    <el-icon style="margin-right: 8px; font-size: 1.2rem;"><Money /></el-icon>
+                    <h3>Tổng cộng: <span class="total-amount">{{ formatCurrency(totalAmount) }}</span></h3>
                 </div>
             </el-card>
 
@@ -123,11 +134,9 @@ const toast = useToast()
 const formRef = ref(null)
 const submitLoading = ref(false)
 
-// --- State cho Dropdowns ---
 const suppliers = ref([])
 const ingredients = ref([])
 
-// --- State cho Form ---
 const form = ref({
     supplierId: null,
     expectedDate: null,
@@ -137,10 +146,8 @@ const form = ref({
     ]
 })
 
-// --- State cho Tổng tiền ---
 const totalAmount = ref(0)
 
-// --- Validation Rules ---
 const rules = {
     supplierId: [{ required: true, message: 'Nhà cung cấp là bắt buộc', trigger: 'change' }],
     ingredientId: [{ required: true, message: 'Nguyên vật liệu là bắt buộc', trigger: 'change' }],
@@ -148,7 +155,6 @@ const rules = {
     unitPrice: [{ required: true, type: 'number', min: 0, message: 'Đơn giá phải >= 0', trigger: 'blur' }],
 }
 
-// --- Tải dữ liệu cho Dropdowns ---
 const loadInitialData = async () => {
     try {
         const [supplierRes, ingredientRes] = await Promise.all([
@@ -163,7 +169,6 @@ const loadInitialData = async () => {
     }
 }
 
-// --- Xử lý Items ---
 const addItem = () => {
     form.value.items.push({ ingredientId: null, quantity: 1, unitPrice: 0 })
 }
@@ -177,14 +182,12 @@ const removeItem = (index) => {
     }
 }
 
-// --- Tính tổng tiền ---
 const calculateTotal = () => {
     totalAmount.value = form.value.items.reduce((sum, item) => {
         return sum + (item.quantity * item.unitPrice)
     }, 0)
 }
 
-// --- Xử lý Submit ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -240,13 +243,35 @@ onMounted(() => {
 }
 
 .total-summary {
-    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     margin-top: 20px;
-    font-size: 1.5rem;
-    font-weight: 600;
+    padding: 20px;
+    background: linear-gradient(135deg, #F8F6F3 0%, #F5F3F0 100%);
+    border-radius: 12px;
+    border: 2px solid #8B7355;
 }
 
-/* Ẩn thông báo lỗi validation của el-form-item bên trong bảng */
+.total-summary h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212121;
+}
+
+.total-amount {
+    color: #8B7355;
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+
+.total-cell {
+    font-weight: 600;
+    color: #8B7355;
+    font-size: 1rem;
+}
+
 .el-table .el-form-item {
     margin-bottom: 0;
 }

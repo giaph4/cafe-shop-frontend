@@ -14,17 +14,36 @@
                         <el-option label="Đã hủy (CANCELLED)" value="CANCELLED" />
                     </el-select>
                 </el-col>
-                <el-col :span="12">
-                    <el-date-picker v-model="filters.dateRange" type="daterange" range-separator="Đến"
-                        start-placeholder="Từ ngày" end-placeholder="Đến ngày" @change="fetchData" :clearable="true"
-                        class="w-100" />
+                <el-col :span="6">
+                    <el-date-picker
+                        v-model="filters.startDate"
+                        type="date"
+                        placeholder="Từ ngày"
+                        @change="fetchData"
+                        :clearable="true"
+                        class="w-100"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                    />
+                </el-col>
+                <el-col :span="6">
+                    <el-date-picker
+                        v-model="filters.endDate"
+                        type="date"
+                        placeholder="Đến ngày"
+                        @change="fetchData"
+                        :clearable="true"
+                        class="w-100"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                    />
                 </el-col>
             </el-row>
         </el-card>
 
         <EasyDataTable v-model:server-options="serverOptions" :server-items-length="serverItemsLength"
-            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#409EFF"
-            buttons-pagination>
+            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#8B7355"
+            buttons-pagination show-index>
             <template #item-id="{ id }">
                 <strong>#{{ id }}</strong>
             </template>
@@ -34,7 +53,7 @@
             </template>
 
             <template #item-status="{ status }">
-                <el-tag :type="statusType(status)">{{ status }}</el-tag>
+                <span class="status-tag" :class="status.toLowerCase()">{{ getStatusLabel(status) }}</span>
             </template>
 
             <template #item-totalAmount="{ totalAmount }">
@@ -60,7 +79,7 @@
         </EasyDataTable>
 
         <OrderDetailModal v-model:visible="detailModalVisible" :order-id="selectedId" />
-        
+
         <el-dialog v-model="paymentModalVisible" title="Thanh toán đơn hàng" width="500px">
             <div v-if="selectedOrder">
                 <el-descriptions :column="1" border>
@@ -77,25 +96,25 @@
 
                 <el-form-item>
                     <div class="payment-methods">
-                        <el-button 
-                            size="large" 
-                            @click="selectedPaymentMethod = 'CASH'" 
+                        <el-button
+                            size="large"
+                            @click="selectedPaymentMethod = 'CASH'"
                             :type="selectedPaymentMethod === 'CASH' ? 'primary' : ''"
                             style="flex: 1;"
                         >
                             Tiền mặt
                         </el-button>
-                        <el-button 
-                            size="large" 
-                            @click="selectedPaymentMethod = 'TRANSFER'" 
+                        <el-button
+                            size="large"
+                            @click="selectedPaymentMethod = 'TRANSFER'"
                             :type="selectedPaymentMethod === 'TRANSFER' ? 'primary' : ''"
                             style="flex: 1;"
                         >
                             Chuyển khoản
                         </el-button>
-                        <el-button 
-                            size="large" 
-                            @click="selectedPaymentMethod = 'CARD'" 
+                        <el-button
+                            size="large"
+                            @click="selectedPaymentMethod = 'CARD'"
                             :type="selectedPaymentMethod === 'CARD' ? 'primary' : ''"
                             style="flex: 1;"
                         >
@@ -107,9 +126,9 @@
 
             <template #footer>
                 <el-button @click="paymentModalVisible = false">Hủy</el-button>
-                <el-button 
-                    type="primary" 
-                    @click="handlePayment" 
+                <el-button
+                    type="primary"
+                    @click="handlePayment"
                     :disabled="!selectedPaymentMethod"
                     :loading="paymentLoading"
                 >
@@ -126,14 +145,13 @@ import EasyDataTable from 'vue3-easy-data-table'
 import 'vue3-easy-data-table/dist/style.css'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/store/auth'
-import { formatCurrency, formatDateISO } from '@/utils/formatters'
+import { formatCurrency } from '@/utils/formatters'
 import { getAllOrders, getOrdersByStatus, getOrdersByDateRange, cancelOrder, payOrder } from '@/api/orderService'
 import OrderDetailModal from '@/components/OrderDetailModal.vue'
 
 const toast = useToast()
 const authStore = useAuthStore()
 
-// --- State cho Bảng ---
 const items = ref([])
 const loading = ref(true)
 const serverItemsLength = ref(0)
@@ -144,7 +162,6 @@ const serverOptions = ref({
     sortType: 'desc',
 })
 
-// --- State cho Modal ---
 const detailModalVisible = ref(false)
 const selectedId = ref(null)
 const paymentModalVisible = ref(false)
@@ -152,13 +169,12 @@ const selectedOrder = ref(null)
 const selectedPaymentMethod = ref(null)
 const paymentLoading = ref(false)
 
-// --- State cho Bộ lọc ---
 const filters = ref({
     status: null,
-    dateRange: null,
+    startDate: null,
+    endDate: null,
 })
 
-// --- Định nghĩa Cột cho Bảng ---
 const headers = [
     { text: "Mã Đơn", value: "id", width: 80 },
     { text: "Bàn", value: "tableName", sortable: true },
@@ -170,7 +186,6 @@ const headers = [
     { text: "Hành động", value: "actions", width: 180, align: 'center' },
 ]
 
-// --- Hàm Tải Dữ liệu Chính ---
 const fetchData = async () => {
     loading.value = true
     try {
@@ -182,9 +197,9 @@ const fetchData = async () => {
 
         let response;
         // API backend của bạn tách biệt 3 hàm
-        if (filters.value.dateRange) {
-            const [start, end] = filters.value.dateRange.map(d => formatDateISO(d))
-            response = await getOrdersByDateRange(start, end, params)
+        if (filters.value.startDate && filters.value.endDate) {
+            // Cả hai ngày đều có giá trị
+            response = await getOrdersByDateRange(filters.value.startDate, filters.value.endDate, params)
         } else if (filters.value.status) {
             response = await getOrdersByStatus(filters.value.status, params)
         } else {
@@ -201,7 +216,6 @@ const fetchData = async () => {
     }
 }
 
-// --- Xử lý Hành động ---
 const openDetailModal = (id) => {
     selectedId.value = id
     detailModalVisible.value = true
@@ -244,23 +258,47 @@ const handlePayment = async () => {
     }
 }
 
-// --- Helper ---
 const statusType = (status) => {
     if (status === 'PAID') return 'success'
     if (status === 'CANCELLED') return 'danger'
     return 'warning' // PENDING
 }
 
-// --- Theo dõi khi phân trang/sort thay đổi ---
+const getStatusLabel = (status) => {
+    if (status === 'PAID') return 'Đã thanh toán'
+    if (status === 'CANCELLED') return 'Đã hủy'
+    return 'Chờ thanh toán' // PENDING
+}
+
 watch(serverOptions, (newValue, oldValue) => {
     fetchData()
 }, { deep: true })
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchData()
 })
 </script>
+
+<style>
+/* FORCE BROWN THEME FOR THIS PAGE */
+.vue3-easy-data-table thead {
+    background: linear-gradient(135deg, #8B7355 0%, #6F5B45 100%) !important;
+}
+
+.vue3-easy-data-table th {
+    background: transparent !important;
+    color: #FFFFFF !important;
+}
+
+.vue3-easy-data-table .header-text {
+    color: #FFFFFF !important;
+}
+
+.vue3-easy-data-table .buttons-pagination button.pagination__active-button {
+    background: linear-gradient(135deg, #8B7355 0%, #6F5B45 100%) !important;
+    color: #FFFFFF !important;
+}
+</style>
 
 <style scoped>
 .app-page-container {
@@ -275,19 +313,144 @@ onMounted(() => {
     width: 100%;
 }
 
-.data-table {
-    --easy-table-header-font-size: 14px;
-    --easy-table-header-font-weight: 600;
-    --easy-table-body-row-font-size: 14px;
+/* vue3-easy-data-table styles */
+:deep(.vue3-easy-data-table) {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid #E0E0E0;
+    background: #FFFFFF;
 }
 
+:deep(.vue3-easy-data-table__main) {
+    background: #FFFFFF;
+}
+
+:deep(.vue3-easy-data-table thead) {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+}
+
+:deep(.vue3-easy-data-table thead tr) {
+    background: transparent !important;
+}
+
+:deep(.vue3-easy-data-table th) {
+    background: transparent !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    font-size: 0.875rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 18px 20px !important;
+    border: none !important;
+}
+
+:deep(.vue3-easy-data-table .header-text) {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+:deep(.vue3-easy-data-table .sortable) {
+    cursor: pointer;
+}
+
+:deep(.vue3-easy-data-table .sortable .sortType-icon) {
+    color: #FFFFFF !important;
+    opacity: 0.7;
+}
+
+:deep(.vue3-easy-data-table .sortable:hover .sortType-icon) {
+    opacity: 1;
+}
+
+:deep(.vue3-easy-data-table tbody tr) {
+    background: #FFFFFF;
+    border-bottom: 1px solid #F5F5F5;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.vue3-easy-data-table tbody tr:hover) {
+    background: #F5F5F5 !important;
+    transform: scale(1.002);
+}
+
+:deep(.vue3-easy-data-table td) {
+    padding: 16px 20px !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: #424242 !important;
+    border: none !important;
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination) {
+    padding: 16px 20px;
+    background: #FAFAFA;
+    border-top: 2px solid #E0E0E0;
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination button) {
+    background: #FFFFFF;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #424242;
+    transition: all 0.2s;
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination button:hover:not(.pagination__active-button)) {
+    background: #F5F5F5;
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination button.pagination__active-button) {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    border-color: #2196F3;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.status-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.status-tag.pending {
+    background: #FFF3E0;
+    color: #FF9800;
+    border: 2px solid #FF9800;
+}
+
+.status-tag.paid {
+    background: #E8F5E9;
+    color: #4CAF50;
+    border: 2px solid #4CAF50;
+}
+
+.status-tag.cancelled {
+    background: #FFEBEE;
+    color: #F44336;
+    border: 2px solid #F44336;
+}
 
 .payment-methods {
-    margin-top: 30px;
-    flex-wrap: wrap;
-    background-color: #f5f7fa;
-    padding: 15px;
-    border-radius: 4px;
-    font-weight: 600;
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.payment-methods .el-button {
+    flex: 1;
+    height: 70px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 12px;
 }
 </style>

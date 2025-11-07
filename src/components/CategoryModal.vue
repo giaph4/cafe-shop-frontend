@@ -40,22 +40,18 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     name: '',
     description: '',
 }
 const formData = ref({ ...defaultFormData })
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.category)
 
-// --- Validation Rules ---
 const formRules = {
     name: [{ required: true, message: 'Tên danh mục là bắt buộc', trigger: 'blur' }],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -69,12 +65,10 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    await updateCategory(props.category.id, categoryData)
+                                        await updateCategory(props.category.id, categoryData)
                     toast.success('Cập nhật danh mục thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createCategory(categoryData)
+                                        await createCategory(categoryData)
                     toast.success('Tạo danh mục mới thành công!')
                 }
 
@@ -91,13 +85,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.category thay đổi ---
 watch(() => props.category, (newCategory) => {
     if (newCategory) {
         // Đang Edit: Đổ dữ liệu vào form

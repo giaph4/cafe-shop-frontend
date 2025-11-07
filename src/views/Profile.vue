@@ -1,6 +1,8 @@
 <template>
   <div class="app-page-container">
-    <h1 class="page-title">Thông tin cá nhân</h1>
+    <div class="page-header">
+      <h1 class="page-title">Thông tin cá nhân</h1>
+    </div>
 
     <el-card class="box-card profile-card" v-if="user">
       <div class="profile-info">

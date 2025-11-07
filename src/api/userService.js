@@ -11,7 +11,7 @@ export const getUsers = (params) => {
 
 /**
  * Lấy user theo ID (Bây giờ đã an toàn cho self-service)
- * @param {number} id 
+ * @param {number} id
  */
 export const getUserById = (id) => {
     return apiClient.get(`/api/v1/users/${id}`)

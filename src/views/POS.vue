@@ -15,30 +15,53 @@
         <el-row :gutter="20" class="pos-main-content">
             <!-- Khu vực Menu/Sản phẩm -->
             <el-col :span="14">
-                <el-card class="box-card menu-section">
-                    <template #header>
-                        <div class="card-header">
-                            <span class="card-title">Menu Sản phẩm</span>
-                            <el-input 
-                                v-model="productSearch" 
-                                placeholder="Tìm món..." 
-                                clearable 
-                                style="width: 300px;"
+                <div class="menu-section">
+                    <div class="menu-header-bar">
+                        <span class="menu-title">Menu Sản phẩm</span>
+                        <div class="menu-filters">
+                            <el-input
+                                v-model="productSearch"
+                                placeholder="Tìm món..."
+                                clearable
+                                style="width: 200px;"
                             />
+                            <el-select
+                                v-model="selectedCategory"
+                                placeholder="Danh mục"
+                                clearable
+                                style="width: 150px;"
+                            >
+                                <el-option label="Tất cả" :value="null" />
+                                <el-option
+                                    v-for="cat in categories"
+                                    :key="cat.id"
+                                    :label="cat.name"
+                                    :value="cat.id"
+                                />
+                            </el-select>
+                            <el-select
+                                v-model="priceRange"
+                                placeholder="Giá bán"
+                                clearable
+                                style="width: 150px;"
+                            >
+                                <el-option label="Tất cả" :value="null" />
+                                <el-option label="< 50k" value="0-50000" />
+                                <el-option label="50k - 100k" value="50000-100000" />
+                                <el-option label="> 200k" value="200000-999999999" />
+                            </el-select>
                         </div>
-                    </template>
+                    </div>
                     <div v-loading="loadingProducts" class="product-grid">
-                        <el-card 
-                            v-for="product in filteredProducts" 
-                            :key="product.id" 
+                        <div
+                            v-for="product in filteredProducts"
+                            :key="product.id"
                             class="product-card"
-                            shadow="hover" 
                             @click="addProductToCart(product)"
-                            :body-style="{ padding: '10px' }"
                         >
-                            <el-image 
-                                :src="product.imageUrl" 
-                                fit="cover" 
+                            <el-image
+                                :src="product.imageUrl"
+                                fit="cover"
                                 class="product-image"
                             >
                                 <template #error>
@@ -48,35 +71,40 @@
                                 </template>
                             </el-image>
                             <div class="product-info">
-                                <div class="product-name">{{ product.name }}</div>
-                                <div class="product-price">{{ formatCurrency(product.price) }}</div>
+                                <h4 class="product-name">{{ product.name }}</h4>
+                                <p class="product-price">{{ formatCurrency(product.price) }}</p>
                             </div>
-                        </el-card>
+                        </div>
                     </div>
-                </el-card>
+                </div>
             </el-col>
 
             <!-- Khu vực Sơ đồ Bàn -->
             <el-col :span="10">
-                <el-card class="box-card table-section">
-                    <template #header>
-                        <span class="card-title">Sơ đồ Bàn</span>
-                    </template>
+                <div class="table-section">
+                    <div class="table-header-bar">
+                        <span class="table-title">Sơ đồ Bàn</span>
+                        <el-input
+                            v-model="tableSearch"
+                            placeholder="Tìm bàn..."
+                            clearable
+                            style="width: 200px;"
+                        />
+                    </div>
                     <div v-loading="loadingTables" class="table-grid">
-                        <el-card 
-                            v-for="table in tables" 
-                            :key="table.id" 
+                        <div
+                            v-for="table in filteredTables"
+                            :key="table.id"
                             class="table-card"
-                            :class="getTableClass(table.status)" 
-                            shadow="hover" 
+                            :class="getTableClass(table.status)"
                             @click="openOrderModal(table)"
                         >
                             <div class="table-name">{{ table.name }}</div>
                             <div class="table-status">{{ getStatusText(table.status) }}</div>
                             <div class="table-capacity">{{ table.capacity }} chỗ</div>
-                        </el-card>
+                        </div>
                     </div>
-                </el-card>
+                </div>
             </el-col>
         </el-row>
 
@@ -94,23 +122,31 @@
                     </template>
                     <div class="cart-items">
                         <div v-for="(item, index) in tempCart" :key="index" class="cart-item">
-                            <span class="item-name">{{ item.name }}</span>
-                            <div class="item-actions">
-                                <el-input-number 
-                                    v-model="item.quantity" 
-                                    :min="1" 
-                                    size="small"
-                                    style="width: 100px;"
-                                />
-                                <el-button 
-                                    type="danger" 
-                                    size="small" 
-                                    circle 
-                                    @click="removeFromCart(index)"
-                                >
-                                    <el-icon><X /></el-icon>
-                                </el-button>
+                            <div class="item-header">
+                                <span class="item-name">{{ item.name }}</span>
+                                <div class="item-actions">
+                                    <el-input-number
+                                        v-model="item.quantity"
+                                        :min="1"
+                                        size="small"
+                                        style="width: 100px;"
+                                    />
+                                    <el-button
+                                        type="danger"
+                                        size="small"
+                                        circle
+                                        @click="removeFromCart(index)"
+                                    >
+                                        <el-icon><X /></el-icon>
+                                    </el-button>
+                                </div>
                             </div>
+                            <el-input
+                                v-model="item.notes"
+                                placeholder="Ghi chú (ít đá, nhiều đường...)"
+                                size="small"
+                                style="margin-top: 8px;"
+                            />
                         </div>
                     </div>
                     <div class="cart-total">
@@ -127,15 +163,15 @@
         </transition>
 
         <!-- Dialog chọn bàn cho giỏ hàng tạm -->
-        <el-dialog 
-            v-model="showTableSelection" 
-            title="Chọn bàn tại quán" 
+        <el-dialog
+            v-model="showTableSelection"
+            title="Chọn bàn tại quán"
             width="700px"
             :close-on-click-modal="false"
         >
             <div class="table-selection-dialog">
-                <el-alert 
-                    type="info" 
+                <el-alert
+                    type="info"
                     :closable="false"
                     style="margin-bottom: 20px;"
                 >
@@ -143,19 +179,30 @@
                         Bạn đã chọn {{ tempCart.length }} món ({{ formatCurrency(cartTotal) }}). Vui lòng chọn bàn.
                     </template>
                 </el-alert>
-                
-                <div v-if="emptyTables.length === 0" style="text-align: center; padding: 40px; color: #909399;">
+
+                <el-input
+                    v-model="dialogTableSearch"
+                    placeholder="Tìm bàn..."
+                    clearable
+                    style="margin-bottom: 20px;"
+                >
+                    <template #prefix>
+                        <el-icon><Search /></el-icon>
+                    </template>
+                </el-input>
+
+                <div v-if="filteredEmptyTables.length === 0" style="text-align: center; padding: 40px; color: #909399;">
                     <el-icon style="font-size: 48px; margin-bottom: 16px;"><InfoFilled /></el-icon>
-                    <div style="font-size: 16px;">Không có bàn trống</div>
-                    <div style="font-size: 14px; margin-top: 8px;">Vui lòng chọn "Đơn Mang đi" ở góc trên</div>
+                    <div style="font-size: 16px;">Không tìm thấy bàn trống</div>
+                    <div style="font-size: 14px; margin-top: 8px;">Vui lòng thử từ khóa khác hoặc chọn "Đơn Mang đi"</div>
                 </div>
-                
+
                 <div v-else class="table-grid-dialog">
-                    <el-card 
-                        v-for="table in emptyTables" 
-                        :key="table.id" 
+                    <el-card
+                        v-for="table in filteredEmptyTables"
+                        :key="table.id"
                         class="table-card-dialog"
-                        shadow="hover" 
+                        shadow="hover"
                         @click="createOrderFromCart(table)"
                     >
                         <div class="table-name">{{ table.name }}</div>
@@ -173,9 +220,11 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { ShoppingCart, Image, X } from '@/components/icons'
+import { ShoppingCart, Image, X, Search } from '@/components/icons'
+import { InfoFilled } from '@element-plus/icons-vue'
 import { getAllTables } from '@/api/tableService.js'
 import { getAvailableProducts } from '@/api/productService.js'
+import { getAllCategories } from '@/api/categoryService.js'
 import { usePosStore } from '@/store/posStore.js'
 import { formatCurrency } from '@/utils/formatters.js'
 import OrderEditorModal from '@/components/OrderEditorModal.vue'
@@ -186,16 +235,47 @@ const posStore = usePosStore()
 const tables = ref([])
 const loadingTables = ref(true)
 const products = ref([])
+const categories = ref([])
 const loadingProducts = ref(true)
 const productSearch = ref('')
+const selectedCategory = ref(null)
+const priceRange = ref(null)
+const tableSearch = ref('')
+const dialogTableSearch = ref('')
 const tempCart = ref([])
 const showTableSelection = ref(false)
 
-// --- Computed ---
 const filteredProducts = computed(() => {
-    if (!productSearch.value) return products.value
-    return products.value.filter(p => 
-        p.name.toLowerCase().includes(productSearch.value.toLowerCase())
+    let result = products.value
+    
+    // Filter by search
+    if (productSearch.value) {
+        result = result.filter(p =>
+            p.name.toLowerCase().includes(productSearch.value.toLowerCase())
+        )
+    }
+    
+    // Filter by category
+    if (selectedCategory.value) {
+        const selectedCat = categories.value.find(c => c.id === selectedCategory.value)
+        if (selectedCat) {
+            result = result.filter(p => p.categoryName === selectedCat.name)
+        }
+    }
+    
+    // Filter by price range
+    if (priceRange.value) {
+        const [min, max] = priceRange.value.split('-').map(Number)
+        result = result.filter(p => p.price >= min && p.price <= max)
+    }
+    
+    return result
+})
+
+const filteredTables = computed(() => {
+    if (!tableSearch.value) return tables.value
+    return tables.value.filter(t =>
+        t.name.toLowerCase().includes(tableSearch.value.toLowerCase())
     )
 })
 
@@ -203,11 +283,17 @@ const emptyTables = computed(() => {
     return tables.value.filter(t => t.status === 'EMPTY')
 })
 
+const filteredEmptyTables = computed(() => {
+    if (!dialogTableSearch.value) return emptyTables.value
+    return emptyTables.value.filter(t =>
+        t.name.toLowerCase().includes(dialogTableSearch.value.toLowerCase())
+    )
+})
+
 const cartTotal = computed(() => {
     return tempCart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 })
 
-// --- Tải Sơ đồ bàn ---
 const fetchTables = async () => {
     loadingTables.value = true
     try {
@@ -220,12 +306,15 @@ const fetchTables = async () => {
     }
 }
 
-// --- Tải Menu sản phẩm ---
 const fetchProducts = async () => {
     loadingProducts.value = true
     try {
         const response = await getAvailableProducts()
         products.value = response.data.content.filter(p => p.available)
+        
+        // Fetch categories
+        const catResponse = await getAllCategories()
+        categories.value = catResponse.data
     } catch (error) {
         toast.error('Lỗi khi tải menu sản phẩm')
     } finally {
@@ -233,7 +322,6 @@ const fetchProducts = async () => {
     }
 }
 
-// --- Xử lý Modal ---
 const openOrderModal = (table) => {
     // Bàn đang phục vụ hoặc trống đều mở modal
     if (table.status === 'SERVING' || table.status === 'EMPTY') {
@@ -258,7 +346,6 @@ const openTakeAwayModal = () => {
     }
 }
 
-// --- Xử lý Giỏ hàng tạm ---
 const addProductToCart = (product) => {
     const existingItem = tempCart.value.find(item => item.id === product.id)
     if (existingItem) {
@@ -269,9 +356,11 @@ const addProductToCart = (product) => {
             id: product.id,
             name: product.name,
             price: product.price,
-            quantity: 1
+            quantity: 1,
+            notes: '',
+            category: product.categoryName
         })
-        toast.success(`Đã thêm ${product.name} vào giỏ`)
+        toast.success(`Đã thêm ${product.name}`)
     }
 }
 
@@ -295,7 +384,7 @@ const createOrderFromCart = async (table) => {
     const items = tempCart.value.map(item => ({
         productId: item.id,
         quantity: item.quantity,
-        notes: ''
+        notes: item.notes || ''
     }))
 
     const orderData = {
@@ -306,33 +395,32 @@ const createOrderFromCart = async (table) => {
 
     try {
         await posStore.createOrder(orderData)
-        
+
         // Clear giỏ hàng và đóng dialog
         tempCart.value = []
         showTableSelection.value = false
-        
+
         // Refresh bàn
         await fetchTables()
-        
+
         // Mở modal để tiếp tục quản lý đơn
         const targetTable = table || {
             id: null,
             name: 'Đơn Mang đi',
             status: 'EMPTY'
         }
-        
+
         // Đợi một chút để bàn được cập nhật
         setTimeout(() => {
             posStore.openPosModal(targetTable)
         }, 300)
-        
+
     } catch (error) {
         console.error('Error creating order:', error)
         toast.error(error.response?.data?.message || 'Lỗi khi tạo đơn hàng')
     }
 }
 
-// --- Helpers ---
 const getStatusText = (status) => {
     if (status === 'SERVING') return 'Đang phục vụ'
     if (status === 'RESERVED') return 'Đã đặt'
@@ -345,7 +433,6 @@ const getTableClass = (status) => {
     return 'status-empty'
 }
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchTables()
     fetchProducts()
@@ -387,94 +474,164 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 /* Menu Section */
 .menu-section {
     height: calc(100vh - 180px);
+    background: #FDFCFB;
+    border-radius: 16px;
+    border: 2px solid #E8E6E3;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-:deep(.menu-section .el-card__body) {
-    padding: 0;
-    height: calc(100% - 60px);
+.menu-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #F8F6F3 0%, #F5F3F0 100%);
+    border-bottom: 2px solid #E8E6E3;
+}
+
+.menu-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #212121;
+}
+
+.menu-filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 
 .product-grid {
-    height: 100%;
+    flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 15px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 15px;
+    align-content: start;
 }
 
 .product-card {
     cursor: pointer;
     transition: all 0.2s ease;
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 2px solid #E8E6E3;
+    padding: 10px;
 }
 
 .product-card:hover {
     transform: translateY(-3px);
-    box-shadow: var(--el-box-shadow);
+    box-shadow: 0 8px 16px rgba(139, 115, 85, 0.15);
+    border-color: #8B7355;
 }
 
 .product-image {
     width: 100%;
-    height: 120px;
-    border-radius: 4px;
+    height: 150px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: block;
+}
+
+:deep(.product-image img) {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
 }
 
 .image-placeholder {
     width: 100%;
-    height: 120px;
-    background: #f5f7fa;
+    height: 150px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecef 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #c0c4cc;
-    font-size: 2rem;
+    font-size: 3rem;
+    border-radius: 8px;
 }
 
 .product-info {
-    margin-top: 8px;
+    padding: 12px 8px;
+    background: #FFFFFF;
+    border-top: 1px solid #E8E6E3;
 }
 
 .product-name {
-    font-weight: 500;
-    font-size: 0.95rem;
-    margin-bottom: 4px;
+    margin: 0 0 6px 0;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #212121 !important;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 1.3;
 }
 
 .product-price {
-    color: var(--el-color-primary);
-    font-weight: 600;
+    margin: 0;
+    color: #8B7355 !important;
+    font-weight: 700;
+    font-size: 1rem;
 }
 
 /* Table Section */
 .table-section {
     height: calc(100vh - 180px);
+    background: #FDFCFB;
+    border-radius: 16px;
+    border: 2px solid #E8E6E3;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-:deep(.table-section .el-card__body) {
-    padding: 15px;
-    height: calc(100% - 60px);
-    overflow-y: auto;
+.table-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #F8F6F3 0%, #F5F3F0 100%);
+    border-bottom: 2px solid #E8E6E3;
+}
+
+.table-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #212121;
 }
 
 .table-grid {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 15px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 15px;
+    align-content: start;
 }
 
 .table-card {
     cursor: pointer;
     text-align: center;
     transition: all 0.2s ease;
-    border: 2px solid transparent;
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 2px solid #E8E6E3;
+    padding: 16px 12px;
 }
 
 .table-card:hover {
     transform: translateY(-5px);
-    box-shadow: var(--el-box-shadow-light);
+    box-shadow: 0 8px 16px rgba(139, 115, 85, 0.15);
+    border-color: #8B7355;
 }
 
 .table-name {
@@ -493,7 +650,6 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     color: #909399;
 }
 
-/* --- Màu theo Trạng thái --- */
 .table-card.status-empty {
     border-color: var(--el-color-success-light-3);
     background-color: var(--el-color-success-light-9);
@@ -552,10 +708,16 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 
 .cart-item {
     display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    border-bottom: 1px solid #e4e7ed;
+}
+
+.item-header {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #e4e7ed;
+    width: 100%;
 }
 
 .item-name {

@@ -1,18 +1,45 @@
 <template>
-    <div class="dashboard-container">
-        <el-card class="box-card filter-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="page-title">Tổng quan Báo cáo</span>
-                <el-date-picker v-model="dateRange" type="daterange" range-separator="Đến"
-                    start-placeholder="Ngày bắt đầu" end-placeholder="Ngày kết thúc" @change="fetchDashboardData"
-                    :clearable="false" />
+    <div class="app-page-container">
+        <div class="page-header">
+            <h1 class="page-title">Tổng quan Báo cáo</h1>
+            <div class="filter-controls">
+                    <el-radio-group v-model="quickFilter" @change="handleQuickFilter" size="default">
+                        <el-radio-button label="today">Hôm nay</el-radio-button>
+                        <el-radio-button label="week">7 ngày</el-radio-button>
+                        <el-radio-button label="month">30 ngày</el-radio-button>
+                        <el-radio-button label="custom">Tùy chỉnh</el-radio-button>
+                    </el-radio-group>
+                    <div class="date-filters" v-if="quickFilter === 'custom'">
+                        <el-date-picker
+                            v-model="startDate"
+                            type="date"
+                            placeholder="Từ ngày"
+                            @change="fetchDashboardData"
+                            :clearable="false"
+                            format="DD/MM/YYYY"
+                            value-format="YYYY-MM-DD"
+                        />
+                        <span class="date-separator">đến</span>
+                        <el-date-picker
+                            v-model="endDate"
+                            type="date"
+                            placeholder="Đến ngày"
+                            @change="fetchDashboardData"
+                            :clearable="false"
+                            format="DD/MM/YYYY"
+                            value-format="YYYY-MM-DD"
+                        />
+                    </div>
             </div>
-        </el-card>
+        </div>
 
         <el-row :gutter="20" class="kpi-cards">
-            <el-col :span="8">
-                <el-card shadow="hover">
+            <el-col :span="8" class="animate__animated animate__fadeInUp stagger-item">
+                <el-card shadow="hover" class="kpi-card hover-lift">
                     <div class="kpi-content">
+                        <div class="kpi-icon gradient-primary">
+                            💰
+                        </div>
                         <div class="kpi-text">
                             <div class="kpi-title">Tổng Doanh thu</div>
                             <div class="kpi-value revenue">{{ formatCurrency(profitStats.totalRevenue) }}</div>
@@ -20,9 +47,12 @@
                     </div>
                 </el-card>
             </el-col>
-            <el-col :span="8">
-                <el-card shadow="hover">
+            <el-col :span="8" class="animate__animated animate__fadeInUp stagger-item">
+                <el-card shadow="hover" class="kpi-card hover-lift">
                     <div class="kpi-content">
+                        <div class="kpi-icon gradient-danger">
+                            📦
+                        </div>
                         <div class="kpi-text">
                             <div class="kpi-title">Tổng Chi phí (Giá vốn)</div>
                             <div class="kpi-value cost">{{ formatCurrency(profitStats.totalCostOfGoodsSold) }}</div>
@@ -30,9 +60,12 @@
                     </div>
                 </el-card>
             </el-col>
-            <el-col :span="8">
-                <el-card shadow="hover">
+            <el-col :span="8" class="animate__animated animate__fadeInUp stagger-item">
+                <el-card shadow="hover" class="kpi-card hover-lift">
                     <div class="kpi-content">
+                        <div class="kpi-icon gradient-success">
+                            📈
+                        </div>
                         <div class="kpi-text">
                             <div class="kpi-title">Lợi nhuận</div>
                             <div class="kpi-value profit">{{ formatCurrency(profitStats.totalProfit) }}</div>
@@ -44,18 +77,27 @@
 
         <el-row :gutter="20">
             <el-col :span="16">
-                <el-card class="box-card chart-card" v-loading="loading.revenue">
+                <el-card class="box-card chart-card" v-loading="loading.revenue" data-aos="fade-right" data-aos-delay="200">
                     <template #header>
-                        <span>Doanh thu theo ngày</span>
+                        <div class="chart-header">
+                            <span>Doanh thu theo ngày</span>
+                            <el-radio-group v-model="chartType" size="small">
+                                <el-radio-button label="line">Line</el-radio-button>
+                                <el-radio-button label="bar">Bar</el-radio-button>
+                                <el-radio-button label="area">Area</el-radio-button>
+                            </el-radio-group>
+                        </div>
                     </template>
                     <div class="chart-container">
-                        <LineChart v-if="chartData.revenue.labels.length" :chartData="chartData.revenue" />
+                        <LineChart v-if="chartType === 'line' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
+                        <BarChart v-if="chartType === 'bar' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
+                        <LineChart v-if="chartType === 'area' && chartData.revenue.labels.length" :chartData="chartDataArea" />
                     </div>
                 </el-card>
             </el-col>
 
             <el-col :span="8">
-                <el-card class="box-card chart-card" v-loading="loading.bestSellers">
+                <el-card class="box-card chart-card" v-loading="loading.bestSellers" data-aos="fade-left" data-aos-delay="300">
                     <template #header>
                         <span>Top 5 Sản phẩm (Theo Doanh thu)</span>
                     </template>
@@ -70,47 +112,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import {
-    getProfitReport,
-    getRevenueByDateRange,
-    getBestSellers,
-    getExpensesByDateRange
-} from '@/api/reportService'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { getProfitReport, getRevenueByDateRange, getBestSellers } from '@/api/reportService'
 import { formatCurrency, formatDateISO } from '@/utils/formatters'
 import { useToast } from 'vue-toastification'
+import { getDefaultDateRange, getDateRangeByFilter } from '@/utils/dateHelpers'
+import { createBarChartData } from '@/utils/chartHelpers'
 
-// Import components biểu đồ
 import LineChart from '@/components/charts/LineChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
-// import PieChart from '@/components/charts/PieChart.vue'
 
 const toast = useToast()
 
-// --- State cho Bộ lọc Ngày ---
-const defaultDateRange = () => {
-    const end = new Date()
-    const start = new Date()
-    start.setDate(end.getDate() - 29) // Mặc định 30 ngày
-    return [start, end]
-}
-const dateRange = ref(defaultDateRange())
+const quickFilter = ref('month')
+const chartType = ref('line')
 
-// --- State cho Thẻ KPI ---
+const defaultDates = getDefaultDateRange(30)
+const startDate = ref(formatDateISO(defaultDates[0]))
+const endDate = ref(formatDateISO(defaultDates[1]))
+
+const handleQuickFilter = () => {
+    if (quickFilter.value === 'custom') return
+    
+    const [start, end] = getDateRangeByFilter(quickFilter.value)
+    startDate.value = formatDateISO(start)
+    endDate.value = formatDateISO(end)
+    fetchDashboardData()
+}
+
 const profitStats = ref({
     totalRevenue: 0,
     totalCostOfGoodsSold: 0,
     totalProfit: 0,
 })
 
-// --- State cho Biểu đồ ---
 const chartData = reactive({
     revenue: { labels: [], datasets: [] },
     bestSellers: { labels: [], datasets: [] },
     expenses: { labels: [], datasets: [] },
 })
 
-// --- State Tải (Loading) ---
 const loading = reactive({
     profit: false,
     revenue: false,
@@ -118,7 +159,24 @@ const loading = reactive({
     expenses: false,
 })
 
-// --- Hàm xử lý Data cho Biểu đồ Doanh thu (Line) ---
+const chartDataArea = computed(() => {
+    if (!chartData.revenue.labels.length) return { labels: [], datasets: [] }
+
+    return {
+        labels: chartData.revenue.labels,
+        datasets: [
+            {
+                label: 'Doanh thu',
+                backgroundColor: 'rgba(139, 115, 85, 0.3)',
+                borderColor: '#8B7355',
+                tension: 0.4,
+                fill: true,
+                data: chartData.revenue.datasets[0]?.data || [],
+            },
+        ],
+    }
+})
+
 const processRevenueData = (apiData) => {
     const labels = Object.keys(apiData)
     const data = Object.values(apiData)
@@ -128,40 +186,31 @@ const processRevenueData = (apiData) => {
         datasets: [
             {
                 label: 'Doanh thu',
-                backgroundColor: 'rgba(64, 158, 255, 0.2)',
-                borderColor: '#409EFF',
+                backgroundColor: 'rgba(139, 115, 85, 0.2)',
+                borderColor: '#8B7355',
                 tension: 0.1,
-                fill: true,
+                fill: false,
                 data: data,
             },
         ],
     }
 }
 
-// --- Hàm xử lý Data cho Biểu đồ Bán chạy (Bar) ---
 const processBestSellerData = (apiData) => {
-    const labels = apiData.map(item => item.productName)
-    const data = apiData.map(item => item.totalRevenueGenerated)
-
-    chartData.bestSellers = {
-        labels: labels,
-        datasets: [
-            {
-                label: 'Doanh thu',
-                backgroundColor: ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399'],
-                data: data,
-            },
-        ],
-    }
+    chartData.bestSellers = createBarChartData(
+        apiData.map(item => item.productName),
+        apiData.map(item => item.totalRevenueGenerated),
+        'Doanh thu'
+    )
 }
 
-// --- Hàm Fetch Dữ liệu ---
 const fetchDashboardData = async () => {
-    if (!dateRange.value || dateRange.value.length < 2) {
+    if (!startDate.value || !endDate.value) {
         return;
     }
 
-    const [start, end] = dateRange.value.map(date => formatDateISO(date))
+    const start = formatDateISO(startDate.value)
+    const end = formatDateISO(endDate.value)
 
     // 1. Fetch Profit (KPIs)
     loading.profit = true
@@ -197,7 +246,6 @@ const fetchDashboardData = async () => {
     }
 }
 
-// --- Tải dữ liệu khi component được mounted ---
 onMounted(() => {
     fetchDashboardData()
 })
@@ -213,13 +261,55 @@ onMounted(() => {
     margin-bottom: 20px;
 }
 
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.date-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-separator {
+    font-weight: 600;
+    color: #757575;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
 .kpi-cards {
     margin-bottom: 20px;
+}
+
+.kpi-card {
+    transition: all 0.3s ease;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
 }
 
 .kpi-content {
     display: flex;
     align-items: center;
+    gap: var(--space-4);
+}
+
+.kpi-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    border-radius: var(--radius-xl);
+    flex-shrink: 0;
 }
 
 .kpi-text {
@@ -227,26 +317,28 @@ onMounted(() => {
 }
 
 .kpi-title {
-    font-size: 0.9rem;
-    color: #909399;
-    margin-bottom: 5px;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    font-weight: var(--font-medium);
+    margin-bottom: var(--space-2);
 }
 
 .kpi-value {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.75rem;
+    font-weight: var(--font-bold);
+    margin-bottom: var(--space-1);
 }
 
 .kpi-value.revenue {
-    color: #409EFF;
+    color: var(--info-600);
 }
 
 .kpi-value.cost {
-    color: #F56C6C;
+    color: var(--danger-600);
 }
 
 .kpi-value.profit {
-    color: #67C23A;
+    color: var(--success-600);
 }
 
 .chart-card {
@@ -256,5 +348,17 @@ onMounted(() => {
 .chart-container {
     position: relative;
     height: 350px;
+}
+
+.date-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-separator {
+    font-weight: 600;
+    color: #757575;
+    padding: 0 8px;
 }
 </style>

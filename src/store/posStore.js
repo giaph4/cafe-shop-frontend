@@ -9,14 +9,12 @@ import { checkVoucher } from '@/api/voucherService.js'
 export const usePosStore = defineStore('pos', () => {
     const toast = useToast()
 
-    // --- STATE ---
-    const isModalOpen = ref(false)
+        const isModalOpen = ref(false)
     const isLoading = ref(false)
     const currentTable = ref(null) // Bàn đang được chọn
     const activeOrder = ref(null) // Đơn hàng PENDING (nếu có)
 
-    // --- GETTERS (Computed) ---
-    const isCreating = computed(() => !activeOrder.value && currentTable.value)
+        const isCreating = computed(() => !activeOrder.value && currentTable.value)
     const isEditing = computed(() => !!activeOrder.value)
     const orderItems = computed(() => activeOrder.value?.orderDetails || [])
     const subTotal = computed(() => activeOrder.value?.subTotal || 0)
@@ -24,9 +22,7 @@ export const usePosStore = defineStore('pos', () => {
     const total = computed(() => activeOrder.value?.totalAmount || 0)
     const voucher = computed(() => activeOrder.value?.voucherCode || null)
 
-    // --- ACTIONS ---
-
-    /**
+        /**
      * (Hàm Nội bộ) Tải đơn hàng PENDING hoặc chuẩn bị tạo đơn mới
      */
     async function _loadOrderForTable(table) {
@@ -46,8 +42,7 @@ export const usePosStore = defineStore('pos', () => {
         } catch (error) {
             if (error.response && error.response.status === 404) {
                 // Không tìm thấy đơn PENDING -> Sẵn sàng tạo đơn mới
-                console.log(`Bàn ${table.name} chưa có đơn. Sẵn sàng tạo mới.`);
-            } else {
+                } else {
                 toast.error('Lỗi khi tải đơn hàng của bàn.')
             }
         } finally {
@@ -84,19 +79,18 @@ export const usePosStore = defineStore('pos', () => {
                 type: currentTable.value.id ? 'AT_TABLE' : 'TAKE_AWAY',
                 items: [itemData], // Thêm món đầu tiên ngay khi tạo
             }
-            
+
             // Chỉ thêm tableId nếu có (không phải TAKE_AWAY)
             if (currentTable.value.id) {
                 createRequest.tableId = currentTable.value.id
             }
-            
+
             // Chỉ thêm customerId nếu có
             if (customerId) {
                 createRequest.customerId = customerId
             }
-            
+
             // API: POST /api/v1/orders
-            console.log('Creating order with request:', createRequest)
             const response = await orderService.createOrder(createRequest)
             activeOrder.value = response.data
             toast.success(`Đã tạo đơn #${response.data.id} cho ${currentTable.value.name}`)
@@ -282,17 +276,17 @@ export const usePosStore = defineStore('pos', () => {
                 type: orderData.type,
                 items: orderData.items
             }
-            
+
             // Chỉ thêm tableId nếu có
             if (orderData.tableId) {
                 cleanRequest.tableId = orderData.tableId
             }
-            
+
             // Chỉ thêm customerId nếu có
             if (orderData.customerId) {
                 cleanRequest.customerId = orderData.customerId
             }
-            
+
             const response = await orderService.createOrder(cleanRequest)
             toast.success(`Đã tạo đơn #${response.data.id}`)
             return response.data

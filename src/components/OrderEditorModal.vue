@@ -1,23 +1,42 @@
 <template>
-  <el-dialog :model-value="posStore.isModalOpen" @update:model-value="posStore.closePosModal()" :title="modalTitle"
-    width="95%" top="2vh" :close-on-click-modal="false" class="order-editor-modal">
+  <el-drawer
+    :model-value="posStore.isModalOpen"
+    @update:model-value="posStore.closePosModal()"
+    :title="modalTitle"
+    direction="rtl"
+    size="95%"
+    :close-on-click-modal="false"
+    class="order-editor-drawer">
     <div v-loading="posStore.isLoading">
       <el-row :gutter="20">
         <el-col :span="10">
-          <el-card class="box-card menu-card">
+          <el-card class="menu-card" shadow="hover">
             <template #header>
-              <el-input v-model="productSearch" placeholder="Tìm món..." :prefix-icon="Search" clearable />
+              <div class="menu-card-header">
+                <span class="section-title">🍝 Menu</span>
+                <el-tag type="info" size="small">{{ filteredProducts.length }} món</el-tag>
+              </div>
             </template>
+            <div class="menu-header">
+              <el-input v-model="productSearch" placeholder="Tìm món..." :prefix-icon="Search" clearable />
+              <el-select v-model="selectedCategory" placeholder="Danh mục" clearable class="w-100" style="margin-top: 12px;">
+                <el-option label="Tất cả" :value="null" />
+                <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+              </el-select>
+            </div>
             <div class="product-list">
-              <div v-for="product in filteredProducts" :key="product.id" class="product-item"
-                @click="onProductClick(product)">
-                <el-image :src="product.imageUrl" fit="cover" class="product-item-img">
-                  <template #error>
-                    <div class="image-slot-small">
-                      <Picture />
-                    </div>
-                  </template>
-                </el-image>
+              <div v-for="product in filteredProducts" :key="product.id" 
+                   class="product-item hover-lift"
+                   @click="onProductClick(product)">
+                <el-badge :value="'+1'" class="item-badge" type="success">
+                  <el-image :src="product.imageUrl" fit="cover" class="product-item-img">
+                    <template #error>
+                      <div class="image-slot-small">
+                        <Picture />
+                      </div>
+                    </template>
+                  </el-image>
+                </el-badge>
                 <div class="product-item-info">
                   <div class="product-item-name">{{ product.name }}</div>
                   <div class="product-item-price">{{ formatCurrency(product.price) }}</div>
@@ -28,27 +47,39 @@
         </el-col>
 
         <el-col :span="14">
-          <el-card class="box-card cart-card">
-            <el-tabs v-model="activeTab">
+          <el-card class="box-card cart-card" shadow="hover">
+            <template #header>
+              <div class="cart-card-header">
+                <span class="section-title">🛒 Đơn hàng</span>
+                <el-tag :type="posStore.orderItems.length > 0 ? 'success' : 'info'" size="small">
+                  {{ posStore.orderItems.length }} món
+                </el-tag>
+              </div>
+            </template>
+            <el-tabs v-model="activeTab" class="order-tabs">
               <el-tab-pane label="Chi tiết Đơn hàng" name="cart">
                 <div class="item-list">
                   <div v-if="posStore.orderItems.length === 0" class="empty-cart">
                     <el-empty description="Chưa có món nào. Vui lòng chọn món bên trái." />
                   </div>
 
-                  <div v-else class="cart-item" v-for="item in posStore.orderItems" :key="item.id">
+                  <div v-else class="cart-item" v-for="(item, index) in posStore.orderItems" :key="item.id">
+                    <div class="cart-item-index">{{ index + 1 }}</div>
                     <div class="cart-item-info">
-                      <div class="cart-item-name">{{ item.productName }}</div>
-                      <div class="cart-item-price">{{ formatCurrency(item.priceAtOrder) }}</div>
-                      <el-input v-model="item.notes" placeholder="Ghi chú (ít đá, nhiều đường...)" size="small"
-                        @change="(newNote) => onNoteChange(item.id, newNote)" class="cart-item-notes" />
+                      <div class="cart-item-name">
+                        <el-icon class="item-icon"><Picture /></el-icon>
+                        {{ item.productName }}
+                      </div>
+                      <div class="cart-item-price">{{ formatCurrency(item.priceAtOrder) }} x {{ item.quantity }}</div>
+                      <el-input :model-value="item.notes" placeholder="📝 Ghi chú..." size="small"
+                        @input="(newNote) => onNoteChange(item.id, newNote)" class="cart-item-notes" />
                     </div>
                     <div class="cart-item-actions">
                       <el-input-number :model-value="item.quantity"
                         @change="(newQty) => onQuantityChange(item.id, newQty)" :min="1" size="small"
                         class="cart-item-qty" />
                       <el-button type="danger" plain circle :icon="Trash2" size="small"
-                        @click="posStore.removeItem(item.id)" />
+                        @click="posStore.removeItem(item.id)" class="delete-btn" />
                     </div>
                   </div>
                 </div>
@@ -72,8 +103,18 @@
                       Bạn đã chọn {{ posStore.orderItems.length }} món. Vui lòng chọn bàn để tạo đơn hàng.
                     </template>
                   </el-alert>
+                  <el-input
+                    v-model="tableSearch"
+                    placeholder="Tìm bàn..."
+                    clearable
+                    style="margin-bottom: 20px;"
+                  >
+                    <template #prefix>
+                      <el-icon><Search /></el-icon>
+                    </template>
+                  </el-input>
                   <div class="table-grid-modal">
-                    <el-card v-for="table in availableTables" :key="table.id" class="table-card-modal"
+                    <el-card v-for="table in filteredTables" :key="table.id" class="table-card-modal"
                       :class="getTableClass(table.status)" shadow="hover" @click="onSelectTable(table)">
                       <div class="table-name">{{ table.name }}</div>
                       <div class="table-status">{{ getStatusText(table.status) }}</div>
@@ -128,17 +169,19 @@
             </el-tabs>
 
             <div class="cart-summary">
-              <div class="total-row">
-                <span>Tạm tính:</span>
-                <span>{{ formatCurrency(posStore.subTotal) }}</span>
-              </div>
-              <div class="total-row discount">
-                <span>Giảm giá ({{ posStore.voucher || 'N/A' }}):</span>
-                <span>- {{ formatCurrency(posStore.discount) }}</span>
-              </div>
-              <div class="total-row final-total">
-                <span>TỔNG CỘNG:</span>
-                <span>{{ formatCurrency(posStore.total) }}</span>
+              <div class="summary-gradient">
+                <div class="total-row">
+                  <span>💵 Tạm tính:</span>
+                  <span>{{ formatCurrency(posStore.subTotal) }}</span>
+                </div>
+                <div class="total-row discount" v-if="posStore.discount > 0">
+                  <span>🎟️ Giảm giá:</span>
+                  <span>- {{ formatCurrency(posStore.discount) }}</span>
+                </div>
+                <div class="total-row final-total">
+                  <span>💰 TỔNG CỘNG:</span>
+                  <span>{{ formatCurrency(posStore.total) }}</span>
+                </div>
               </div>
             </div>
 
@@ -146,42 +189,45 @@
         </el-col>
       </el-row>
     </div>
-    <template #footer>
-      <div class="dialog-footer">
-      </div>
-    </template>
-  </el-dialog>
+  </el-drawer>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePosStore } from '@/store/posStore.js'
 import { getAvailableProducts } from '@/api/productService.js'
+import { getAllCategories } from '@/api/categoryService.js'
 import { searchCustomersSimple } from '@/api/customerService.js'
 import { getAllTables } from '@/api/tableService.js'
 import { formatCurrency } from '@/utils/formatters.js'
 import { useToast } from 'vue-toastification'
-// SỬA LỖI: Import icons từ 2 thư viện riêng biệt
 import { Search, Trash2, Ticket, DollarSign, Landmark, CreditCard } from '@/components/icons/index.js'
-import { Picture, Plus, Close } from '@element-plus/icons-vue' // SỬA LỖI: Đổi X thành Close
+import { Picture, Plus, Close } from '@element-plus/icons-vue'
 
 const posStore = usePosStore()
 const toast = useToast()
 
 const activeTab = ref('cart')
 const productSearch = ref('')
+const selectedCategory = ref(null)
+const tableSearch = ref('')
 const allProducts = ref([])
+const categories = ref([])
 const customers = ref([])
 const customerSearchLoading = ref(false)
 const selectedCustomerId = ref(null)
 const voucherInput = ref('')
-const selectedPaymentMethod = ref(null) // Thêm state cho phương thức thanh toán đã chọn
-const availableTables = ref([]) // Danh sách bàn để chọn
+const selectedPaymentMethod = ref(null)
+const availableTables = ref([])
 
 onMounted(async () => {
   try {
     const response = await getAvailableProducts()
     allProducts.value = response.data.content.filter(p => p.available)
+    
+    // Fetch categories
+    const catResponse = await getAllCategories()
+    categories.value = catResponse.data
   } catch (error) {
     toast.error('Lỗi khi tải danh sách món')
   }
@@ -197,11 +243,32 @@ const modalTitle = computed(() => {
 })
 
 const filteredProducts = computed(() => {
-  if (!productSearch.value) {
-    return allProducts.value
+  let result = allProducts.value
+  
+  // Filter by search
+  if (productSearch.value) {
+    result = result.filter(p =>
+      p.name.toLowerCase().includes(productSearch.value.toLowerCase())
+    )
   }
-  return allProducts.value.filter(p =>
-    p.name.toLowerCase().includes(productSearch.value.toLowerCase())
+  
+  // Filter by category
+  if (selectedCategory.value) {
+    const selectedCat = categories.value.find(c => c.id === selectedCategory.value)
+    if (selectedCat) {
+      result = result.filter(p => p.categoryName === selectedCat.name)
+    }
+  }
+  
+  return result
+})
+
+const filteredTables = computed(() => {
+  if (!tableSearch.value) {
+    return availableTables.value
+  }
+  return availableTables.value.filter(t =>
+    t.name.toLowerCase().includes(tableSearch.value.toLowerCase())
   )
 })
 
@@ -218,12 +285,12 @@ const onQuantityChange = (orderDetailId, newQuantity) => {
   posStore.updateItem(orderDetailId, { quantity: newQuantity, notes: null })
 }
 
-let noteTimer = null
 const onNoteChange = (orderDetailId, newNote) => {
-  clearTimeout(noteTimer)
-  noteTimer = setTimeout(() => {
-    posStore.updateItem(orderDetailId, { quantity: 0, notes: newNote })
-  }, 700)
+  // Lưu ngay lập tức, không delay
+  const currentItem = posStore.orderItems.find(item => item.id === orderDetailId)
+  if (currentItem) {
+    posStore.updateItem(orderDetailId, { quantity: currentItem.quantity, notes: newNote })
+  }
 }
 
 let customerTimer = null
@@ -307,7 +374,7 @@ const onSelectTable = async (table) => {
     toast.warning(`Bàn ${table.name} đã được đặt, không thể tạo đơn.`)
     return
   }
-  
+
   const success = await posStore.assignTableAndCreateOrder(table)
   if (success) {
     activeTab.value = 'payment'
@@ -316,92 +383,133 @@ const onSelectTable = async (table) => {
 </script>
 
 <style>
-:deep(.order-editor-modal .el-dialog__body) {
-  padding: 10px 20px 20px 20px;
-  background-color: #f0f2f5;
-  height: 85vh;
+:deep(.order-editor-drawer .el-drawer__body) {
+  padding: 20px;
+  background: #F8F9FA;
+  overflow-y: auto;
 }
 
-:deep(.order-editor-modal .el-dialog__header) {
-  padding: 15px 20px;
-  border-bottom: 1px solid #e4e7ed;
-  margin-right: 0;
+:deep(.order-editor-drawer .el-drawer__header) {
+  padding: 20px;
+  border-bottom: 2px solid #E0E0E0;
+  margin-bottom: 0;
+  background: #FFFFFF;
+}
+
+:deep(.order-editor-drawer .el-drawer__title) {
+  font-size: 1.5rem;
+  font-weight: var(--font-bold);
+  color: var(--primary-700);
 }
 
 .menu-card {
-  height: 80vh;
-  display: flex;
-  flex-direction: column;
+  height: auto;
+  min-height: 600px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
 }
 
-:deep(.menu-card .el-card__body) {
-  padding: 0;
-  flex: 1;
-  overflow-y: hidden;
+.menu-card-header,
+.cart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: var(--font-bold);
+  color: var(--primary-700);
+}
+
+.menu-header {
+  padding: var(--space-4);
+  background: var(--gray-50);
 }
 
 .product-list {
-  height: calc(80vh - 60px);
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 15px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  align-content: start;
 }
 
 .product-item {
   display: flex;
   align-items: center;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  padding: 10px;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  padding: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #FFFFFF;
 }
 
 .product-item:hover {
-  box-shadow: var(--el-box-shadow-light);
-  border-color: var(--el-color-primary);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+  border-color: #2196F3;
+  transform: translateY(-2px);
 }
 
 .product-item-img {
-  width: 50px;
-  height: 50px;
-  border-radius: 4px;
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
   flex-shrink: 0;
+  overflow: hidden;
+  display: block;
+}
+
+:deep(.product-item-img img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .image-slot-small {
-  width: 50px;
-  height: 50px;
-  background: #f5f7fa;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #F5F5F5 0%, #E0E0E0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #c0c4cc;
+  color: #BDBDBD;
+  border-radius: 10px;
 }
 
 .product-item-info {
-  margin-left: 10px;
+  margin-left: 12px;
   overflow: hidden;
+  flex: 1;
 }
 
 .product-item-name {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #212121;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-bottom: 4px;
 }
 
 .product-item-price {
   font-size: 0.9rem;
-  color: #606266;
+  font-weight: 600;
+  color: #2196F3;
 }
 
 .cart-card {
-  height: 80vh;
+  height: auto;
+  min-height: 600px;
   display: flex;
   flex-direction: column;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
 }
 
 :deep(.cart-card .el-card__body) {
@@ -410,6 +518,7 @@ const onSelectTable = async (table) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: #F8F9FA;
 }
 
 :deep(.el-tabs) {
@@ -422,6 +531,31 @@ const onSelectTable = async (table) => {
 :deep(.el-tabs__header) {
   margin: 0;
   padding: 0 20px;
+  background: #FFFFFF;
+  border-bottom: 2px solid #E0E0E0;
+}
+
+:deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+:deep(.el-tabs__item) {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #757575;
+  padding: 0 24px;
+  height: 50px;
+  line-height: 50px;
+}
+
+:deep(.el-tabs__item.is-active) {
+  color: #2196F3;
+  font-weight: 700;
+}
+
+:deep(.el-tabs__active-bar) {
+  height: 3px;
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
 }
 
 :deep(.el-tabs__content) {
@@ -433,6 +567,12 @@ const onSelectTable = async (table) => {
   padding: 20px;
 }
 
+.item-list {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .empty-cart {
   padding-top: 50px;
 }
@@ -441,24 +581,69 @@ const onSelectTable = async (table) => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 15px 0;
-  border-bottom: 1px solid #e4e7ed;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--gray-200);
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-2);
+  transition: all 0.2s ease;
+}
+
+.cart-item:hover {
+  background: var(--gray-50);
+  box-shadow: var(--shadow-sm);
+}
+
+.cart-item-index {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary-100);
+  color: var(--primary-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-bold);
+  font-size: 0.875rem;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
 }
 
 .cart-item-info {
   flex: 1;
-  margin-right: 15px;
+  margin-right: var(--space-4);
 }
 
 .cart-item-name {
-  font-weight: 600;
-  font-size: 1.05rem;
+  font-weight: var(--font-bold);
+  font-size: 1rem;
+  color: var(--gray-900);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.item-icon {
+  color: var(--primary-500);
 }
 
 .cart-item-price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2196F3;
+  margin-bottom: 8px;
+}
+
+.cart-item-notes {
+  margin-top: 8px;
+}
+
+:deep(.cart-item-notes .el-input__wrapper) {
+  background: #F8F9FA;
+  border: 1px solid #E0E0E0;
   font-size: 0.9rem;
-  color: #606266;
-  margin-bottom: 5px;
+  color: #424242;
 }
 
 .cart-item-actions {
@@ -468,44 +653,88 @@ const onSelectTable = async (table) => {
 
 .cart-item-qty {
   width: 100px;
-  margin-right: 10px;
+  margin-right: var(--space-2);
+}
+
+.delete-btn {
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  transform: scale(1.1);
 }
 
 .cart-summary {
-  padding: 20px;
-  border-top: 2px solid #e4e7ed;
+  padding: 0;
+  margin: var(--space-4);
+}
+
+.summary-gradient {
+  padding: var(--space-6);
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
 }
 
 .total-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
-  font-size: 1rem;
+  margin-bottom: var(--space-3);
+  font-size: 1.1rem;
+  font-weight: var(--font-medium);
+  color: var(--gray-700);
+}
+
+.total-row span:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.total-row span:last-child {
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
 }
 
 .total-row.discount span {
-  color: #F56C6C;
+  color: var(--danger-600);
+  font-weight: var(--font-bold);
 }
 
 .total-row.final-total {
-  font-size: 1.7rem;
-  font-weight: 700;
-  color: var(--el-color-primary);
-  border-top: 1px dashed #c0c4cc;
-  padding-top: 10px;
-  margin-top: 10px;
+  font-size: 1.75rem;
+  font-weight: var(--font-bold);
+  color: var(--success-700);
+  border-top: 3px solid var(--success-500);
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
+  background: rgba(255, 255, 255, 0.7);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.total-row.final-total span:last-child {
+  color: var(--success-700);
 }
 
 .payment-methods {
   display: flex;
-  gap: 15px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .payment-methods .el-button {
   flex: 1;
-  height: 60px;
-  font-size: 1rem;
+  height: 70px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 2px solid #E0E0E0;
+}
+
+.payment-methods .el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
 }
 
 .w-100 {
@@ -515,22 +744,38 @@ const onSelectTable = async (table) => {
 .order-actions-bottom {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   padding-top: 20px;
-  border-top: 1px solid #e4e7ed;
+  border-top: 2px solid #E0E0E0;
   margin-top: 20px;
+}
+
+.order-actions-bottom .el-button {
+  font-size: 1rem;
+  font-weight: 700;
+  height: 45px;
+  padding: 0 32px;
+  border-radius: 12px;
 }
 
 .payment-actions-bottom {
   display: flex;
   justify-content: flex-end;
   padding-top: 20px;
-  border-top: 1px solid #e4e7ed;
+  border-top: 2px solid #E0E0E0;
   margin-top: 20px;
 }
 
+.payment-actions-bottom .el-button {
+  font-size: 1.2rem;
+  font-weight: 700;
+  height: 60px;
+  padding: 0 48px;
+  border-radius: 12px;
+}
+
 .table-selection {
-  max-height: calc(80vh - 200px);
+  max-height: 600px;
   overflow-y: auto;
 }
 

@@ -39,17 +39,14 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     name: '',
     capacity: 2,
 }
 const formData = ref({ ...defaultFormData })
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.table)
 
-// --- Validation Rules ---
 const formRules = {
     name: [{ required: true, message: 'Tên bàn là bắt buộc', trigger: 'blur' }],
     capacity: [
@@ -59,7 +56,6 @@ const formRules = {
     ],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -73,12 +69,10 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    await updateTable(props.table.id, tableData)
+                                        await updateTable(props.table.id, tableData)
                     toast.success('Cập nhật bàn thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createTable(tableData)
+                                        await createTable(tableData)
                     toast.success('Tạo bàn mới thành công!')
                 }
 
@@ -95,13 +89,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.table thay đổi ---
 watch(() => props.table, (newTable) => {
     if (newTable) {
         // Đang Edit: Đổ dữ liệu vào form

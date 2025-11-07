@@ -68,3 +68,103 @@ export const exportOrdersToExcel = (startDate, endDate) => {
         responseType: 'blob' // !! Quan trọng: Yêu cầu Axios trả về dạng file Blob
     })
 }
+
+/**
+ * Lấy Top Khách hàng (theo doanh thu)
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ * @param {number} top - Số lượng top (default: 10)
+ */
+export const getTopCustomers = (startDate, endDate, top = 10) => {
+    return apiClient.get('/api/v1/reports/top-customers', {
+        params: { startDate, endDate, top }
+    })
+}
+
+/**
+ * Lấy Hiệu suất Nhân viên
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ * @param {number} top - Số lượng top (default: 10)
+ */
+export const getStaffPerformance = (startDate, endDate, top = 10) => {
+    return apiClient.get('/api/v1/reports/staff-performance', {
+        params: { startDate, endDate, top }
+    })
+}
+
+/**
+ * Lấy Doanh thu theo Danh mục
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ */
+export const getCategorySales = (startDate, endDate) => {
+    return apiClient.get('/api/v1/reports/category-sales', {
+        params: { startDate, endDate }
+    })
+}
+
+/**
+ * Lấy Doanh thu theo Giờ (24 giờ)
+ * @param {string} date - "YYYY-MM-DD"
+ */
+export const getHourlySales = (date) => {
+    return apiClient.get('/api/v1/reports/hourly-sales', {
+        params: { date }
+    })
+}
+
+/**
+ * Lấy Thống kê Phương thức Thanh toán
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ */
+export const getPaymentMethodStats = (startDate, endDate) => {
+    return apiClient.get('/api/v1/reports/payment-method-stats', {
+        params: { startDate, endDate }
+    })
+}
+
+/**
+ * So sánh Doanh thu 2 kỳ
+ * @param {string} currentStart - "YYYY-MM-DD"
+ * @param {string} currentEnd - "YYYY-MM-DD"
+ * @param {string} previousStart - "YYYY-MM-DD"
+ * @param {string} previousEnd - "YYYY-MM-DD"
+ */
+export const getSalesComparison = (currentStart, currentEnd, previousStart, previousEnd) => {
+    return apiClient.get('/api/v1/reports/sales-comparison', {
+        params: { currentStart, currentEnd, previousStart, previousEnd }
+    })
+}
+
+/**
+ * Lấy Doanh thu theo Ngày (single day)
+ * @param {string} date - "YYYY-MM-DD"
+ */
+export const getDailyRevenue = (date) => {
+    return apiClient.get('/api/v1/reports/daily-revenue', {
+        params: { date }
+    })
+}
+
+/**
+ * Xuất file Excel Tồn kho
+ */
+export const exportInventoryToExcel = () => {
+    return apiClient.get('/api/v1/reports/inventory/export', {
+        responseType: 'blob'
+    })
+}
+
+/**
+ * Xuất file Excel Chi phí
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ */
+export const exportExpensesToExcel = (startDate, endDate) => {
+    return apiClient.get('/api/v1/reports/expenses/export', {
+        params: { startDate, endDate },
+        responseType: 'blob'
+    })
+}

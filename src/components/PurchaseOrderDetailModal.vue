@@ -1,6 +1,12 @@
 <template>
-    <el-dialog :model-value="visible" @update:model-value="$emit('update:visible', $event)"
-        title="Chi tiết Phiếu Nhập hàng" width="800px" @open="fetchDetails">
+    <el-dialog 
+        :model-value="visible" 
+        @update:model-value="$emit('update:visible', $event)"
+        title="Chi tiết Phiếu Nhập hàng" 
+        width="1000px" 
+        @open="fetchDetails"
+        destroy-on-close
+        :append-to-body="true">
         <div v-loading="loading">
             <div v-if="po">
                 <el-descriptions :column="2" border>
@@ -26,16 +32,16 @@
 
                 <h3 class="modal-subtitle">Chi tiết Nguyên vật liệu</h3>
                 <el-table :data="po.purchaseOrderDetails" style="width: 100%" border>
-                    <el-table-column type="index" label="#" width="50" />
-                    <el-table-column prop="ingredientName" label="Tên Nguyên vật liệu" />
-                    <el-table-column prop="quantity" label="Số lượng" align="center" />
-                    <el-table-column prop="ingredientUnit" label="Đơn vị" align="center" />
-                    <el-table-column label="Đơn giá" align="right">
+                    <el-table-column type="index" label="#" width="60" align="center" />
+                    <el-table-column prop="ingredientName" label="Tên Nguyên vật liệu" min-width="250" />
+                    <el-table-column prop="quantity" label="Số lượng" align="center" width="120" />
+                    <el-table-column prop="ingredientUnit" label="Đơn vị" align="center" width="120" />
+                    <el-table-column label="Đơn giá" align="right" width="150">
                         <template #default="scope">
                             {{ formatCurrency(scope.row.unitPrice) }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="Thành tiền" align="right">
+                    <el-table-column label="Thành tiền" align="right" width="150">
                         <template #default="scope">
                             {{ formatCurrency(scope.row.lineTotal) }}
                         </template>

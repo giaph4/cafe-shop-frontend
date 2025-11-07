@@ -127,8 +127,7 @@ const routes = [
             }
         ]
     },
-    // --- Trang Public ---
-    {
+        {
         path: '/login',
         name: 'Login',
         component: Login,
@@ -144,7 +143,6 @@ const router = createRouter({
     },
 })
 
-// --- Navigation Guard (Giữ nguyên) ---
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore()
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth)

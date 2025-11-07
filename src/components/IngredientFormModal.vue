@@ -49,7 +49,6 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     name: '',
     unit: 'kg', // Mặc định
@@ -57,10 +56,8 @@ const defaultFormData = {
 }
 const formData = ref({ ...defaultFormData })
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.ingredient)
 
-// --- Validation Rules ---
 const formRules = {
     name: [{ required: true, message: 'Tên nguyên vật liệu là bắt buộc', trigger: 'blur' }],
     unit: [{ required: true, message: 'Đơn vị tính là bắt buộc', trigger: 'blur' }],
@@ -71,7 +68,6 @@ const formRules = {
     ],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -86,12 +82,10 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    await updateIngredient(props.ingredient.id, ingredientData)
+                                        await updateIngredient(props.ingredient.id, ingredientData)
                     toast.success('Cập nhật thông tin thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createIngredient(ingredientData)
+                                        await createIngredient(ingredientData)
                     toast.success('Tạo nguyên vật liệu mới thành công!')
                 }
 
@@ -109,13 +103,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.ingredient thay đổi ---
 watch(() => props.ingredient, (newIngredient) => {
     if (newIngredient) {
         // Đang Edit: Đổ dữ liệu vào form

@@ -20,7 +20,7 @@
         </el-card>
 
         <EasyDataTable v-model:server-options="serverOptions" :server-items-length="serverItemsLength"
-            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#409EFF"
+            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#8B7355"
             buttons-pagination show-index>
             <template #item-quantityOnHand="{ quantityOnHand, unit, reorderLevel }">
                 <el-tag :type="quantityOnHand <= reorderLevel ? 'danger' : 'primary'" effect="light">
@@ -65,7 +65,6 @@ import InventoryAdjustModal from '@/components/InventoryAdjustModal.vue'
 
 const toast = useToast()
 
-// --- State cho Bảng ---
 const items = ref([])
 const loading = ref(true)
 const serverItemsLength = ref(0)
@@ -76,16 +75,13 @@ const serverOptions = ref({
     sortType: 'asc',
 })
 
-// --- State cho Modals ---
 const formModalVisible = ref(false)
 const adjustModalVisible = ref(false)
 const selectedIngredient = ref(null)
 
-// --- State cho Bộ lọc ---
 const searchQuery = ref('')
 let searchTimer = null
 
-// --- Định nghĩa Cột cho Bảng ---
 const headers = [
     { text: "Tên Nguyên vật liệu", value: "name", sortable: true },
     { text: "Tồn kho", value: "quantityOnHand", sortable: true, width: 150 },
@@ -94,7 +90,6 @@ const headers = [
     { text: "Hành động", value: "actions", width: 280 },
 ]
 
-// --- Hàm Tải Dữ liệu Chính ---
 const fetchData = async () => {
     loading.value = true
     try {
@@ -117,7 +112,6 @@ const fetchData = async () => {
     }
 }
 
-// --- Xử lý Tìm kiếm (Debounce) ---
 const debouncedSearch = () => {
     clearTimeout(searchTimer)
     searchTimer = setTimeout(() => {
@@ -126,7 +120,6 @@ const debouncedSearch = () => {
     }, 500)
 }
 
-// --- Xử lý CRUD ---
 const openCreateModal = () => {
     selectedIngredient.value = null
     formModalVisible.value = true
@@ -161,12 +154,10 @@ const handleModalSuccess = () => {
     fetchData() // Tải lại bảng
 }
 
-// --- Theo dõi khi serverOptions thay đổi (click phân trang / sort) ---
 watch(serverOptions, (newValue, oldValue) => {
     fetchData()
 }, { deep: true })
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchData()
 })

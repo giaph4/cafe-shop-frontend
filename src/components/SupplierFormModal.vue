@@ -58,7 +58,6 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     name: '',
     contactPerson: '',
@@ -68,10 +67,8 @@ const defaultFormData = {
 }
 const formData = ref({ ...defaultFormData })
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.supplier)
 
-// --- Validation Rules ---
 // (Sử dụng regex SĐT giống Customer để đảm bảo UX)
 const validatePhone = (rule, value, callback) => {
     const phoneRegex = /^(\+?84|0)\d{9}$/
@@ -90,7 +87,6 @@ const formRules = {
     email: [{ type: 'email', message: 'Định dạng email không hợp lệ', trigger: 'blur' }],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -107,12 +103,10 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    await updateSupplier(props.supplier.id, supplierData)
+                                        await updateSupplier(props.supplier.id, supplierData)
                     toast.success('Cập nhật nhà cung cấp thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createSupplier(supplierData)
+                                        await createSupplier(supplierData)
                     toast.success('Tạo nhà cung cấp mới thành công!')
                 }
 
@@ -121,8 +115,7 @@ const submitForm = async () => {
 
             } catch (error) {
                 // Bắt lỗi 400 (IllegalArgumentException) nếu Tên/SĐT trùng
-                //
-                const msg = error.response?.data?.message || (isEditMode.value ? 'Lỗi khi cập nhật' : 'Lỗi khi tạo mới')
+                                const msg = error.response?.data?.message || (isEditMode.value ? 'Lỗi khi cập nhật' : 'Lỗi khi tạo mới')
                 toast.error(msg)
             } finally {
                 loading.value = false
@@ -131,13 +124,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.supplier thay đổi ---
 watch(() => props.supplier, (newSupplier) => {
     if (newSupplier) {
         // Đang Edit: Đổ dữ liệu vào form

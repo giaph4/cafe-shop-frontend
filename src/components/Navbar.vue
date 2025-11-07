@@ -28,17 +28,17 @@
 
 <script setup>
 import { useAuthStore } from '@/store/auth'
-import { useRouter } from 'vue-router' // Import useRouter
-import { UserCircle, ChevronDown } from '@/components/icons' // Import icon
+import { useRouter } from 'vue-router'
+import { UserCircle, ChevronDown } from '@/components/icons'
 
 const authStore = useAuthStore()
-const router = useRouter() // Khởi tạo router
+const router = useRouter()
 
 const handleCommand = (command) => {
     if (command === 'logout') {
         authStore.logout()
     } else if (command === 'profile') {
-        router.push('/profile') // Chuyển hướng đến trang profile
+        router.push('/profile')
     }
 }
 </script>
@@ -49,8 +49,8 @@ const handleCommand = (command) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #FFFFFF;
-    border-bottom: 1px solid #F5F5F5;
+    background: #FDFCFB;
+    border-bottom: 1px solid #E8E6E3;
     padding: 0 32px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
@@ -79,13 +79,13 @@ const handleCommand = (command) => {
 }
 
 .el-dropdown-link:hover {
-    background: #E3F2FD;
+    background: #EAE7E3;
 }
 
 .user-icon {
     width: 28px;
     height: 28px;
-    color: #2196F3;
+    color: #8B7355;
 }
 
 .user-name {

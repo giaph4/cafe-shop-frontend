@@ -3,13 +3,21 @@ import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import 'bootstrap/dist/css/bootstrap-grid.min.css' // Chỉ dùng grid system
-import './assets/styles/theme.css' // Modern Theme
-import './assets/styles/element-override.css' // Element Plus Override
-import './assets/main.css' // File CSS tùy chỉnh
 import Toast from 'vue-toastification'
-import 'vue-toastification/dist/index.css' // CSS cho Toast (phiên bản @next)
+import VueApexCharts from 'vue3-apexcharts'
+import AOS from 'aos'
+
+import 'element-plus/dist/index.css'
+import 'vue-toastification/dist/index.css'
+import 'bootstrap/dist/css/bootstrap-grid.min.css'
+import 'animate.css'
+import 'aos/dist/aos.css'
+import './assets/styles/design-system.css'
+import './assets/styles/enhanced-animations.css'
+import './assets/styles/theme.css'
+import './assets/styles/element-override.css'
+import './assets/styles/animations.css'
+import './assets/main.css'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -17,11 +25,20 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
+app.use(VueApexCharts)
 app.use(Toast, {
-  transition: "Vue-Toastification__bounce",
+  transition: 'Vue-Toastification__bounce',
   maxToasts: 5,
   newestOnTop: true,
   timeout: 3000
 })
 
 app.mount('#app')
+
+// Initialize AOS
+AOS.init({
+  duration: 800,
+  easing: 'ease-in-out',
+  once: true,
+  offset: 100
+})

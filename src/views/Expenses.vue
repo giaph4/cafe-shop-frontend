@@ -13,16 +13,35 @@
         <el-card class="box-card filter-card mb-3">
             <el-row>
                 <el-col :span="12">
-                    <el-date-picker v-model="filters.dateRange" type="daterange" range-separator="Đến"
-                        start-placeholder="Từ ngày" end-placeholder="Đến ngày" @change="fetchData" :clearable="true"
-                        class="w-100" />
+                    <el-date-picker
+                        v-model="filters.startDate"
+                        type="date"
+                        placeholder="Từ ngày"
+                        @change="fetchData"
+                        :clearable="true"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                        class="w-100"
+                    />
+                </el-col>
+                <el-col :span="6">
+                    <el-date-picker
+                        v-model="filters.endDate"
+                        type="date"
+                        placeholder="Đến ngày"
+                        @change="fetchData"
+                        :clearable="true"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                        class="w-100"
+                    />
                 </el-col>
             </el-row>
         </el-card>
 
         <EasyDataTable v-model:server-options="serverOptions" :server-items-length="serverItemsLength"
-            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#409EFF"
-            buttons-pagination>
+            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#8B7355"
+            buttons-pagination show-index>
             <template #item-expenseDate="{ expenseDate }">
                 {{ new Date(expenseDate).toLocaleDateString('vi-VN') }}
             </template>
@@ -67,7 +86,6 @@ import ExpenseFormModal from '@/components/ExpenseFormModal.vue'
 const toast = useToast()
 const authStore = useAuthStore() // Khởi tạo auth store
 
-// --- State cho Bảng ---
 const items = ref([])
 const loading = ref(true)
 const serverItemsLength = ref(0)
@@ -78,16 +96,14 @@ const serverOptions = ref({
     sortType: 'desc',
 })
 
-// --- State cho Modal ---
 const modalVisible = ref(false)
 const selectedExpense = ref(null)
 
-// --- State cho Bộ lọc ---
 const filters = ref({
-    dateRange: null,
+    startDate: null,
+    endDate: null,
 })
 
-// --- Định nghĩa Cột cho Bảng ---
 const headers = [
     { text: "Ngày chi", value: "expenseDate", sortable: true, width: 120 },
     { text: "Loại chi phí", value: "category", sortable: true, width: 180 },
@@ -97,7 +113,6 @@ const headers = [
     { text: "Hành động", value: "actions", width: 180 },
 ]
 
-// --- Hàm Tải Dữ liệu Chính ---
 const fetchData = async () => {
     loading.value = true
     try {
@@ -106,8 +121,8 @@ const fetchData = async () => {
             size: serverOptions.value.rowsPerPage,
             sort: `${serverOptions.value.sortBy},${serverOptions.value.sortType}`,
             // Lọc
-            startDate: filters.value.dateRange ? formatDateISO(filters.value.dateRange[0]) : null,
-            endDate: filters.value.dateRange ? formatDateISO(filters.value.dateRange[1]) : null,
+            startDate: filters.value.startDate ? formatDateISO(filters.value.startDate) : null,
+            endDate: filters.value.endDate ? formatDateISO(filters.value.endDate) : null,
         }
 
         // API GET /api/v1/expenses
@@ -123,7 +138,6 @@ const fetchData = async () => {
     }
 }
 
-// --- Xử lý CRUD ---
 const openCreateModal = () => {
     selectedExpense.value = null
     modalVisible.value = true
@@ -150,12 +164,10 @@ const handleModalSuccess = () => {
     fetchData() // Tải lại bảng
 }
 
-// --- Theo dõi khi serverOptions thay đổi (click phân trang / sort) ---
 watch(serverOptions, (newValue, oldValue) => {
     fetchData()
 }, { deep: true })
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchData()
 })
@@ -178,5 +190,17 @@ onMounted(() => {
     --easy-table-header-font-size: 14px;
     --easy-table-header-font-weight: 600;
     --easy-table-body-row-font-size: 14px;
+}
+
+.date-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-separator {
+    font-weight: 600;
+    color: #757575;
+    padding: 0 8px;
 }
 </style>

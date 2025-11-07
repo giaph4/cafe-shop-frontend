@@ -27,17 +27,36 @@
                             :value="supplier.id" />
                     </el-select>
                 </el-col>
-                <el-col :span="12">
-                    <el-date-picker v-model="filters.dateRange" type="daterange" range-separator="Đến"
-                        start-placeholder="Từ ngày" end-placeholder="Đến ngày" @change="fetchData" :clearable="true"
-                        class="w-100" />
+                <el-col :span="6">
+                    <el-date-picker
+                        v-model="filters.startDate"
+                        type="date"
+                        placeholder="Từ ngày"
+                        @change="fetchData"
+                        :clearable="true"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                        class="w-100"
+                    />
+                </el-col>
+                <el-col :span="6">
+                    <el-date-picker
+                        v-model="filters.endDate"
+                        type="date"
+                        placeholder="Đến ngày"
+                        @change="fetchData"
+                        :clearable="true"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                        class="w-100"
+                    />
                 </el-col>
             </el-row>
         </el-card>
 
         <EasyDataTable v-model:server-options="serverOptions" :server-items-length="serverItemsLength"
-            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#409EFF"
-            buttons-pagination>
+            :headers="headers" :items="items" :loading="loading" table-class-name="data-table" theme-color="#8B7355"
+            buttons-pagination show-index>
             <template #item-id="{ id }">
                 <strong>#{{ id }}</strong>
             </template>
@@ -96,7 +115,6 @@ import PurchaseOrderDetailModal from '@/components/PurchaseOrderDetailModal.vue'
 const toast = useToast()
 const router = useRouter()
 
-// --- State cho Bảng ---
 const items = ref([])
 const loading = ref(true)
 const serverItemsLength = ref(0)
@@ -107,19 +125,17 @@ const serverOptions = ref({
     sortType: 'desc',
 })
 
-// --- State cho Modal ---
 const detailModalVisible = ref(false)
 const selectedId = ref(null)
 
-// --- State cho Bộ lọc ---
 const filters = ref({
     status: null,
     supplierId: null,
-    dateRange: null,
+    startDate: null,
+    endDate: null,
 })
 const suppliers = ref([]) // Danh sách NCC cho bộ lọc
 
-// --- Định nghĩa Cột cho Bảng ---
 const headers = [
     { text: "Mã Phiếu", value: "id", width: 80 },
     { text: "Nhà cung cấp", value: "supplierName", sortable: true },
@@ -130,7 +146,6 @@ const headers = [
     { text: "Hành động", value: "actions", width: 280, align: 'center' },
 ]
 
-// --- Hàm Tải Dữ liệu Chính ---
 const fetchData = async () => {
     loading.value = true
     try {
@@ -141,8 +156,8 @@ const fetchData = async () => {
             // Lọc
             status: filters.value.status || null,
             supplierId: filters.value.supplierId || null,
-            startDate: filters.value.dateRange ? formatDateISO(filters.value.dateRange[0]) : null,
-            endDate: filters.value.dateRange ? formatDateISO(filters.value.dateRange[1]) : null,
+            startDate: filters.value.startDate || null,
+            endDate: filters.value.endDate || null,
         }
 
         const response = await getAllPurchaseOrders(params)
@@ -156,7 +171,6 @@ const fetchData = async () => {
     }
 }
 
-// --- Tải Danh sách NCC cho Bộ lọc ---
 const fetchSuppliers = async () => {
     try {
         const response = await getAllSuppliers()
@@ -166,7 +180,6 @@ const fetchSuppliers = async () => {
     }
 }
 
-// --- Xử lý Hành động ---
 const goToCreatePage = () => {
     router.push({ name: 'PurchaseOrderCreate' }) // Chuyển đến trang tạo mới
 }
@@ -198,19 +211,16 @@ const handleCancel = async (id) => {
     }
 }
 
-// --- Helper ---
 const statusType = (status) => {
     if (status === 'COMPLETED') return 'success'
     if (status === 'CANCELLED') return 'danger'
     return 'warning' // PENDING
 }
 
-// --- Theo dõi khi phân trang/sort thay đổi ---
 watch(serverOptions, (newValue, oldValue) => {
     fetchData()
 }, { deep: true })
 
-// --- Tải dữ liệu khi trang được mở ---
 onMounted(() => {
     fetchSuppliers()
     fetchData()
@@ -234,5 +244,17 @@ onMounted(() => {
     --easy-table-header-font-size: 14px;
     --easy-table-header-font-weight: 600;
     --easy-table-body-row-font-size: 14px;
+}
+
+.date-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-separator {
+    font-weight: 600;
+    color: #757575;
+    padding: 0 8px;
 }
 </style>

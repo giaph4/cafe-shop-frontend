@@ -54,14 +54,12 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     newQuantityOnHand: 0,
     reason: '',
 }
 const formData = ref({ ...defaultFormData })
 
-// --- Validation Rules ---
 const formRules = {
     // DTO Validation
     newQuantityOnHand: [
@@ -71,7 +69,6 @@ const formRules = {
     reason: [{ required: true, message: 'Lý do là bắt buộc', trigger: 'blur' }],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -101,13 +98,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.ingredient thay đổi ---
 watch(() => props.ingredient, (newIngredient) => {
     if (newIngredient) {
         // Đổ số lượng TỒN KHO CŨ vào form

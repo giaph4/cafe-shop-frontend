@@ -2,41 +2,91 @@
     <div class="app-page-container">
         <div class="page-header">
             <h1 class="page-title">Trung tâm Báo cáo</h1>
-            <el-date-picker v-model="dateRange" type="daterange" range-separator="Đến" start-placeholder="Ngày bắt đầu"
-                end-placeholder="Ngày kết thúc" @change="fetchAllReports" :clearable="false" size="large" />
+            <div class="filter-controls">
+                <el-radio-group v-model="quickFilter" @change="handleQuickFilter" size="default">
+                    <el-radio-button label="today">Hôm nay</el-radio-button>
+                    <el-radio-button label="week">7 ngày</el-radio-button>
+                    <el-radio-button label="month">30 ngày</el-radio-button>
+                    <el-radio-button label="custom">Tùy chỉnh</el-radio-button>
+                </el-radio-group>
+                <div class="date-filters" v-if="quickFilter === 'custom'">
+                    <el-date-picker
+                        v-model="startDate"
+                        type="date"
+                        placeholder="Từ ngày"
+                        @change="fetchAllReports"
+                        :clearable="false"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                    />
+                    <span class="date-separator">đến</span>
+                    <el-date-picker
+                        v-model="endDate"
+                        type="date"
+                        placeholder="Đến ngày"
+                        @change="fetchAllReports"
+                        :clearable="false"
+                        format="DD/MM/YYYY"
+                        value-format="YYYY-MM-DD"
+                    />
+                </div>
+            </div>
         </div>
 
         <el-tabs v-model="activeTab" class="report-tabs">
 
-            <el-tab-pane label="Doanh thu & Lợi nhuận" name="revenue">
+            <el-tab-pane label="📊 Tổng quan" name="revenue">
+                <el-alert type="info" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                        <strong>Hướng dẫn:</strong> Tab này hiển thị tổng quan về doanh thu, lợi nhuận và các chỉ số kinh doanh quan trọng trong khoảng thời gian đã chọn.
+                    </template>
+                </el-alert>
+
                 <el-row :gutter="20" class="kpi-cards" v-loading="loading.profit">
-                    <el-col :span="8">
-                        <el-card shadow="hover">
+                    <el-col :span="6">
+                        <el-card shadow="hover" class="kpi-card">
                             <div class="kpi-content">
+                                <div class="kpi-icon revenue-icon">💰</div>
                                 <div class="kpi-text">
                                     <div class="kpi-title">Tổng Doanh thu</div>
                                     <div class="kpi-value revenue">{{ formatCurrency(profitStats.totalRevenue) }}</div>
+                                    <div class="kpi-desc">Tổng tiền thu được từ bán hàng</div>
                                 </div>
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="8">
-                        <el-card shadow="hover">
+                    <el-col :span="6">
+                        <el-card shadow="hover" class="kpi-card">
                             <div class="kpi-content">
+                                <div class="kpi-icon cost-icon">📦</div>
                                 <div class="kpi-text">
-                                    <div class="kpi-title">Tổng Giá vốn (COGS)</div>
-                                    <div class="kpi-value cost">{{ formatCurrency(profitStats.totalCostOfGoodsSold) }}
-                                    </div>
+                                    <div class="kpi-title">Giá vốn hàng bán</div>
+                                    <div class="kpi-value cost">{{ formatCurrency(profitStats.totalCostOfGoodsSold) }}</div>
+                                    <div class="kpi-desc">Chi phí nguyên vật liệu</div>
                                 </div>
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="8">
-                        <el-card shadow="hover">
+                    <el-col :span="6">
+                        <el-card shadow="hover" class="kpi-card">
                             <div class="kpi-content">
+                                <div class="kpi-icon profit-icon">📈</div>
                                 <div class="kpi-text">
-                                    <div class="kpi-title">Lợi nhuận</div>
+                                    <div class="kpi-title">Lợi nhuận gộp</div>
                                     <div class="kpi-value profit">{{ formatCurrency(profitStats.totalProfit) }}</div>
+                                    <div class="kpi-desc">Doanh thu - Giá vốn</div>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="6">
+                        <el-card shadow="hover" class="kpi-card">
+                            <div class="kpi-content">
+                                <div class="kpi-icon margin-icon">📊</div>
+                                <div class="kpi-text">
+                                    <div class="kpi-title">Tỷ suất lợi nhuận</div>
+                                    <div class="kpi-value margin">{{ profitMargin }}%</div>
+                                    <div class="kpi-desc">Lợi nhuận / Doanh thu</div>
                                 </div>
                             </div>
                         </el-card>
@@ -45,9 +95,20 @@
                 <el-row :gutter="20">
                     <el-col :span="16">
                         <el-card class="box-card chart-card" v-loading="loading.revenue">
-                            <template #header><span>Doanh thu theo ngày</span></template>
+                            <template #header>
+                                <div class="chart-header">
+                                    <span>Doanh thu theo ngày</span>
+                                    <el-radio-group v-model="chartType" size="small">
+                                        <el-radio-button label="line">Line</el-radio-button>
+                                        <el-radio-button label="bar">Bar</el-radio-button>
+                                        <el-radio-button label="area">Area</el-radio-button>
+                                    </el-radio-group>
+                                </div>
+                            </template>
                             <div class="chart-container">
-                                <LineChart v-if="chartData.revenue.labels.length" :chartData="chartData.revenue" />
+                                <LineChart v-if="chartType === 'line' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
+                                <BarChart v-if="chartType === 'bar' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
+                                <LineChart v-if="chartType === 'area' && chartData.revenue.labels.length" :chartData="chartDataArea" />
                             </div>
                         </el-card>
                     </el-col>
@@ -61,9 +122,89 @@
                         </el-card>
                     </el-col>
                 </el-row>
+
+                <el-row :gutter="20" style="margin-top: 20px;">
+                    <el-col :span="12">
+                        <el-card class="box-card chart-card">
+                            <template #header>
+                                <div class="chart-header">
+                                    <span>📅 Thống kê theo giờ trong ngày</span>
+                                    <el-tag type="info" size="small">Giờ cao điểm</el-tag>
+                                </div>
+                            </template>
+                            <div class="chart-container">
+                                <BarChart v-if="chartData.hourly.labels.length" :chartData="chartData.hourly" />
+                            </div>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="summary-label">Giờ bận nhất:</span>
+                                    <span class="summary-value">{{ peakHour }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Tổng đơn:</span>
+                                    <span class="summary-value">{{ totalHourlyOrders }} đơn</span>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-card class="box-card chart-card">
+                            <template #header>
+                                <div class="chart-header">
+                                    <span>📊 Doanh thu theo Danh mục</span>
+                                    <el-tag type="success" size="small">Real-time</el-tag>
+                                </div>
+                            </template>
+                            <div class="chart-container" v-loading="loading.categories">
+                                <BarChart v-if="chartData.categories.labels.length" :chartData="chartData.categories" />
+                            </div>
+                        </el-card>
+                    </el-col>
+                </el-row>
             </el-tab-pane>
 
-            <el-tab-pane label="Chi phí" name="expenses">
+            <el-tab-pane label="☕ Sản phẩm" name="products">
+                <el-alert type="success" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                        <strong>Phân tích sản phẩm:</strong> Xem sản phẩm nào bán chạy nhất, danh mục nào có doanh thu cao để tối ưu menu và kho hàng.
+                    </template>
+                </el-alert>
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-card class="box-card chart-card" v-loading="loading.bestSellers">
+                            <template #header>
+                                <div class="chart-header">
+                                    <span>Top 10 Sản phẩm bán chạy (Số lượng)</span>
+                                    <el-tag type="primary" size="small">Real API</el-tag>
+                                </div>
+                            </template>
+                            <div class="chart-container">
+                                <BarChart v-if="chartData.topProducts.labels.length" :chartData="chartData.topProducts" />
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-card class="box-card chart-card" v-loading="loading.categories">
+                            <template #header>
+                                <div class="chart-header">
+                                    <span>Doanh thu theo Danh mục</span>
+                                    <el-tag type="success" size="small">Real API</el-tag>
+                                </div>
+                            </template>
+                            <div class="chart-container">
+                                <BarChart v-if="chartData.categories.labels.length" :chartData="chartData.categories" />
+                            </div>
+                        </el-card>
+                    </el-col>
+                </el-row>
+            </el-tab-pane>
+
+            <el-tab-pane label="💸 Chi phí" name="expenses">
+                <el-alert type="warning" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                        <strong>Quản lý chi phí:</strong> Theo dõi các khoản chi phí vận hành hàng ngày để kiểm soát ngân sách và tối ưu lợi nhuận.
+                    </template>
+                </el-alert>
                 <el-card class="box-card chart-card" v-loading="loading.expenses">
                     <template #header><span>Chi phí theo ngày (Cột chồng)</span></template>
                     <div class="chart-container" style="height: 500px;">
@@ -72,7 +213,12 @@
                 </el-card>
             </el-tab-pane>
 
-            <el-tab-pane label="Tồn kho" name="inventory">
+            <el-tab-pane label="📦 Tồn kho" name="inventory">
+                <el-alert type="error" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                        <strong>Cảnh báo tồn kho:</strong> Kiểm tra nguyên vật liệu sắp hết để đặt hàng kịp thời, tránh gián đoạn kinh doanh.
+                    </template>
+                </el-alert>
                 <el-card class="box-card" v-loading="loading.inventory">
                     <template #header>
                         <div class="d-flex justify-content-between align-items-center">
@@ -91,21 +237,243 @@
                 </el-card>
             </el-tab-pane>
 
-            <el-tab-pane label="Xuất Excel" name="export">
-                <el-card class="box-card" style="width: 500px; margin: 0 auto; text-align: center;">
-                    <template #header><span>Xuất Báo cáo Đơn hàng</span></template>
-                    <p>Chọn khoảng thời gian bạn muốn xuất file Excel.</p>
-                    <el-date-picker v-model="exportDateRange" type="daterange" range-separator="Đến"
-                        start-placeholder="Từ ngày" end-placeholder="Đến ngày" class="w-100"
-                        style="margin-bottom: 20px;" />
-                    <el-button type="success" size="large" @click="handleExportExcel" :loading="loading.exporting"
-                        class="w-100">
-                        <el-icon style="margin-right: 8px;">
-                            <Download />
-                        </el-icon>
-                        Tải xuống file Excel
-                    </el-button>
-                </el-card>
+            <el-tab-pane label="👥 Khách hàng & Nhân viên" name="people">
+                <el-alert type="success" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                        <strong>Phân tích con người:</strong> Xem khách hàng VIP và nhân viên xuất sắc để có chiến lược chăm sóc và khen thưởng phù hợp.
+                    </template>
+                </el-alert>
+                
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-card class="box-card" v-loading="loading.customers">
+                            <template #header>
+                                <div class="chart-header">
+                                    <span>👑 Top 10 Khách hàng VIP</span>
+                                    <el-tag type="warning" size="small">Theo doanh thu</el-tag>
+                                </div>
+                            </template>
+                            <el-table :data="topCustomers" style="width: 100%" border max-height="500">
+                                <el-table-column type="index" label="#" width="50" align="center">
+                                    <template #default="scope">
+                                        <el-tag v-if="scope.$index === 0" type="warning" size="small">🥇</el-tag>
+                                        <el-tag v-else-if="scope.$index === 1" type="info" size="small">🥈</el-tag>
+                                        <el-tag v-else-if="scope.$index === 2" type="success" size="small">🥉</el-tag>
+                                        <span v-else>{{ scope.$index + 1 }}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="customerName" label="Tên khách hàng" min-width="150" />
+                                <el-table-column label="SĐT" width="130">
+                                    <template #default="scope">
+                                        <span v-if="scope.row.customerPhone || scope.row.phone">
+                                            {{ scope.row.customerPhone || scope.row.phone }}
+                                        </span>
+                                        <el-tag v-else type="info" size="small">Chưa có</el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="totalOrders" label="Số đơn" width="80" align="center" sortable />
+                                <el-table-column prop="totalSpent" label="Tổng chi tiêu" width="150" align="right" sortable>
+                                    <template #default="scope">
+                                        <strong style="color: #8B7355;">{{ formatCurrency(scope.row.totalSpent) }}</strong>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="averageOrderValue" label="TB/Đơn" width="120" align="right">
+                                    <template #default="scope">
+                                        {{ formatCurrency(scope.row.averageOrderValue) }}
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-card>
+                    </el-col>
+                    
+                    <el-col :span="12">
+                        <el-card class="box-card" v-loading="loading.staff">
+                            <template #header>
+                                <div class="chart-header">
+                                    <span>🏆 Hiệu suất Nhân viên</span>
+                                    <el-tag type="success" size="small">Leaderboard</el-tag>
+                                </div>
+                            </template>
+                            <el-table :data="staffPerformance" style="width: 100%" border max-height="500">
+                                <el-table-column type="index" label="#" width="50" align="center">
+                                    <template #default="scope">
+                                        <el-tag v-if="scope.$index === 0" type="danger" size="small">⭐</el-tag>
+                                        <span v-else>{{ scope.$index + 1 }}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="fullName" label="Nhân viên" min-width="150">
+                                    <template #default="scope">
+                                        <div>
+                                            <div style="font-weight: 600;">{{ scope.row.fullName }}</div>
+                                            <div style="font-size: 0.85em; color: #909399;">@{{ scope.row.username }}</div>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="totalOrders" label="Số đơn" width="80" align="center" sortable />
+                                <el-table-column prop="totalRevenue" label="Doanh thu" width="150" align="right" sortable>
+                                    <template #default="scope">
+                                        <strong style="color: #67C23A;">{{ formatCurrency(scope.row.totalRevenue) }}</strong>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="averageOrderValue" label="TB/Đơn" width="120" align="right">
+                                    <template #default="scope">
+                                        {{ formatCurrency(scope.row.averageOrderValue) }}
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-card>
+                    </el-col>
+                </el-row>
+            </el-tab-pane>
+
+            <el-tab-pane label="💳 Phương thức Thanh toán" name="payment">
+                <el-alert type="warning" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                        <strong>Phân tích thanh toán:</strong> Hiểu rõ khách hàng thích thanh toán bằng cách nào để chuẩn bị đầy đủ phương thức.
+                    </template>
+                </el-alert>
+                
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-card class="box-card chart-card" v-loading="loading.paymentMethods">
+                            <template #header><span>Biểu đồ Phương thức Thanh toán</span></template>
+                            <div class="chart-container">
+                                <PieChart v-if="chartData.paymentMethods.labels.length" :chartData="chartData.paymentMethods" />
+                            </div>
+                        </el-card>
+                    </el-col>
+                    
+                    <el-col :span="12">
+                        <el-card class="box-card" v-loading="loading.paymentMethods">
+                            <template #header><span>Chi tiết Thống kê</span></template>
+                            <el-table :data="paymentMethodStats" style="width: 100%" border>
+                                <el-table-column label="Phương thức" width="150">
+                                    <template #default="scope">
+                                        <el-tag v-if="scope.row.paymentMethod === 'CASH'" type="success">💵 Tiền mặt</el-tag>
+                                        <el-tag v-else-if="scope.row.paymentMethod === 'TRANSFER'" type="primary">🏦 Chuyển khoản</el-tag>
+                                        <el-tag v-else-if="scope.row.paymentMethod === 'CARD'" type="warning">💳 Thẻ</el-tag>
+                                        <el-tag v-else type="info">{{ scope.row.paymentMethod }}</el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="orderCount" label="Số đơn" width="100" align="center" sortable />
+                                <el-table-column prop="totalAmount" label="Tổng tiền" align="right" sortable>
+                                    <template #default="scope">
+                                        <strong>{{ formatCurrency(scope.row.totalAmount) }}</strong>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="percentage" label="Tỷ lệ" width="100" align="center" sortable>
+                                    <template #default="scope">
+                                        <el-progress :percentage="scope.row.percentage" :stroke-width="12" :show-text="false" />
+                                        <div style="margin-top: 4px; font-weight: 600;">{{ scope.row.percentage.toFixed(1) }}%</div>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-card>
+                    </el-col>
+                </el-row>
+            </el-tab-pane>
+
+            <el-tab-pane label="📥 Xuất Excel" name="export">
+                <el-alert type="info" :closable="false" style="margin-bottom: 20px;">
+                    <template #title>
+                        <strong>Xuất báo cáo:</strong> Tải xuống file Excel chứa chi tiết để phân tích offline hoặc lưu trữ.
+                    </template>
+                </el-alert>
+                
+                <el-row :gutter="20">
+                    <el-col :span="8">
+                        <el-card class="box-card export-card">
+                            <template #header>
+                                <div style="text-align: center;">
+                                    <span style="font-size: 2rem;">📋</span>
+                                    <div style="margin-top: 8px; font-weight: 600;">Đơn hàng</div>
+                                </div>
+                            </template>
+                            <div style="text-align: center;">
+                                <p>Xuất danh sách đơn hàng chi tiết</p>
+                                <div class="date-filters" style="margin-bottom: 20px; flex-direction: column;">
+                                    <el-date-picker
+                                        v-model="exportStartDate"
+                                        type="date"
+                                        placeholder="Từ ngày"
+                                        format="DD/MM/YYYY"
+                                        value-format="YYYY-MM-DD"
+                                        style="width: 100%; margin-bottom: 8px;"
+                                    />
+                                    <el-date-picker
+                                        v-model="exportEndDate"
+                                        type="date"
+                                        placeholder="Đến ngày"
+                                        format="DD/MM/YYYY"
+                                        value-format="YYYY-MM-DD"
+                                        style="width: 100%;"
+                                    />
+                                </div>
+                                <el-button type="success" @click="handleExportExcel" :loading="loading.exporting" style="width: 100%;">
+                                    <el-icon style="margin-right: 8px;"><Download /></el-icon>
+                                    Tải xuống
+                                </el-button>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    
+                    <el-col :span="8">
+                        <el-card class="box-card export-card">
+                            <template #header>
+                                <div style="text-align: center;">
+                                    <span style="font-size: 2rem;">📦</span>
+                                    <div style="margin-top: 8px; font-weight: 600;">Tồn kho</div>
+                                </div>
+                            </template>
+                            <div style="text-align: center;">
+                                <p>Xuất báo cáo tồn kho hiện tại</p>
+                                <div style="height: 88px; display: flex; align-items: center; justify-content: center; color: #909399;">
+                                    Xuất tất cả nguyên vật liệu
+                                </div>
+                                <el-button type="primary" @click="handleExportInventory" :loading="loading.exporting" style="width: 100%;">
+                                    <el-icon style="margin-right: 8px;"><Download /></el-icon>
+                                    Tải xuống
+                                </el-button>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    
+                    <el-col :span="8">
+                        <el-card class="box-card export-card">
+                            <template #header>
+                                <div style="text-align: center;">
+                                    <span style="font-size: 2rem;">💸</span>
+                                    <div style="margin-top: 8px; font-weight: 600;">Chi phí</div>
+                                </div>
+                            </template>
+                            <div style="text-align: center;">
+                                <p>Xuất danh sách chi phí theo kỳ</p>
+                                <div class="date-filters" style="margin-bottom: 20px; flex-direction: column;">
+                                    <el-date-picker
+                                        v-model="exportStartDate"
+                                        type="date"
+                                        placeholder="Từ ngày"
+                                        format="DD/MM/YYYY"
+                                        value-format="YYYY-MM-DD"
+                                        style="width: 100%; margin-bottom: 8px;"
+                                    />
+                                    <el-date-picker
+                                        v-model="exportEndDate"
+                                        type="date"
+                                        placeholder="Đến ngày"
+                                        format="DD/MM/YYYY"
+                                        value-format="YYYY-MM-DD"
+                                        style="width: 100%;"
+                                    />
+                                </div>
+                                <el-button type="warning" @click="handleExportExpenses" :loading="loading.exporting" style="width: 100%;">
+                                    <el-icon style="margin-right: 8px;"><Download /></el-icon>
+                                    Tải xuống
+                                </el-button>
+                            </div>
+                        </el-card>
+                    </el-col>
+                </el-row>
             </el-tab-pane>
 
         </el-tabs>
@@ -113,9 +481,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useToast } from 'vue-toastification'
-import { saveAs } from 'file-saver' // Import thư viện mới
+import { saveAs } from 'file-saver'
 import { Download } from '@element-plus/icons-vue'
 import {
     getProfitReport,
@@ -123,39 +491,65 @@ import {
     getBestSellers,
     getExpensesByDateRange,
     getInventoryReport,
-    exportOrdersToExcel
+    exportOrdersToExcel,
+    getTopCustomers,
+    getStaffPerformance,
+    getCategorySales,
+    getHourlySales,
+    getPaymentMethodStats,
+    exportInventoryToExcel,
+    exportExpensesToExcel
 } from '@/api/reportService.js'
 import { formatCurrency, formatDateISO, formatStackedBarChartData } from '@/utils/formatters.js'
+import { getDefaultDateRange, getDateRangeByFilter } from '@/utils/dateHelpers'
+import { createBarChartData, createPieChartData } from '@/utils/chartHelpers'
+import { getChartColors } from '@/utils/chartColors'
 
-// Import components biểu đồ
+
 import LineChart from '@/components/charts/LineChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
-import StackedBarChart from '@/components/charts/StackedBarChart.vue' // (MỚI)
+import StackedBarChart from '@/components/charts/StackedBarChart.vue'
+import PieChart from '@/components/charts/PieChart.vue'
 
 const toast = useToast()
 const activeTab = ref('revenue')
+const quickFilter = ref('month')
+const chartType = ref('line')
 
-// --- State cho Bộ lọc Ngày (Chung) ---
-const defaultDateRange = () => {
-    const end = new Date()
-    const start = new Date()
-    start.setDate(end.getDate() - 29) // Mặc định 30 ngày
-    return [start, end]
+const defaultDates = getDefaultDateRange(30)
+const startDate = ref(formatDateISO(defaultDates[0]))
+const endDate = ref(formatDateISO(defaultDates[1]))
+
+const handleQuickFilter = () => {
+    if (quickFilter.value === 'custom') return
+    
+    const [start, end] = getDateRangeByFilter(quickFilter.value)
+    startDate.value = formatDateISO(start)
+    endDate.value = formatDateISO(end)
+    fetchAllReports()
 }
-const dateRange = ref(defaultDateRange())
 
-// --- State cho Dữ liệu ---
 const profitStats = ref({ totalRevenue: 0, totalCostOfGoodsSold: 0, totalProfit: 0 })
 const inventory = ref([])
 const lowStockOnly = ref(false)
-const exportDateRange = ref(defaultDateRange())
+const exportStartDate = ref(formatDateISO(defaultDates[0]))
+const exportEndDate = ref(formatDateISO(defaultDates[1]))
+const hourlyStats = ref([])
+const topCustomers = ref([])
+const staffPerformance = ref([])
+const paymentMethodStats = ref([])
+
 const chartData = reactive({
     revenue: { labels: [], datasets: [] },
     bestSellers: { labels: [], datasets: [] },
     expenses: { labels: [], datasets: [] },
+    topProducts: { labels: [], datasets: [] },
+    categories: { labels: [], datasets: [] },
+    hourly: { labels: [], datasets: [] },
+    tables: { labels: [], datasets: [] },
+    paymentMethods: { labels: [], datasets: [] },
 })
 
-// --- State Tải (Loading) ---
 const loading = reactive({
     profit: false,
     revenue: false,
@@ -163,37 +557,92 @@ const loading = reactive({
     expenses: false,
     inventory: false,
     exporting: false,
+    customers: false,
+    staff: false,
+    hourly: false,
+    categories: false,
+    paymentMethods: false,
 })
 
-// --- Hàm xử lý Data cho Biểu đồ (Copy từ Dashboard.vue) ---
+const profitMargin = computed(() => {
+    if (!profitStats.value || !profitStats.value.totalRevenue || profitStats.value.totalRevenue === 0) return '0.00'
+    try {
+        const margin = (profitStats.value.totalProfit / profitStats.value.totalRevenue) * 100
+        return margin.toFixed(2)
+    } catch (e) {
+        return '0.00'
+    }
+})
+
+const peakHour = computed(() => {
+    if (!hourlyStats.value || !hourlyStats.value.length) return 'N/A'
+    try {
+        const peak = hourlyStats.value.reduce((max, curr) => 
+            (curr.orders > max.orders) ? curr : max
+        )
+        return peak?.hour || 'N/A'
+    } catch (e) {
+        return 'N/A'
+    }
+})
+
+const totalHourlyOrders = computed(() => {
+    if (!hourlyStats.value || !hourlyStats.value.length) return 0
+    try {
+        return hourlyStats.value.reduce((sum, curr) => sum + (curr.orders || 0), 0)
+    } catch (e) {
+        return 0
+    }
+})
+
+const chartDataArea = computed(() => {
+    if (!chartData.revenue.labels.length) return { labels: [], datasets: [] }
+
+    return {
+        labels: chartData.revenue.labels,
+        datasets: [
+            {
+                label: 'Doanh thu',
+                backgroundColor: 'rgba(139, 115, 85, 0.3)',
+                borderColor: '#8B7355',
+                tension: 0.4,
+                fill: true,
+                data: chartData.revenue.datasets[0]?.data || [],
+            },
+        ],
+    }
+})
+
 const processRevenueData = (apiData) => {
     chartData.revenue = {
         labels: Object.keys(apiData),
         datasets: [{
             label: 'Doanh thu',
-            backgroundColor: 'rgba(64, 158, 255, 0.2)',
-            borderColor: '#409EFF',
+            backgroundColor: 'rgba(139, 115, 85, 0.2)',
+            borderColor: '#8B7355',
             tension: 0.1,
-            fill: true,
+            fill: false,
             data: Object.values(apiData),
         }],
     }
 }
 const processBestSellerData = (apiData) => {
-    chartData.bestSellers = {
-        labels: apiData.map(item => item.productName),
-        datasets: [{
-            label: 'Doanh thu',
-            backgroundColor: ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399'],
-            data: apiData.map(item => item.totalRevenueGenerated),
-        }],
+    if (!apiData || !apiData.length) {
+        chartData.bestSellers = { labels: [], datasets: [] }
+        return
     }
+    
+    chartData.bestSellers = createBarChartData(
+        apiData.map(item => item.productName),
+        apiData.map(item => item.totalRevenueGenerated),
+        'Doanh thu'
+    )
 }
 
-// --- Hàm Fetch Dữ liệu (Tất cả) ---
 const fetchAllReports = async () => {
-    if (!dateRange.value || dateRange.value.length < 2) return;
-    const [start, end] = dateRange.value.map(date => formatDateISO(date))
+    if (!startDate.value || !endDate.value) return;
+    const start = formatDateISO(startDate.value)
+    const end = formatDateISO(endDate.value)
 
     // 1. Fetch Profit (KPIs)
     loading.profit = true
@@ -222,9 +671,14 @@ const fetchAllReports = async () => {
         .then(res => { chartData.expenses = formatStackedBarChartData(res.data) })
         .catch(() => toast.error('Lỗi tải biểu đồ chi phí'))
         .finally(() => { loading.expenses = false })
+    
+    // 5. Fetch Category Sales
+    fetchCategorySales()
+    
+    // 6. Fetch Top Products by Quantity
+    fetchTopProducts()
 }
 
-// --- Hàm Fetch Tồn kho (Riêng vì không phụ thuộc ngày) ---
 const fetchInventoryData = async () => {
     loading.inventory = true
     try {
@@ -238,25 +692,104 @@ const fetchInventoryData = async () => {
     }
 }
 
-// --- Xử lý Xuất Excel ---
+const fetchHourlySales = async () => {
+    loading.hourly = true
+    try {
+        const today = new Date().toISOString().split('T')[0]
+        const response = await getHourlySales(today)
+        const data = response.data
+        
+        hourlyStats.value = data.map(item => ({
+            hour: `${item.hour}:00`,
+            orders: item.orderCount,
+            revenue: item.revenue
+        }))
+
+        chartData.hourly = {
+            labels: hourlyStats.value.map(h => h.hour),
+            datasets: [
+                {
+                    label: 'Số đơn hàng',
+                    backgroundColor: '#8B7355',
+                    borderColor: '#8B7355',
+                    data: hourlyStats.value.map(h => h.orders),
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'Doanh thu (triệu đồng)',
+                    backgroundColor: '#A68A6D',
+                    borderColor: '#A68A6D',
+                    data: hourlyStats.value.map(h => Math.round(h.revenue / 1000000)),
+                    yAxisID: 'y1',
+                }
+            ]
+        }
+    } catch (error) {
+        toast.error('Lỗi tải dữ liệu theo giờ')
+    } finally {
+        loading.hourly = false
+    }
+}
+
+const fetchTopProducts = async () => {
+    loading.bestSellers = true
+    try {
+        const start = formatDateISO(startDate.value)
+        const end = formatDateISO(endDate.value)
+        const response = await getBestSellers(start, end, 10, 'quantity')
+        const data = response.data
+        
+        chartData.topProducts = createBarChartData(
+            data.map(item => item.productName),
+            data.map(item => item.totalQuantitySold),
+            'Số lượng bán'
+        )
+    } catch (error) {
+        console.error('Error fetching top products:', error)
+        toast.error('Lỗi tải top sản phẩm theo số lượng')
+        chartData.topProducts = { labels: [], datasets: [] }
+    } finally {
+        loading.bestSellers = false
+    }
+}
+
+const fetchCategorySales = async () => {
+    loading.categories = true
+    try {
+        const start = formatDateISO(startDate.value)
+        const end = formatDateISO(endDate.value)
+        const response = await getCategorySales(start, end)
+        const data = response.data
+        
+        chartData.categories = createBarChartData(
+            data.map(item => item.categoryName),
+            data.map(item => item.totalRevenue),
+            'Doanh thu'
+        )
+    } catch (error) {
+        console.error('Error fetching category sales:', error)
+        toast.error('Lỗi tải dữ liệu danh mục')
+        chartData.categories = { labels: [], datasets: [] }
+    } finally {
+        loading.categories = false
+    }
+}
+
 const handleExportExcel = async () => {
-    if (!exportDateRange.value || exportDateRange.value.length < 2) {
+    if (!exportStartDate.value || !exportEndDate.value) {
         toast.error('Vui lòng chọn khoảng ngày để xuất file.')
         return
     }
 
-    const [start, end] = exportDateRange.value.map(date => formatDateISO(date))
+    const start = exportStartDate.value
+    const end = exportEndDate.value
     loading.exporting = true
 
     try {
-        // API: GET /api/v1/reports/orders/export
         const response = await exportOrdersToExcel(start, end)
-
-        // Tạo tên file
         const filename = `Orders_${start}_to_${end}.xlsx`
-        // Dùng file-saver để tải file blob
         saveAs(new Blob([response.data]), filename)
-
+        toast.success('Xuất file thành công!')
     } catch (error) {
         toast.error('Lỗi khi xuất file Excel.')
     } finally {
@@ -264,18 +797,102 @@ const handleExportExcel = async () => {
     }
 }
 
-// --- Tô màu hàng Tồn kho ---
-const inventoryRowClass = (row) => {
-    if (row.quantityOnHand <= row.reorderLevel) {
+const inventoryRowClass = ({ row }) => {
+    if (!row) return ''
+    if ((row.quantityOnHand !== undefined && row.reorderLevel !== undefined) &&
+        (row.quantityOnHand <= row.reorderLevel)) {
         return 'row-danger'
     }
     return ''
 }
 
-// --- Tải dữ liệu khi trang được mở ---
+const fetchTopCustomers = async () => {
+    loading.customers = true
+    try {
+        const start = formatDateISO(startDate.value)
+        const end = formatDateISO(endDate.value)
+        const response = await getTopCustomers(start, end, 10)
+        topCustomers.value = response.data
+    } catch (error) {
+        toast.error('Lỗi tải top khách hàng')
+    } finally {
+        loading.customers = false
+    }
+}
+
+const fetchStaffPerformance = async () => {
+    loading.staff = true
+    try {
+        const start = formatDateISO(startDate.value)
+        const end = formatDateISO(endDate.value)
+        const response = await getStaffPerformance(start, end, 10)
+        staffPerformance.value = response.data
+    } catch (error) {
+        toast.error('Lỗi tải hiệu suất nhân viên')
+    } finally {
+        loading.staff = false
+    }
+}
+
+const fetchPaymentMethodStats = async () => {
+    loading.paymentMethods = true
+    try {
+        const start = formatDateISO(startDate.value)
+        const end = formatDateISO(endDate.value)
+        const response = await getPaymentMethodStats(start, end)
+        paymentMethodStats.value = response.data
+        
+        chartData.paymentMethods = createPieChartData(
+            response.data.map(item => item.paymentMethod),
+            response.data.map(item => item.totalAmount),
+            'Doanh thu'
+        )
+    } catch (error) {
+        toast.error('Lỗi tải thống kê thanh toán')
+    } finally {
+        loading.paymentMethods = false
+    }
+}
+
+const handleExportInventory = async () => {
+    loading.exporting = true
+    try {
+        const response = await exportInventoryToExcel()
+        const filename = `Inventory_${new Date().toISOString().split('T')[0]}.xlsx`
+        saveAs(new Blob([response.data]), filename)
+        toast.success('Xuất file tồn kho thành công!')
+    } catch (error) {
+        toast.error('Lỗi khi xuất file tồn kho')
+    } finally {
+        loading.exporting = false
+    }
+}
+
+const handleExportExpenses = async () => {
+    if (!exportStartDate.value || !exportEndDate.value) {
+        toast.error('Vui lòng chọn khoảng ngày')
+        return
+    }
+    loading.exporting = true
+    try {
+        const response = await exportExpensesToExcel(exportStartDate.value, exportEndDate.value)
+        const filename = `Expenses_${exportStartDate.value}_to_${exportEndDate.value}.xlsx`
+        saveAs(new Blob([response.data]), filename)
+        toast.success('Xuất file chi phí thành công!')
+    } catch (error) {
+        toast.error('Lỗi khi xuất file chi phí')
+    } finally {
+        loading.exporting = false
+    }
+}
+
 onMounted(() => {
     fetchAllReports()
     fetchInventoryData()
+    fetchHourlySales()
+    fetchTopCustomers()
+    fetchStaffPerformance()
+    fetchPaymentMethodStats()
 })
 </script>
 
@@ -288,14 +905,72 @@ onMounted(() => {
     margin-top: 20px;
 }
 
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.date-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-separator {
+    font-weight: 600;
+    color: #757575;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
 .kpi-cards {
     margin-bottom: 20px;
 }
 
-/* (Các style KPI copy từ Dashboard) */
+.kpi-card {
+    transition: all 0.3s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+}
+
 .kpi-content {
     display: flex;
     align-items: center;
+    gap: 16px;
+}
+
+.kpi-icon {
+    font-size: 3rem;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.revenue-icon {
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+}
+
+.cost-icon {
+    background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+}
+
+.profit-icon {
+    background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+}
+
+.margin-icon {
+    background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
 }
 
 .kpi-text {
@@ -303,22 +978,37 @@ onMounted(() => {
 }
 
 .kpi-title {
-    font-size: 0.9rem;
-    color: #909399;
-    margin-bottom: 5px;
+    font-size: 0.875rem;
+    color: #757575;
+    margin-bottom: 8px;
+    font-weight: 600;
 }
 
 .kpi-value {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.kpi-desc {
+    font-size: 0.75rem;
+    color: #9E9E9E;
 }
 
 .kpi-value.revenue {
-    color: #409EFF;
+    color: #2196F3;
 }
 
 .kpi-value.cost {
-    color: #F56C6C;
+    color: #F44336;
+}
+
+.kpi-value.profit {
+    color: #4CAF50;
+}
+
+.kpi-value.margin {
+    color: #FF9800;
 }
 
 .kpi-value.profit {
@@ -326,7 +1016,36 @@ onMounted(() => {
 }
 
 .chart-card {
-    height: 450px;
+    height: auto;
+}
+
+.chart-summary {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #F8F6F3 0%, #F5F3F0 100%);
+    border-top: 2px solid #E8E6E3;
+    margin: 0 -24px -24px -24px;
+    border-radius: 0 0 14px 14px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #757575;
+    font-weight: 600;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #8B7355;
 }
 
 .chart-container {
@@ -336,6 +1055,27 @@ onMounted(() => {
 
 .w-100 {
     width: 100%;
+}
+
+.date-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-separator {
+    font-weight: 600;
+    color: #757575;
+    padding: 0 8px;
+}
+
+.export-card {
+    transition: all 0.3s;
+}
+
+.export-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 </style>
 

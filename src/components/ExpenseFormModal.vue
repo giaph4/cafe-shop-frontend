@@ -63,7 +63,6 @@ const toast = useToast()
 const formRef = ref(null)
 const loading = ref(false)
 
-// --- State cho Form ---
 const defaultFormData = {
     category: null,
     amount: 0,
@@ -72,10 +71,8 @@ const defaultFormData = {
 }
 const formData = ref({ ...defaultFormData })
 
-// --- Kiểm tra Chế độ (Thêm mới / Chỉnh sửa) ---
 const isEditMode = computed(() => !!props.expense)
 
-// --- Validation Rules ---
 // Dựa trên ExpenseDTO.java
 const formRules = {
     category: [{ required: true, message: 'Loại chi phí là bắt buộc', trigger: 'change' }],
@@ -86,7 +83,6 @@ const formRules = {
     expenseDate: [{ required: true, message: 'Ngày chi là bắt buộc', trigger: 'change' }],
 }
 
-// --- Xử lý Form ---
 const submitForm = async () => {
     if (!formRef.value) return
 
@@ -102,12 +98,10 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                    // --- Chế độ Sửa ---
-                    await updateExpense(props.expense.id, expenseData)
+                                        await updateExpense(props.expense.id, expenseData)
                     toast.success('Cập nhật chi phí thành công!')
                 } else {
-                    // --- Chế độ Thêm mới ---
-                    await createExpense(expenseData)
+                                        await createExpense(expenseData)
                     toast.success('Ghi nhận chi phí mới thành công!')
                 }
 
@@ -124,13 +118,11 @@ const submitForm = async () => {
     })
 }
 
-// --- Reset Form khi đóng ---
 const onClose = () => {
     formData.value = { ...defaultFormData }
     formRef.value?.resetFields()
 }
 
-// --- Theo dõi khi props.expense thay đổi ---
 watch(() => props.expense, (newExpense) => {
     if (newExpense) {
         // Đang Edit: Đổ dữ liệu vào form

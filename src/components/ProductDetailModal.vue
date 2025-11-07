@@ -1,6 +1,12 @@
 <template>
-    <el-dialog :model-value="visible" @update:model-value="$emit('update:visible', $event)" title="Chi tiết Sản phẩm"
-        width="800px" @open="fetchProductDetails">
+    <el-dialog 
+        :model-value="visible" 
+        @update:model-value="$emit('update:visible', $event)" 
+        title="Chi tiết Sản phẩm"
+        width="800px" 
+        @open="fetchProductDetails"
+        destroy-on-close
+        :append-to-body="true">
         <div v-loading="loading">
             <div v-if="product">
                 <el-row :gutter="20">

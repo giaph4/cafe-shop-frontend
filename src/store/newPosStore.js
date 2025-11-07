@@ -70,7 +70,7 @@ export const useNewPosStore = defineStore('newPos', () => {
      */
     async function selectTable(table) {
         selectedTable.value = table
-        
+
         // Nếu bàn có đơn PENDING, load đơn đó lên
         if (table && table.status === 'PENDING') {
             await loadTableOrder(table.id)
@@ -97,7 +97,7 @@ export const useNewPosStore = defineStore('newPos', () => {
         try {
             const response = await orderService.getPendingOrderByTable(tableId)
             currentOrder.value = response.data
-            
+
             // Chuyển items từ server vào giỏ hàng
             cartItems.value = response.data.items.map(item => ({
                 id: item.id, // orderDetailId
@@ -108,11 +108,10 @@ export const useNewPosStore = defineStore('newPos', () => {
                 notes: item.notes || '',
                 imageUrl: item.imageUrl
             }))
-            
+
             toast.info(`Đã load đơn #${response.data.id}`)
         } catch (error) {
             // Không có đơn PENDING cho bàn này
-            console.log('Không tìm thấy đơn pending cho bàn:', tableId)
             currentOrder.value = null
             cartItems.value = []
         } finally {
@@ -125,7 +124,7 @@ export const useNewPosStore = defineStore('newPos', () => {
      */
     function addToCart(product) {
         const existingItem = cartItems.value.find(item => item.productId === product.id)
-        
+
         if (existingItem) {
             existingItem.quantity++
         } else {
@@ -195,7 +194,7 @@ export const useNewPosStore = defineStore('newPos', () => {
                 // Đơn đã tồn tại, cập nhật items
                 await syncOrderItems()
                 toast.success(`Đã cập nhật đơn #${currentOrder.value.id}`)
-                
+
                 // Đảm bảo bàn vẫn ở trạng thái PENDING
                 if (selectedTable.value && selectedTable.value.status !== 'PENDING') {
                     selectedTable.value.status = 'PENDING'
@@ -219,7 +218,7 @@ export const useNewPosStore = defineStore('newPos', () => {
                 const response = await orderService.createOrder(orderData)
                 currentOrder.value = response.data
                 toast.success(`Đã tạo đơn #${response.data.id}`)
-                
+
                 // Reload bàn từ server (SERVING sẽ tự động convert thành PENDING)
                 if (selectedTable.value) {
                     await loadTables()
@@ -227,7 +226,7 @@ export const useNewPosStore = defineStore('newPos', () => {
                     selectedTable.value = allTables.value.find(t => t.id === selectedTable.value.id)
                 }
             }
-            
+
             return true
         } catch (error) {
             const msg = error.response?.data?.message || 'Lỗi khi xác nhận đơn hàng'
@@ -245,11 +244,11 @@ export const useNewPosStore = defineStore('newPos', () => {
         if (!currentOrder.value) return
 
         const orderId = currentOrder.value.id
-        
+
         // Xóa các món không còn trong giỏ
         const currentItemIds = cartItems.value.map(i => i.id).filter(id => id !== null)
         const serverItemIds = currentOrder.value.items.map(i => i.id)
-        
+
         for (const itemId of serverItemIds) {
             if (!currentItemIds.includes(itemId)) {
                 await orderService.removeOrderItem(orderId, itemId)
@@ -291,11 +290,11 @@ export const useNewPosStore = defineStore('newPos', () => {
         try {
             await orderService.payOrder(currentOrder.value.id, { paymentMethod })
             toast.success('Thanh toán thành công!')
-            
+
             // Clear giỏ hàng và reload bàn
             clearCart()
             await loadTables()
-            
+
             return true
         } catch (error) {
             const msg = error.response?.data?.message || 'Lỗi khi thanh toán'
@@ -319,10 +318,10 @@ export const useNewPosStore = defineStore('newPos', () => {
         try {
             await orderService.cancelOrder(currentOrder.value.id)
             toast.success('Đã hủy đơn hàng')
-            
+
             clearCart()
             await loadTables()
-            
+
             return true
         } catch (error) {
             const msg = error.response?.data?.message || 'Lỗi khi hủy đơn'
@@ -341,13 +340,13 @@ export const useNewPosStore = defineStore('newPos', () => {
         allProducts,
         allTables,
         isLoading,
-        
+
         // Computed
         subTotal,
         totalItems,
         isTableOrder,
         canConfirmOrder,
-        
+
         // Actions
         loadProducts,
         loadTables,
