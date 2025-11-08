@@ -587,7 +587,7 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 
 .product-image {
   width: 100%;
-  height: 140px;
+  max-height: 140px;
   border-radius: 8px;
   overflow: hidden;
   display: block;
