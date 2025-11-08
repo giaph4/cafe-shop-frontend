@@ -72,7 +72,7 @@
                       </div>
                       <div class="cart-item-price">{{ formatCurrency(item.priceAtOrder) }} x {{ item.quantity }}</div>
                       <el-input :model-value="item.notes" placeholder="📝 Ghi chú..." size="small"
-                        @input="(newNote) => onNoteChange(item.id, newNote)" class="cart-item-notes" />
+                        @input="(newNote) => onNoteChange(item.id, newNote)" class="cart-item-notes mb-3" />
                     </div>
                     <div class="cart-item-actions">
                       <el-input-number :model-value="item.quantity"
@@ -286,7 +286,6 @@ const onQuantityChange = (orderDetailId, newQuantity) => {
 }
 
 const onNoteChange = (orderDetailId, newNote) => {
-  // Lưu ngay lập tức, không delay
   const currentItem = posStore.orderItems.find(item => item.id === orderDetailId)
   if (currentItem) {
     posStore.updateItem(orderDetailId, { quantity: currentItem.quantity, notes: newNote })
@@ -637,6 +636,7 @@ const onSelectTable = async (table) => {
 
 .cart-item-notes {
   margin-top: 8px;
+  width: 500px;
 }
 
 :deep(.cart-item-notes .el-input__wrapper) {

@@ -112,11 +112,11 @@ const filterStatus = ref(null)
 const filterCapacity = ref(null)
 
 const headers = [
-    { text: "ID", value: "id", width: 80 },
+    { text: "ID", value: "id"},
     { text: "Tên Bàn", value: "name", sortable: true },
-    { text: "Sức chứa", value: "capacity", sortable: true, width: 120 },
-    { text: "Trạng thái", value: "status", width: 180 },
-    { text: "Hành động", value: "actions", width: 180 },
+    { text: "Sức chứa", value: "capacity", sortable: true, width: 200 },
+    { text: "Trạng thái", value: "status", width: 300 },
+    { text: "Hành động", value: "actions", width: 300 },
 ]
 
 const filteredTables = computed(() => {

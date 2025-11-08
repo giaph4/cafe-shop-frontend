@@ -1,21 +1,6 @@
 <template>
   <div id="app" class="modern-app">
-    <!-- Global Loading Spinner -->
-    <transition name="fade">
-      <div v-if="isLoading" class="global-loading">
-        <div class="spinner-container">
-          <div class="coffee-spinner">
-            <div class="coffee-cup">☕</div>
-            <div class="spinner-ring"></div>
-          </div>
-          <p class="loading-text">Đang tải...</p>
-        </div>
-      </div>
-    </transition>
-
-    <transition name="fade-slide" mode="out-in" @before-enter="onBeforeEnter" @after-enter="onAfterEnter">
       <router-view :key="route.fullPath"/>
-    </transition>
   </div>
 </template>
 
@@ -247,93 +232,5 @@ html:root,
   background: #6F5B45;
 }
 
-/* Global Loading Spinner */
-.global-loading {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
 
-.spinner-container {
-  text-align: center;
-}
-
-.coffee-spinner {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 20px;
-}
-
-.coffee-cup {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 48px;
-  animation: bounce 1s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translate(-50%, -50%);
-  }
-  50% {
-    transform: translate(-50%, -60%);
-  }
-}
-
-.spinner-ring {
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  border: 4px solid rgba(139, 115, 85, 0.2);
-  border-top-color: #8B7355;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #8B7355;
-  margin: 0;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 </style>
