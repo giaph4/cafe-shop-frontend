@@ -574,9 +574,10 @@ const downloadBill = (content, filename) => {
   overflow-x: hidden;
   padding: 15px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   align-content: start;
+  max-height: 490px;
 }
 
 .product-item {
