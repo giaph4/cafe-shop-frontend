@@ -18,8 +18,8 @@ export const posModule = {
         tables: [],
         products: [],
         categories: [],
-        currentCart: [], // Giỏ hàng tạm
-        selectedOrder: null, // Đơn hàng đang xem
+        currentCart: [],
+        selectedOrder: null,
         isLoading: false,
         error: null,
     },

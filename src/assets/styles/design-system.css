@@ -423,11 +423,6 @@
   }
 }
 
-/* ========================================
-   ANIMATIONS & TRANSITIONS
-   ======================================== */
-
-/* Fade In Animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -596,7 +591,6 @@
   animation: shimmer 2s infinite;
 }
 
-/* Smooth Transitions */
 .transition-all {
   transition: all 0.3s ease;
 }
@@ -615,16 +609,6 @@
   transition: all 0.2s ease;
 }
 
-/* Remove hover transform that conflicts with table interactions */
-/* .clickable:hover {
-  transform: scale(1.02);
-}
-
-.clickable:active {
-  transform: scale(0.98);
-} */
-
-/* Loading Dots Animation */
 @keyframes loadingDots {
   0%, 20% {
     opacity: 0;
@@ -665,7 +649,6 @@
   transform: translateX(30px);
 }
 
-/* Card Flip Animation */
 @keyframes cardFlip {
   0% {
     transform: rotateY(0);

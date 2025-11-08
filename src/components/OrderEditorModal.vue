@@ -318,10 +318,6 @@ const onConfirmOrderDetails = () => {
 
 const generateBillPreview = () => {
   try {
-    console.log('=== BILL PREVIEW TEST ===')
-    console.log('Current order items:', posStore.orderItems)
-    console.log('Total:', posStore.total)
-
     // Create a preview order object
     const previewOrder = {
       id: 'PREVIEW',
@@ -355,39 +351,26 @@ const generateBillPreview = () => {
 }
 
 const onPay = async (paymentMethod) => {
-  console.log('=== POS PAYMENT STARTED ===')
-  console.log('Payment method:', paymentMethod)
-  console.log('Customer ID:', selectedCustomerId.value)
-
   try {
     // Store order ID before payment (since closePosModal clears it)
     const orderId = posStore.activeOrder?.id
-    console.log('Order ID before payment:', orderId)
 
     // Use posStore to complete the payment (like Orders.vue does)
     const success = await posStore.pay(paymentMethod, selectedCustomerId.value)
-    console.log('Payment result:', success)
 
     if (success && orderId) {
       // Fetch updated order data for bill printing (like Orders.vue does)
       const response = await getOrderById(orderId)
       const updatedOrder = response.data
 
-      console.log('=== PAYMENT SUCCESSFUL ===')
-      console.log('Fetched order data:', updatedOrder)
 
       // Auto-generate bill after payment
       const billContent = generateBillContent(updatedOrder)
-      console.log('Bill content generated, length:', billContent.length)
 
       downloadBill(billContent, `bill_${updatedOrder.id}.txt`)
-      console.log('Bill downloaded as:', `bill_${updatedOrder.id}.txt`)
-
-      toast.success('Thanh toán thành công! Bill đã được tải xuống.')
 
       // Modal closes automatically via posStore.pay()
     } else {
-      console.log('=== PAYMENT FAILED ===')
       toast.error('Thanh toán thất bại!')
     }
   } catch (error) {
@@ -448,7 +431,6 @@ const onSelectTable = async (table) => {
 }
 
 const generateBillContent = (order) => {
-  console.log('Generating bill for order:', order)
 
   if (!order) {
     throw new Error('Order object is null or undefined')
@@ -484,7 +466,7 @@ Phương thức: ${order.paymentMethod || 'N/A'}
       bill += `${index + 1}. ${item.productName || 'N/A'}\n`
       bill += `   Số lượng: ${item.quantity || 0}\n`
       bill += `   Đơn giá: ${formatCurrency(item.priceAtOrder || 0)}\n`
-      bill += `   Thành tiền: ${formatCurrency(item.lineTotal || 0)}\n`
+      bill += `   Thành tiền: ${formatCurrency(item.priceAtOrder * item.quantity || 0)}\n`
       if (item.notes) {
         bill += `   Ghi chú: ${item.notes}\n`
       }
@@ -518,8 +500,6 @@ const downloadBill = (content, filename) => {
   link.download = filename
   document.body.appendChild(link)
   link.click()
-  document.body.removeChild(link)
-  window.URL.revokeObjectURL(url)
 }
 </script>
 
@@ -852,7 +832,6 @@ const downloadBill = (content, filename) => {
   padding-top: var(--space-4);
   margin-top: var(--space-4);
   background: rgba(255, 255, 255, 0.7);
-  padding: var(--space-4);
   border-radius: var(--radius-lg);
 }
 

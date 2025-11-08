@@ -1,61 +1,60 @@
 <template>
-    <el-dialog 
-        :model-value="visible" 
-        @update:model-value="$emit('update:visible', $event)"
-        :title="`Công thức cho: ${productName}`" 
-        width="1100px" 
-        @open="onOpen" 
-        @close="onClose"
-        :close-on-click-modal="false"
-        destroy-on-close
-        :append-to-body="true">
-        <div v-loading="loading" class="recipe-editor">
-            <el-table :data="recipeItems" style="width: 100%" border>
-                <el-table-column label="NGUYÊN VẬT LIỆU" min-width="400">
-                    <template #default="scope">
-                        <el-select v-model="scope.row.ingredientId" placeholder="Chọn nguyên vật liệu" class="w-100"
-                            filterable @change="(id) => onIngredientSelect(scope.row, id)">
-                            <el-option v-for="ing in allIngredients" :key="ing.id" :label="`${ing.name} (${ing.unit})`"
-                                :value="ing.id" :disabled="isIngredientSelected(ing.id, scope.row.ingredientId)" />
-                        </el-select>
-                    </template>
-                </el-table-column>
+  <el-dialog
+      :model-value="visible"
+      @update:model-value="$emit('update:visible', $event)"
+      :title="`Công thức cho: ${productName}`"
+      width="1100px"
+      @open="onOpen"
+      @close="onClose"
+      :close-on-click-modal="false"
+      destroy-on-close
+      :append-to-body="true">
+    <div v-loading="loading" class="recipe-editor">
+      <el-table :data="recipeItems" style="width: 100%" border>
+        <el-table-column label="NGUYÊN VẬT LIỆU" min-width="400">
+          <template #default="scope">
+            <el-select v-model="scope.row.ingredientId" placeholder="Chọn nguyên vật liệu" class="w-100"
+                       filterable @change="(id) => onIngredientSelect(scope.row, id)">
+              <el-option v-for="ing in allIngredients" :key="ing.id" :label="`${ing.name} (${ing.unit})`"
+                         :value="ing.id" :disabled="isIngredientSelected(ing.id, scope.row.ingredientId)" />
+            </el-select>
+          </template>
+        </el-table-column>
 
-                <el-table-column label="SỐ LƯỢNG" width="200" align="center">
-                    <template #default="scope">
-                        <el-input-number v-model="scope.row.quantityNeeded" :min="0.004" :precision="3" />
-                    </template>
-                </el-table-column>
+        <el-table-column label="SỐ LƯỢNG" width="300" align="center">
+          <template #default="scope">
+            <el-input-number v-model="scope.row.quantityNeeded" :min="0.004" :precision="3" />
+          </template>
+        </el-table-column>
 
-                <el-table-column label="ĐƠN VỊ" width="180" align="center">
-                    <template #default="scope">
-                        <span style="color: #606266; font-weight: 500;">{{ scope.row.ingredientUnit || 'N/A' }}</span>
-                    </template>
-                </el-table-column>
+        <el-table-column label="ĐƠN VỊ" width="180" align="center">
+          <template #default="scope">
+            <span style="color: #606266; font-weight: 500;">{{ scope.row.ingredientUnit || 'N/A' }}</span>
+          </template>
+        </el-table-column>
 
-                <el-table-column label="XÓA" width="150" align="center">
-                    <template #default="scope">
-                        <el-button type="danger" plain :icon="Trash2" @click="removeRow(scope.$index)">Xóa</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
+        <el-table-column label="XÓA" width="150" align="center">
+          <template #default="scope">
+            <el-button type="danger" plain :icon="Trash2" @click="removeRow(scope.$index)">Xóa</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
 
-            <el-button class="w-100" style="margin-top: 15px;" @click="addRow" :icon="Plus">
-                Thêm Nguyên vật liệu
-            </el-button>
-        </div>
+      <el-button class="w-100" style="margin-top: 15px;" @click="addRow" :icon="Plus">
+        Thêm Nguyên vật liệu
+      </el-button>
+    </div>
 
-        <template #footer>
+    <template #footer>
             <span class="dialog-footer">
                 <el-button @click="$emit('update:visible', false)">Hủy</el-button>
                 <el-button type="primary" @click="submitRecipe" :loading="loading">
                     Lưu Công thức
                 </el-button>
             </span>
-        </template>
-    </el-dialog>
+    </template>
+  </el-dialog>
 </template>
-
 <script setup>
 import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
@@ -179,9 +178,14 @@ const onClose = () => {
 }
 
 .recipe-editor {
-    /* Đảm bảo modal có thể cuộn nếu có quá nhiều dòng */
     max-height: 60vh;
     overflow-y: auto;
     padding: 5px;
 }
+
+.recipe-editor :deep(.el-table__header tr th) {
+  background-color: rgb(131, 108, 80) !important;
+  color: #fff !important;
+}
+
 </style>

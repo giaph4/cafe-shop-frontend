@@ -1,5 +1,3 @@
-// src/utils/formatters.js
-
 /**
  * Định dạng số thành tiền tệ VND
  * @param {number} value - Số tiền
@@ -46,7 +44,7 @@ const EXPENSE_COLORS = {
 const DEFAULT_COLOR = 'rgba(100, 100, 100, 0.7)';
 
 /**
- * [MỚI] Chuyển đổi dữ liệu API chi phí sang định dạng Stacked Bar Chart
+ *  Chuyển đổi dữ liệu API chi phí sang định dạng Stacked Bar Chart
  * @param {object} apiData - Dữ liệu từ API (ví dụ: {"2025-11-01": {"SALARY": 500}})
  * @returns {object} - Dữ liệu cho Chart.js (labels, datasets)
  */

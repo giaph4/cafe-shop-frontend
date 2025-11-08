@@ -21,8 +21,6 @@ body {
   color: #333;
 }
 
-/* * Tùy chỉnh thanh cuộn (Scrollbar) 
-   */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

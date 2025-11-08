@@ -82,12 +82,11 @@
 
 <script setup>
 import { ref } from 'vue'
-import { getOrderById } from '@/api/orderService.js' // Thêm .js
-import { formatCurrency } from '@/utils/formatters.js' // Thêm .js
+import { getOrderById } from '@/api/orderService.js'
+import { formatCurrency } from '@/utils/formatters.js'
 import { useToast } from 'vue-toastification'
 import EasyDataTable from 'vue3-easy-data-table'
 import 'vue3-easy-data-table/dist/style.css'
-import { Picture } from '@element-plus/icons-vue'
 
 const props = defineProps({
     visible: Boolean,

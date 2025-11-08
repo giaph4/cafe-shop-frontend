@@ -28,7 +28,7 @@ defineProps({
         type: Object,
         required: true,
     },
-    // Cấu hình mặc định cho biểu đồ CỘT CHỒNG
+
     chartOptions: {
         type: Object,
         default: () => ({
@@ -42,11 +42,10 @@ defineProps({
             },
             scales: {
                 x: {
-                    stacked: true, // Quan trọng
+                    stacked: true,
                 },
                 y: {
-                    stacked: true, // Quan trọng
-                },
+                    stacked: true,
             },
         }),
     },

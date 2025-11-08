@@ -1,20 +1,19 @@
-// src/store/posStore.js
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useToast } from 'vue-toastification'
-// Thêm .js cho tất cả các import local
+import {defineStore} from 'pinia'
+import {ref, computed} from 'vue'
+import {useToast} from 'vue-toastification'
+
 import * as orderService from '@/api/orderService.js'
-import { checkVoucher } from '@/api/voucherService.js'
+import {checkVoucher} from '@/api/voucherService.js'
 
 export const usePosStore = defineStore('pos', () => {
     const toast = useToast()
 
-        const isModalOpen = ref(false)
+    const isModalOpen = ref(false)
     const isLoading = ref(false)
     const currentTable = ref(null) // Bàn đang được chọn
     const activeOrder = ref(null) // Đơn hàng PENDING (nếu có)
 
-        const isCreating = computed(() => !activeOrder.value && currentTable.value)
+    const isCreating = computed(() => !activeOrder.value && currentTable.value)
     const isEditing = computed(() => !!activeOrder.value)
     const orderItems = computed(() => activeOrder.value?.orderDetails || [])
     const subTotal = computed(() => activeOrder.value?.subTotal || 0)
@@ -22,14 +21,13 @@ export const usePosStore = defineStore('pos', () => {
     const total = computed(() => activeOrder.value?.totalAmount || 0)
     const voucher = computed(() => activeOrder.value?.voucherCode || null)
 
-        /**
+    /**
      * (Hàm Nội bộ) Tải đơn hàng PENDING hoặc chuẩn bị tạo đơn mới
      */
     async function _loadOrderForTable(table) {
         isLoading.value = true
         activeOrder.value = null
 
-        // Đơn mang đi (không có table.id) sẽ không tải
         if (!table.id) {
             isLoading.value = false
             return;
@@ -42,7 +40,7 @@ export const usePosStore = defineStore('pos', () => {
         } catch (error) {
             if (error.response && error.response.status === 404) {
                 // Không tìm thấy đơn PENDING -> Sẵn sàng tạo đơn mới
-                } else {
+            } else {
                 toast.error('Lỗi khi tải đơn hàng của bàn.')
             }
         } finally {
@@ -225,7 +223,7 @@ export const usePosStore = defineStore('pos', () => {
             // (Nên chúng ta bỏ qua việc gán customerId ở đây)
 
             // API: POST /api/v1/orders/{orderId}/payment
-            const response = await orderService.payOrder(activeOrder.value.id, { paymentMethod, customerId })
+            const response = await orderService.payOrder(activeOrder.value.id, {paymentMethod, customerId})
             activeOrder.value = response.data // Đơn hàng đã PAID
             toast.success(`Thanh toán thành công đơn #${response.data.id}`)
             closePosModal() // Đóng modal

@@ -146,7 +146,6 @@ const form = ref({
     supplierId: null,
     expectedDate: null,
     items: [
-        // Một dòng mặc định
         { ingredientId: null, quantity: 1, unitPrice: 0 }
     ]
 })

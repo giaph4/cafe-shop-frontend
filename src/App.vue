@@ -12,16 +12,6 @@ const route = useRoute()
 const router = useRouter()
 const isLoading = ref(false)
 
-const onBeforeEnter = () => {
-  isLoading.value = true
-}
-
-const onAfterEnter = () => {
-  setTimeout(() => {
-    isLoading.value = false
-  }, 300)
-}
-
 // Show loading on route change
 router.beforeEach((to, from, next) => {
   isLoading.value = true

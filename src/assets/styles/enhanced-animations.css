@@ -1,13 +1,7 @@
-/* ====================================
-   ENHANCED ANIMATIONS - CLEANED UP
-   ==================================== */
-
-/* Remove problematic hover effects that conflict with table interactions */
 .hover-scale,
 .hover-lift,
 .hover-glow,
 .hover-rotate {
-  /* These classes removed to prevent conflicts with table hover states */
 }
 
 /* Pulse Glow Animation */
@@ -345,7 +339,6 @@
   animation: progressFill 1.5s ease-out;
 }
 
-/* Utility Classes for Animation Control */
 .animation-delay-1 { animation-delay: 0.1s; }
 .animation-delay-2 { animation-delay: 0.2s; }
 .animation-delay-3 { animation-delay: 0.3s; }

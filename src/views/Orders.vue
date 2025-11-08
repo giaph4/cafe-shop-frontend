@@ -311,7 +311,7 @@ Phương thức: ${order.paymentMethod || 'N/A'}
     bill += `${index + 1}. ${item.productName}\n`
     bill += `   Số lượng: ${item.quantity}\n`
     bill += `   Đơn giá: ${formatCurrency(item.priceAtOrder)}\n`
-    bill += `   Thành tiền: ${formatCurrency(item.lineTotal)}\n`
+    bill += `   Thành tiền: ${formatCurrency(item.priceAtOrder * item.quantity)}\n`
     if (item.notes) {
       bill += `   Ghi chú: ${item.notes}\n`
     }

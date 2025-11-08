@@ -251,9 +251,7 @@
                             </template>
                             <EasyDataTable :headers="topCustomersHeaders" :items="topCustomers" :loading="loading.customers" table-class-name="data-table" max-height="500">
                                 <template #item-index="{ index }">
-                                    <el-tag v-if="index === 0" type="warning" size="small">🥇</el-tag>
-                                    <el-tag v-else-if="index === 1" type="info" size="small">🥈</el-tag>
-                                    <el-tag v-else-if="index === 2" type="success" size="small">🥉</el-tag>
+                                    <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
                                     <span v-else>{{ index + 1 }}</span>
                                 </template>
 
@@ -483,8 +481,6 @@ import {
 import { formatCurrency, formatDateISO, formatStackedBarChartData } from '@/utils/formatters.js'
 import { getDefaultDateRange, getDateRangeByFilter } from '@/utils/dateHelpers'
 import { createBarChartData, createPieChartData } from '@/utils/chartHelpers'
-import { getChartColors } from '@/utils/chartColors'
-
 
 import LineChart from '@/components/charts/LineChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
