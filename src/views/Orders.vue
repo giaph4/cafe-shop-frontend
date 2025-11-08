@@ -158,7 +158,7 @@ import 'vue3-easy-data-table/dist/style.css'
 import {useToast} from 'vue-toastification'
 import {useAuthStore} from '@/store/auth'
 import {formatCurrency} from '@/utils/formatters'
-import {getAllOrders, getOrdersByStatus, getOrdersByDateRange, cancelOrder, payOrder} from '@/api/orderService'
+import {getAllOrders, getOrdersByStatus, getOrdersByDateRange, cancelOrder, payOrder, getOrderById} from '@/api/orderService'
 import OrderDetailModal from '@/components/OrderDetailModal.vue'
 
 const toast = useToast()
@@ -346,10 +346,20 @@ const downloadBill = (content, filename) => {
   window.URL.revokeObjectURL(url)
 }
 
-const statusType = (status) => {
-  if (status === 'PAID') return 'success'
-  if (status === 'CANCELLED') return 'danger'
-  return 'warning' // PENDING
+const handleCancel = async (orderId) => {
+  try {
+    await cancelOrder(orderId)
+    toast.success('Đã hủy đơn hàng thành công')
+    await fetchData()
+  } catch (error) {
+    const msg = error.response?.data?.message || 'Lỗi khi hủy đơn hàng'
+    toast.error(msg)
+  }
+}
+
+const openDetailModal = (orderId) => {
+  selectedId.value = orderId
+  detailModalVisible.value = true
 }
 
 const getStatusLabel = (status) => {

@@ -44,8 +44,8 @@
                     <template #item-priceAtOrder="{ priceAtOrder }">
                         {{ formatCurrency(priceAtOrder) }}
                     </template>
-                    <template #item-lineTotal="{ lineTotal }">
-                        {{ formatCurrency(lineTotal) }}
+                    <template #item-lineTotal="{ priceAtOrder, quantity }">
+                        {{ formatCurrency(priceAtOrder * quantity) }}
                     </template>
                 </EasyDataTable>
 
@@ -87,7 +87,6 @@ import { formatCurrency } from '@/utils/formatters.js' // Thêm .js
 import { useToast } from 'vue-toastification'
 import EasyDataTable from 'vue3-easy-data-table'
 import 'vue3-easy-data-table/dist/style.css'
-// SỬA LỖI: Import Picture từ @element-plus/icons-vue
 import { Picture } from '@element-plus/icons-vue'
 
 const props = defineProps({
