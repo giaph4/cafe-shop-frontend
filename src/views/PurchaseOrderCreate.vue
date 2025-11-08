@@ -38,7 +38,7 @@
                 </el-row>
             </el-card>
 
-            <el-card class="box-card" style="margin-top: 20px;">
+            <el-card class=" w-100" style="margin-top: 20px;">
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
                         <span>Chi tiết Nguyên vật liệu</span>
@@ -51,57 +51,61 @@
                     </div>
                 </template>
 
-                <el-table :data="form.items" style="width: 100%" border>
-                    <el-table-column label="NGUYÊN VẬT LIỆU" min-width="200">
-                        <template #default="scope">
-                            <el-form-item :prop="'items.' + scope.$index + '.ingredientId'" :rules="rules.ingredientId">
-                                <el-select v-model="scope.row.ingredientId" placeholder="Chọn nguyên vật liệu"
-                                    class="w-100" filterable @change="() => calculateTotal()">
-                                    <el-option v-for="ing in ingredients" :key="ing.id"
-                                        :label="`${ing.name} (${ing.unit})`" :value="ing.id" />
-                                </el-select>
-                            </el-form-item>
-                        </template>
-                    </el-table-column>
+                <div class="w-100">
+                    <EasyDataTable
+                        :headers="headers"
+                        :items="tableItems"
+                        :loading="false"
+                        :rows-per-page="1000"
+                        :hide-footer="true"
+                        :hide-header="false"
+                        theme-color="#8B7355"
+                        table-class-name="purchase-order-table"
+                        header-class-name="purchase-order-header"
+                        body-class-name="purchase-order-body"
+                        class="w-100"
+                    >
+                    <template #item-ingredientId="{ index }">
+                        <el-form-item :prop="'items.' + index + '.ingredientId'" :rules="rules.ingredientId">
+                            <el-select v-model="form.items[index].ingredientId" placeholder="Chọn nguyên vật liệu"
+                                class="w-100" filterable @change="() => calculateTotal()">
+                                <el-option v-for="ing in ingredients" :key="ing.id"
+                                    :label="`${ing.name} (${ing.unit})`" :value="ing.id" />
+                            </el-select>
+                        </el-form-item>
+                    </template>
 
-                    <el-table-column label="SỐ LƯỢNG" width="180" align="center">
-                        <template #default="scope">
-                            <el-form-item :prop="'items.' + scope.$index + '.quantity'" :rules="rules.quantity">
-                                <el-input-number v-model="scope.row.quantity" :min="2" :precision="3"
-                                    @change="() => calculateTotal()" />
-                            </el-form-item>
-                        </template>
-                    </el-table-column>
+                    <template #item-quantity="{ index }">
+                        <el-form-item :prop="'items.' + index + '.quantity'" :rules="rules.quantity">
+                            <el-input-number v-model="form.items[index].quantity" :min="2" :precision="3"
+                                @change="() => calculateTotal()" />
+                        </el-form-item>
+                    </template>
 
-                    <el-table-column label="ĐƠN GIÁ (VND)" width="200" align="center">
-                        <template #default="scope">
-                            <el-form-item :prop="'items.' + scope.$index + '.unitPrice'" :rules="rules.unitPrice">
-                                <el-input-number v-model="scope.row.unitPrice" :min="0" :step="1000"
-                                    @change="() => calculateTotal()" />
-                            </el-form-item>
-                        </template>
-                    </el-table-column>
+                    <template #item-unitPrice="{ index }">
+                        <el-form-item :prop="'items.' + index + '.unitPrice'" :rules="rules.unitPrice">
+                            <el-input-number v-model="form.items[index].unitPrice" :min="0" :step="1000"
+                                @change="() => calculateTotal()" />
+                        </el-form-item>
+                    </template>
 
-                    <el-table-column label="THÀNH TIỀN" width="180" align="right">
-                        <template #default="scope">
-                            <span class="total-cell">{{ formatCurrency(scope.row.quantity * scope.row.unitPrice) }}</span>
-                        </template>
-                    </el-table-column>
+                    <template #item-total="{ index }">
+                        <span class="total-cell">{{ formatCurrency(form.items[index].quantity * form.items[index].unitPrice) }}</span>
+                    </template>
 
-                    <el-table-column label="XÓA" width="100" align="center">
-                        <template #default="scope">
-                            <el-button 
-                                type="danger" 
-                                plain 
-                                :icon="Delete" 
-                                @click="removeItem(scope.$index)"
-                                class="hover-scale"
-                            >
-                                Xóa
-                            </el-button>
-                        </template>
-                    </el-table-column>
-                </el-table>
+                    <template #item-actions="{ index }">
+                        <el-button
+                            type="danger"
+                            plain
+                            :icon="Delete"
+                            @click="removeItem(index)"
+                            class="hover-scale"
+                        >
+                            Xóa
+                        </el-button>
+                    </template>
+                </EasyDataTable>
+                </div>
 
                 <div class="total-summary">
                     <el-icon style="margin-right: 8px; font-size: 1.2rem;"><Money /></el-icon>
@@ -123,11 +127,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { Back, Plus, Delete } from '@element-plus/icons-vue'
+import { Back, Plus, Delete, Money, DocumentAdd } from '@element-plus/icons-vue'
 import { getAllSuppliers } from '@/api/supplierService'
 import { getAllIngredientsSimple } from '@/api/ingredientService'
 import { createPurchaseOrder } from '@/api/purchaseOrderService'
 import { formatCurrency } from '@/utils/formatters'
+import EasyDataTable from 'vue3-easy-data-table'
 
 const router = useRouter()
 const toast = useToast()
@@ -147,6 +152,22 @@ const form = ref({
 })
 
 const totalAmount = ref(0)
+
+const headers = [
+    { text: 'NGUYÊN VẬT LIỆU', value: 'ingredientId', width: 200 },
+    { text: 'SỐ LƯỢNG', value: 'quantity', width: 180, sortable: false },
+    { text: 'ĐƠN GIÁ (VND)', value: 'unitPrice', width: 200, sortable: false },
+    { text: 'THÀNH TIỀN', value: 'total', width: 180, sortable: false },
+    { text: 'XÓA', value: 'actions', width: 100, sortable: false }
+]
+
+// Computed items with index for EasyDataTable
+const tableItems = computed(() => {
+    return form.value.items.map((item, index) => ({
+        ...item,
+        index
+    }))
+})
 
 const rules = {
     supplierId: [{ required: true, message: 'Nhà cung cấp là bắt buộc', trigger: 'change' }],
@@ -279,5 +300,56 @@ onMounted(() => {
 .total-cell {
     font-weight: 600;
     color: #606266;
+}
+
+/* EasyDataTable custom styles */
+.purchase-order-table {
+    border: 1px solid #ebeef5;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100% !important;
+}
+
+.purchase-order-table > div {
+    width: 100% !important;
+}
+
+.purchase-order-header {
+    background: linear-gradient(135deg, #8B7355 0%, #A0886B 100%);
+    color: white;
+    font-weight: 600;
+    text-align: center;
+}
+
+.purchase-order-header th {
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px 8px;
+}
+
+.purchase-order-header th:last-child {
+    border-right: none;
+}
+
+.purchase-order-body td {
+    padding: 8px;
+    border-bottom: 1px solid #f5f5f5;
+    text-align: center;
+}
+
+.purchase-order-body td:first-child {
+    text-align: left;
+}
+
+.purchase-order-body td:last-child {
+    text-align: center;
+}
+
+.purchase-order-body tr:hover {
+    background-color: #f9f9f9;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
 }
 </style>

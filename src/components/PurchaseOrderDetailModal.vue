@@ -31,22 +31,14 @@
                 </el-descriptions>
 
                 <h3 class="modal-subtitle">Chi tiết Nguyên vật liệu</h3>
-                <el-table :data="po.purchaseOrderDetails" style="width: 100%" border>
-                    <el-table-column type="index" label="#" width="60" align="center" />
-                    <el-table-column prop="ingredientName" label="Tên Nguyên vật liệu" min-width="250" />
-                    <el-table-column prop="quantity" label="Số lượng" align="center" width="120" />
-                    <el-table-column prop="ingredientUnit" label="Đơn vị" align="center" width="120" />
-                    <el-table-column label="Đơn giá" align="right" width="150">
-                        <template #default="scope">
-                            {{ formatCurrency(scope.row.unitPrice) }}
-                        </template>
-                    </el-table-column>
-                    <el-table-column label="Thành tiền" align="right" width="150">
-                        <template #default="scope">
-                            {{ formatCurrency(scope.row.lineTotal) }}
-                        </template>
-                    </el-table-column>
-                </el-table>
+                <EasyDataTable :headers="purchaseOrderDetailHeaders" :items="po.purchaseOrderDetails" table-class-name="data-table" show-index>
+                    <template #item-unitPrice="{ unitPrice }">
+                        {{ formatCurrency(unitPrice) }}
+                    </template>
+                    <template #item-lineTotal="{ lineTotal }">
+                        {{ formatCurrency(lineTotal) }}
+                    </template>
+                </EasyDataTable>
 
                 <div class="total-summary">
                     <h4>Tổng cộng: {{ formatCurrency(po.totalAmount) }}</h4>
@@ -68,6 +60,8 @@ import { ref } from 'vue'
 import { getPurchaseOrderById } from '@/api/purchaseOrderService'
 import { formatCurrency } from '@/utils/formatters'
 import { useToast } from 'vue-toastification'
+import EasyDataTable from 'vue3-easy-data-table'
+import 'vue3-easy-data-table/dist/style.css'
 
 const props = defineProps({
     visible: Boolean,
@@ -79,6 +73,14 @@ const emit = defineEmits(['update:visible'])
 const toast = useToast()
 const loading = ref(false)
 const po = ref(null) // Purchase Order details
+
+const purchaseOrderDetailHeaders = [
+    { text: "Tên Nguyên vật liệu", value: "ingredientName", minWidth: 300 },
+    { text: "Số lượng", value: "quantity", width: 120 },
+    { text: "Đơn vị", value: "ingredientUnit", width: 100 },
+    { text: "Đơn giá", value: "unitPrice", width: 150 },
+    { text: "Thành tiền", value: "lineTotal", width: 150 }
+]
 
 // Hàm gọi API khi modal mở
 const fetchDetails = async () => {

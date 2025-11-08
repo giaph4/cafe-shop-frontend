@@ -123,7 +123,6 @@ html:root,
   color: #FFFFFF !important;
   font-weight: 700 !important;
 }
-
 .el-table__header th .cell {
   color: #FFFFFF !important;
   font-weight: 700 !important;
@@ -131,32 +130,36 @@ html:root,
 
 /* Page Transitions */
 .fade-slide-enter-active {
-  animation: fadeSlideIn 0.4s ease-out;
+  animation: fadeSlideIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .fade-slide-leave-active {
-  animation: fadeSlideOut 0.3s ease-in;
+  animation: fadeSlideOut 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
 
 @keyframes fadeSlideIn {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.95);
   }
-  to {
+  50% {
+    opacity: 0.8;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes fadeSlideOut {
-  from {
+  0% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
-  to {
+  100% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px) scale(0.95);
   }
 }
 

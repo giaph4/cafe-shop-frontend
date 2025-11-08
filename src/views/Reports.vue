@@ -227,14 +227,10 @@
                                 active-text="Chỉ hiển thị hàng sắp hết" />
                         </div>
                     </template>
-                    <el-table :data="inventory" style="width: 100%" border :row-class-name="inventoryRowClass">
-                        <el-table-column type="index" label="#" width="50" />
-                        <el-table-column prop="name" label="Tên Nguyên vật liệu" sortable />
-                        <el-table-column prop="quantityOnHand" label="Tồn kho" sortable align="center" />
-                        <el-table-column prop="unit" label="Đơn vị" width="100" align="center" />
-                        <el-table-column prop="reorderLevel" label="Ngưỡng cảnh báo" sortable align="center" />
-                    </el-table>
+                    <EasyDataTable :headers="inventoryHeaders" :items="inventory" :loading="loading.inventory" table-class-name="data-table" show-index :row-class-name="inventoryRowClass">
+                    </EasyDataTable>
                 </el-card>
+
             </el-tab-pane>
 
             <el-tab-pane label="👥 Khách hàng & Nhân viên" name="people">
@@ -253,36 +249,29 @@
                                     <el-tag type="warning" size="small">Theo doanh thu</el-tag>
                                 </div>
                             </template>
-                            <el-table :data="topCustomers" style="width: 100%" border max-height="500">
-                                <el-table-column type="index" label="#" width="50" align="center">
-                                    <template #default="scope">
-                                        <el-tag v-if="scope.$index === 0" type="warning" size="small">🥇</el-tag>
-                                        <el-tag v-else-if="scope.$index === 1" type="info" size="small">🥈</el-tag>
-                                        <el-tag v-else-if="scope.$index === 2" type="success" size="small">🥉</el-tag>
-                                        <span v-else>{{ scope.$index + 1 }}</span>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="customerName" label="Tên khách hàng" min-width="150" />
-                                <el-table-column label="SĐT" width="130">
-                                    <template #default="scope">
-                                        <span v-if="scope.row.customerPhone || scope.row.phone">
-                                            {{ scope.row.customerPhone || scope.row.phone }}
-                                        </span>
-                                        <el-tag v-else type="info" size="small">Chưa có</el-tag>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="totalOrders" label="Số đơn" width="80" align="center" sortable />
-                                <el-table-column prop="totalSpent" label="Tổng chi tiêu" width="150" align="right" sortable>
-                                    <template #default="scope">
-                                        <strong style="color: #8B7355;">{{ formatCurrency(scope.row.totalSpent) }}</strong>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="averageOrderValue" label="TB/Đơn" width="120" align="right">
-                                    <template #default="scope">
-                                        {{ formatCurrency(scope.row.averageOrderValue) }}
-                                    </template>
-                                </el-table-column>
-                            </el-table>
+                            <EasyDataTable :headers="topCustomersHeaders" :items="topCustomers" :loading="loading.customers" table-class-name="data-table" max-height="500">
+                                <template #item-index="{ index }">
+                                    <el-tag v-if="index === 0" type="warning" size="small">🥇</el-tag>
+                                    <el-tag v-else-if="index === 1" type="info" size="small">🥈</el-tag>
+                                    <el-tag v-else-if="index === 2" type="success" size="small">🥉</el-tag>
+                                    <span v-else>{{ index + 1 }}</span>
+                                </template>
+
+                                <template #item-phone="{ customerPhone, phone }">
+                                    <span v-if="customerPhone || phone">
+                                        {{ customerPhone || phone }}
+                                    </span>
+                                    <el-tag v-else type="info" size="small">Chưa có</el-tag>
+                                </template>
+
+                                <template #item-totalSpent="{ totalSpent }">
+                                    <strong style="color: #8B7355;">{{ formatCurrency(totalSpent) }}</strong>
+                                </template>
+
+                                <template #item-averageOrderValue="{ averageOrderValue }">
+                                    {{ formatCurrency(averageOrderValue) }}
+                                </template>
+                            </EasyDataTable>
                         </el-card>
                     </el-col>
                     
@@ -294,33 +283,27 @@
                                     <el-tag type="success" size="small">Leaderboard</el-tag>
                                 </div>
                             </template>
-                            <el-table :data="staffPerformance" style="width: 100%" border max-height="500">
-                                <el-table-column type="index" label="#" width="50" align="center">
-                                    <template #default="scope">
-                                        <el-tag v-if="scope.$index === 0" type="danger" size="small">⭐</el-tag>
-                                        <span v-else>{{ scope.$index + 1 }}</span>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="fullName" label="Nhân viên" min-width="150">
-                                    <template #default="scope">
-                                        <div>
-                                            <div style="font-weight: 600;">{{ scope.row.fullName }}</div>
-                                            <div style="font-size: 0.85em; color: #909399;">@{{ scope.row.username }}</div>
-                                        </div>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="totalOrders" label="Số đơn" width="80" align="center" sortable />
-                                <el-table-column prop="totalRevenue" label="Doanh thu" width="150" align="right" sortable>
-                                    <template #default="scope">
-                                        <strong style="color: #67C23A;">{{ formatCurrency(scope.row.totalRevenue) }}</strong>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="averageOrderValue" label="TB/Đơn" width="120" align="right">
-                                    <template #default="scope">
-                                        {{ formatCurrency(scope.row.averageOrderValue) }}
-                                    </template>
-                                </el-table-column>
-                            </el-table>
+                            <EasyDataTable :headers="staffHeaders" :items="staffPerformance" :loading="loading.staff" table-class-name="data-table" max-height="500">
+                                <template #item-index="{ index }">
+                                    <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
+                                    <span v-else>{{ index + 1 }}</span>
+                                </template>
+
+                                <template #item-fullName="{ fullName, username }">
+                                    <div>
+                                        <div style="font-weight: 600;">{{ fullName }}</div>
+                                        <div style="font-size: 0.85em; color: #909399;">@{{ username }}</div>
+                                    </div>
+                                </template>
+
+                                <template #item-totalRevenue="{ totalRevenue }">
+                                    <strong style="color: #67C23A;">{{ formatCurrency(totalRevenue) }}</strong>
+                                </template>
+
+                                <template #item-averageOrderValue="{ averageOrderValue }">
+                                    {{ formatCurrency(averageOrderValue) }}
+                                </template>
+                            </EasyDataTable>
                         </el-card>
                     </el-col>
                 </el-row>
@@ -346,28 +329,23 @@
                     <el-col :span="12">
                         <el-card class="box-card" v-loading="loading.paymentMethods">
                             <template #header><span>Chi tiết Thống kê</span></template>
-                            <el-table :data="paymentMethodStats" style="width: 100%" border>
-                                <el-table-column label="Phương thức" width="150">
-                                    <template #default="scope">
-                                        <el-tag v-if="scope.row.paymentMethod === 'CASH'" type="success">💵 Tiền mặt</el-tag>
-                                        <el-tag v-else-if="scope.row.paymentMethod === 'TRANSFER'" type="primary">🏦 Chuyển khoản</el-tag>
-                                        <el-tag v-else-if="scope.row.paymentMethod === 'CARD'" type="warning">💳 Thẻ</el-tag>
-                                        <el-tag v-else type="info">{{ scope.row.paymentMethod }}</el-tag>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="orderCount" label="Số đơn" width="100" align="center" sortable />
-                                <el-table-column prop="totalAmount" label="Tổng tiền" align="right" sortable>
-                                    <template #default="scope">
-                                        <strong>{{ formatCurrency(scope.row.totalAmount) }}</strong>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="percentage" label="Tỷ lệ" width="100" align="center" sortable>
-                                    <template #default="scope">
-                                        <el-progress :percentage="scope.row.percentage" :stroke-width="12" :show-text="false" />
-                                        <div style="margin-top: 4px; font-weight: 600;">{{ scope.row.percentage.toFixed(1) }}%</div>
-                                    </template>
-                                </el-table-column>
-                            </el-table>
+                            <EasyDataTable :headers="paymentHeaders" :items="paymentMethodStats" :loading="loading.paymentMethods" table-class-name="data-table">
+                                <template #item-paymentMethod="{ paymentMethod }">
+                                    <el-tag v-if="paymentMethod === 'CASH'" type="success">💵 Tiền mặt</el-tag>
+                                    <el-tag v-else-if="paymentMethod === 'TRANSFER'" type="primary">🏦 Chuyển khoản</el-tag>
+                                    <el-tag v-else-if="paymentMethod === 'CARD'" type="warning">💳 Thẻ</el-tag>
+                                    <el-tag v-else type="info">{{ paymentMethod }}</el-tag>
+                                </template>
+
+                                <template #item-totalAmount="{ totalAmount }">
+                                    <strong>{{ formatCurrency(totalAmount) }}</strong>
+                                </template>
+
+                                <template #item-percentage="{ percentage }">
+                                    <el-progress :percentage="percentage" :stroke-width="12" :show-text="false" />
+                                    <div style="margin-top: 4px; font-weight: 600;">{{ percentage.toFixed(1) }}%</div>
+                                </template>
+                            </EasyDataTable>
                         </el-card>
                     </el-col>
                 </el-row>
@@ -485,6 +463,8 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useToast } from 'vue-toastification'
 import { saveAs } from 'file-saver'
 import { Download } from '@element-plus/icons-vue'
+import EasyDataTable from 'vue3-easy-data-table'
+import 'vue3-easy-data-table/dist/style.css'
 import {
     getProfitReport,
     getRevenueByDateRange,
@@ -563,6 +543,38 @@ const loading = reactive({
     categories: false,
     paymentMethods: false,
 })
+
+// Table headers
+const inventoryHeaders = [
+    { text: "Tên Nguyên vật liệu", value: "name", minWidth: 300, sortable: true },
+    { text: "Tồn kho", value: "quantityOnHand", width: 120, sortable: true },
+    { text: "Đơn vị", value: "unit", width: 100 },
+    { text: "Ngưỡng cảnh báo", value: "reorderLevel", width: 150, sortable: true }
+]
+
+const topCustomersHeaders = [
+    { text: "#", value: "index", width: 60 },
+    { text: "Tên khách hàng", value: "customerName", minWidth: 200 },
+    { text: "SĐT", value: "phone", width: 140 },
+    { text: "Số đơn", value: "totalOrders", width: 100, sortable: true },
+    { text: "Tổng chi tiêu", value: "totalSpent", width: 160, sortable: true },
+    { text: "TB/Đơn", value: "averageOrderValue", width: 130 }
+]
+
+const staffHeaders = [
+    { text: "#", value: "index", width: 60 },
+    { text: "Nhân viên", value: "fullName", minWidth: 200 },
+    { text: "Số đơn", value: "totalOrders", width: 100, sortable: true },
+    { text: "Doanh thu", value: "totalRevenue", width: 160, sortable: true },
+    { text: "TB/Đơn", value: "averageOrderValue", width: 130 }
+]
+
+const paymentHeaders = [
+    { text: "Phương thức", value: "paymentMethod", width: 180 },
+    { text: "Số đơn", value: "orderCount", width: 120, sortable: true },
+    { text: "Tổng tiền", value: "totalAmount", width: 160, sortable: true },
+    { text: "Tỷ lệ", value: "percentage", width: 120, sortable: true }
+]
 
 const profitMargin = computed(() => {
     if (!profitStats.value || !profitStats.value.totalRevenue || profitStats.value.totalRevenue === 0) return '0.00'

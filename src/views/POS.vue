@@ -9,6 +9,21 @@
                     </el-icon>
                     Đơn Mang đi (Take Away)
                 </el-button>
+                <el-select
+                    v-model="selectedCustomerId"
+                    placeholder="Chọn khách hàng"
+                    filterable
+                    clearable
+                    style="width: 200px;"
+                >
+                    <el-option label="Khách vãng lai" :value="null" />
+                    <el-option
+                        v-for="customer in customers"
+                        :key="customer.id"
+                        :label="`${customer.fullName} (${customer.phone})`"
+                        :value="customer.id"
+                    />
+                </el-select>
             </div>
         </div>
 
@@ -176,7 +191,8 @@
                     style="margin-bottom: 20px;"
                 >
                     <template #title>
-                        Bạn đã chọn {{ tempCart.length }} món ({{ formatCurrency(cartTotal) }}). Vui lòng chọn bàn.
+                        Bạn đã chọn {{ tempCart.length }} món ({{ formatCurrency(cartTotal) }}). 
+                        Khách hàng: {{ selectedCustomer ? selectedCustomer.fullName : 'Khách vãng lai' }}
                     </template>
                 </el-alert>
 
@@ -225,6 +241,7 @@ import { InfoFilled } from '@element-plus/icons-vue'
 import { getAllTables } from '@/api/tableService.js'
 import { getAvailableProducts } from '@/api/productService.js'
 import { getAllCategories } from '@/api/categoryService.js'
+import { searchCustomers } from '@/api/customerService.js'
 import { usePosStore } from '@/store/posStore.js'
 import { formatCurrency } from '@/utils/formatters.js'
 import OrderEditorModal from '@/components/OrderEditorModal.vue'
@@ -237,6 +254,8 @@ const loadingTables = ref(true)
 const products = ref([])
 const categories = ref([])
 const loadingProducts = ref(true)
+const customers = ref([])
+const loadingCustomers = ref(true)
 const productSearch = ref('')
 const selectedCategory = ref(null)
 const priceRange = ref(null)
@@ -244,6 +263,7 @@ const tableSearch = ref('')
 const dialogTableSearch = ref('')
 const tempCart = ref([])
 const showTableSelection = ref(false)
+const selectedCustomerId = ref(null)
 
 const filteredProducts = computed(() => {
     let result = products.value
@@ -294,6 +314,11 @@ const cartTotal = computed(() => {
     return tempCart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 })
 
+const selectedCustomer = computed(() => {
+    if (!selectedCustomerId.value) return null
+    return customers.value.find(c => c.id === selectedCustomerId.value)
+})
+
 const fetchTables = async () => {
     loadingTables.value = true
     try {
@@ -319,6 +344,18 @@ const fetchProducts = async () => {
         toast.error('Lỗi khi tải menu sản phẩm')
     } finally {
         loadingProducts.value = false
+    }
+}
+
+const fetchCustomers = async () => {
+    loadingCustomers.value = true
+    try {
+        const response = await searchCustomers({ page: 0, size: 1000 }) // Get all customers
+        customers.value = response.data.content
+    } catch (error) {
+        toast.error('Lỗi khi tải danh sách khách hàng')
+    } finally {
+        loadingCustomers.value = false
     }
 }
 
@@ -389,15 +426,24 @@ const createOrderFromCart = async (table) => {
 
     const orderData = {
         tableId: table?.id || null,
+        customerId: selectedCustomerId.value,
         type: table ? 'AT_TABLE' : 'TAKE_AWAY',
         items: items
     }
 
-    try {
-        await posStore.createOrder(orderData)
+    console.log('=== ORDER CREATION DEBUG ===')
+    console.log('Selected customer ID:', selectedCustomerId.value)
+    console.log('Selected customer object:', selectedCustomer.value)
+    console.log('Order data to send:', orderData)
+    console.log('Customer list length:', customers.value.length)
 
-        // Clear giỏ hàng và đóng dialog
+    try {
+        const response = await posStore.createOrder(orderData)
+        console.log('Order creation response:', response)
+        
+        // Clear giỏ hàng và reset customer selection
         tempCart.value = []
+        selectedCustomerId.value = null
         showTableSelection.value = false
 
         // Refresh bàn
@@ -417,6 +463,7 @@ const createOrderFromCart = async (table) => {
 
     } catch (error) {
         console.error('Error creating order:', error)
+        console.error('Error response:', error.response)
         toast.error(error.response?.data?.message || 'Lỗi khi tạo đơn hàng')
     }
 }
@@ -436,6 +483,7 @@ const getTableClass = (status) => {
 onMounted(() => {
     fetchTables()
     fetchProducts()
+    fetchCustomers()
 })
 
 // Theo dõi Pinia store để refresh bàn khi modal đóng
@@ -510,9 +558,10 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     overflow-x: hidden;
     padding: 15px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 160px));
     gap: 15px;
     align-content: start;
+    max-height: 500px;
 }
 
 .product-card {
@@ -522,6 +571,8 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     border-radius: 12px;
     border: 2px solid #E8E6E3;
     padding: 10px;
+    overflow: hidden;
+    max-height: 250px;
 }
 
 .product-card:hover {
@@ -532,21 +583,23 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 
 .product-image {
     width: 100%;
-    height: 150px;
+    height: 140px;
     border-radius: 8px;
     overflow: hidden;
     display: block;
+    margin-bottom: 8px;
 }
 
 :deep(.product-image img) {
     width: 100%;
-    height: 150px;
+    height: 140px;
     object-fit: cover;
+    border-radius: 8px;
 }
 
 .image-placeholder {
     width: 100%;
-    height: 150px;
+    height: 140px;
     background: linear-gradient(135deg, #f5f7fa 0%, #e8ecef 100%);
     display: flex;
     align-items: center;
@@ -567,10 +620,13 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     font-weight: 600;
     font-size: 0.9rem;
     color: #212121 !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     line-height: 1.3;
+    overflow: visible;
+    text-overflow: visible;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .product-price {

@@ -19,8 +19,17 @@
                     </el-descriptions-item>
                     <el-descriptions-item label="Bàn">{{ order.tableName || 'N/A' }}</el-descriptions-item>
                     <el-descriptions-item label="Nhân viên">{{ order.staffUsername }}</el-descriptions-item>
-                    <el-descriptions-item label="Khách hàng">
-                        {{ order.customerName || '(Vãng lai)' }}
+                    <el-descriptions-item label="Khách hàng" :span="2">
+                        <div v-if="order.customerName">
+                            <strong>{{ order.customerName }}</strong>
+                            <br>
+                            <small style="color: #909399;">📞 {{ order.customerPhone || 'N/A' }}</small>
+                        </div>
+                        <div v-else style="color: #909399;">
+                            <em>Khách vãng lai</em>
+                            <br>
+                            <small>💡 Khách hàng được chọn khi tạo đơn hàng</small>
+                        </div>
                     </el-descriptions-item>
                     <el-descriptions-item label="Ngày tạo">
                         {{ new Date(order.createdAt).toLocaleString('vi-VN') }}
@@ -31,22 +40,14 @@
                 </el-descriptions>
 
                 <h4 class="modal-subtitle">Danh sách món đã gọi</h4>
-                <el-table :data="order.orderDetails" style="width: 100%" border>
-                    <el-table-column type="index" label="#" width="60" align="center" />
-                    <el-table-column prop="productName" label="Tên món" min-width="200" />
-                    <el-table-column prop="quantity" label="SỐ lượng" align="center" width="100" />
-                    <el-table-column label="Đơn giá" align="right" width="150">
-                        <template #default="scope">
-                            {{ formatCurrency(scope.row.priceAtOrder) }}
-                        </template>
-                    </el-table-column>
-                    <el-table-column label="Thành tiền" align="right" width="150">
-                        <template #default="scope">
-                            {{ formatCurrency(scope.row.priceAtOrder * scope.row.quantity) }}
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="notes" label="Ghi chú" min-width="200" />
-                </el-table>
+                <EasyDataTable :headers="orderDetailHeaders" :items="order.orderDetails" table-class-name="data-table" show-index>
+                    <template #item-priceAtOrder="{ priceAtOrder }">
+                        {{ formatCurrency(priceAtOrder) }}
+                    </template>
+                    <template #item-lineTotal="{ lineTotal }">
+                        {{ formatCurrency(lineTotal) }}
+                    </template>
+                </EasyDataTable>
 
                 <div class="summary-wrapper">
                     <div class="payment-info">
@@ -72,7 +73,7 @@
         </div>
 
         <template #footer>
-            <span class_="dialog-footer">
+            <span class="dialog-footer">
                 <el-button type="primary" @click="$emit('update:visible', false)">Đóng</el-button>
             </span>
         </template>
@@ -84,6 +85,8 @@ import { ref } from 'vue'
 import { getOrderById } from '@/api/orderService.js' // Thêm .js
 import { formatCurrency } from '@/utils/formatters.js' // Thêm .js
 import { useToast } from 'vue-toastification'
+import EasyDataTable from 'vue3-easy-data-table'
+import 'vue3-easy-data-table/dist/style.css'
 // SỬA LỖI: Import Picture từ @element-plus/icons-vue
 import { Picture } from '@element-plus/icons-vue'
 
@@ -97,15 +100,34 @@ const toast = useToast()
 const loading = ref(false)
 const order = ref(null)
 
+const orderDetailHeaders = [
+    { text: "Tên món", value: "productName", minWidth: 250 },
+    { text: "Số lượng", value: "quantity", width: 100 },
+    { text: "Đơn giá", value: "priceAtOrder", width: 150 },
+    { text: "Thành tiền", value: "lineTotal", width: 150 },
+    { text: "Ghi chú", value: "notes", minWidth: 200 }
+]
+
 const fetchOrderDetails = async () => {
     if (!props.orderId) return
 
     loading.value = true
     order.value = null
     try {
+        console.log('=== FETCHING ORDER DETAILS ===')
+        console.log('Order ID:', props.orderId)
+        
         const response = await getOrderById(props.orderId)
         order.value = response.data
+        
+        console.log('=== RECEIVED ORDER DATA ===')
+        console.log('Full order object:', order.value)
+        console.log('Customer ID from API:', order.value.customerId)
+        console.log('Customer Name from API:', order.value.customerName)
+        console.log('Customer Phone from API:', order.value.customerPhone)
+        
     } catch (error) {
+        console.error('Error fetching order details:', error)
         toast.error('Lỗi khi tải chi tiết đơn hàng.')
     } finally {
         loading.value = false

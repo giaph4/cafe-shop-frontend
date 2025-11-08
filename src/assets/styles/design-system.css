@@ -609,19 +609,20 @@
   transition: all 0.5s ease;
 }
 
-/* Interactive Elements */
+/* Interactive Elements - Removed conflicting transforms */
 .clickable {
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.clickable:hover {
+/* Remove hover transform that conflicts with table interactions */
+/* .clickable:hover {
   transform: scale(1.02);
 }
 
 .clickable:active {
   transform: scale(0.98);
-}
+} */
 
 /* Loading Dots Animation */
 @keyframes loadingDots {

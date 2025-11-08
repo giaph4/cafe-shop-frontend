@@ -129,7 +129,6 @@ body {
 
 .modern-card:hover {
   box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
 }
 
 /* Gradient Button - Cafe Style */
@@ -324,7 +323,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .modern-table tbody tr:hover {
   background: var(--gray-50);
-  transform: scale(1.005);
 }
 
 .modern-table tbody tr:last-child {
@@ -762,3 +760,95 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 24px;
 }
 
+/* ===== EASYDATATABLE STANDARDIZATION ===== */
+:deep(.vue3-easy-data-table) {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--gray-200);
+  background: var(--white);
+}
+
+:deep(.vue3-easy-data-table__main) {
+  background: var(--white);
+}
+
+:deep(.vue3-easy-data-table thead tr) {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+}
+
+:deep(.vue3-easy-data-table th) {
+  background: transparent !important;
+  color: var(--text-white) !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 18px 20px !important;
+  border: none !important;
+}
+
+:deep(.vue3-easy-data-table .header-text) {
+  color: var(--text-white) !important;
+  font-weight: 700 !important;
+}
+
+:deep(.vue3-easy-data-table .sortable) {
+  cursor: pointer;
+}
+
+:deep(.vue3-easy-data-table .sortable .sortType-icon) {
+  color: var(--text-white) !important;
+  opacity: 0.7;
+}
+
+:deep(.vue3-easy-data-table .sortable:hover .sortType-icon) {
+  opacity: 1;
+}
+
+:deep(.vue3-easy-data-table tbody tr) {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  transition: background-color var(--transition-fast);
+}
+
+:deep(.vue3-easy-data-table tbody tr:hover) {
+  background: var(--gray-50) !important;
+}
+
+:deep(.vue3-easy-data-table td) {
+  padding: 16px 20px !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination) {
+  padding: 16px 20px;
+  background: var(--gray-50);
+  border-top: 2px solid var(--gray-200);
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination button) {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination button:hover:not(.pagination__active-button)) {
+  background: var(--gray-100);
+  border-color: var(--info-500);
+  color: var(--info-500);
+}
+
+:deep(.vue3-easy-data-table .buttons-pagination button.pagination__active-button) {
+  background: var(--info-500);
+  border-color: var(--info-500);
+  color: var(--white);
+  font-weight: 700;
+}

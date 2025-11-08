@@ -239,42 +239,5 @@ onMounted(() => {
 </script>
 
 <style>
-.status-select .el-input__wrapper {
-    background-color: var(--el-color-info-light-9) !important;
-    border: 1px solid var(--el-color-info-light-7) !important;
-    color: var(--el-color-info) !important;
-    box-shadow: none !important;
-    font-weight: 600;
-    border-radius: 8px;
-}
 
-.status-select.status-empty .el-input__wrapper {
-    background-color: var(--el-color-success-light-9) !important;
-    border-color: var(--el-color-success) !important;
-    color: var(--el-color-success) !important;
-}
-
-.status-select.status-serving .el-input__wrapper {
-    background-color: var(--el-color-danger-light-9) !important;
-    border-color: var(--el-color-danger) !important;
-    color: var(--el-color-danger) !important;
-}
-
-.status-select.status-reserved .el-input__wrapper {
-    background-color: var(--el-color-warning-light-9) !important;
-    border-color: var(--el-color-warning) !important;
-    color: var(--el-color-warning) !important;
-}
-
-.app-page-container {
-    padding: 20px;
-}
-
-.filter-card {
-    margin-bottom: 20px;
-}
-
-.w-100 {
-    width: 100%;
-}
 </style>

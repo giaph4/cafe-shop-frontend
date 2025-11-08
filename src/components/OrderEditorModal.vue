@@ -103,16 +103,6 @@
                       Bạn đã chọn {{ posStore.orderItems.length }} món. Vui lòng chọn bàn để tạo đơn hàng.
                     </template>
                   </el-alert>
-                  <el-input
-                    v-model="tableSearch"
-                    placeholder="Tìm bàn..."
-                    clearable
-                    style="margin-bottom: 20px;"
-                  >
-                    <template #prefix>
-                      <el-icon><Search /></el-icon>
-                    </template>
-                  </el-input>
                   <div class="table-grid-modal">
                     <el-card v-for="table in filteredTables" :key="table.id" class="table-card-modal"
                       :class="getTableClass(table.status)" shadow="hover" @click="onSelectTable(table)">
@@ -161,8 +151,11 @@
                   </el-form-item>
                 </div>
                 <div class="payment-actions-bottom">
+                  <el-button type="info" plain size="large" @click="generateBillPreview()">
+                    🧪 Test Bill
+                  </el-button>
                   <el-button type="primary" size="large" :disabled="!selectedPaymentMethod" @click="onPay(selectedPaymentMethod)">
-                    Thanh Toán
+                    💳 Thanh Toán & In Bill
                   </el-button>
                 </div>
               </el-tab-pane>
@@ -194,15 +187,16 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { usePosStore } from '@/store/posStore.js'
-import { getAvailableProducts } from '@/api/productService.js'
-import { getAllCategories } from '@/api/categoryService.js'
-import { searchCustomersSimple } from '@/api/customerService.js'
-import { getAllTables } from '@/api/tableService.js'
-import { formatCurrency } from '@/utils/formatters.js'
-import { useToast } from 'vue-toastification'
-import { Search, Trash2, Ticket, DollarSign, Landmark, CreditCard } from '@/components/icons/index.js'
-import { Picture, Plus, Close } from '@element-plus/icons-vue'
+import {usePosStore} from '@/store/posStore.js'
+import {getAvailableProducts} from '@/api/productService.js'
+import {getAllCategories} from '@/api/categoryService.js'
+import {searchCustomersSimple} from '@/api/customerService.js'
+import {getAllTables} from '@/api/tableService.js'
+import {formatCurrency} from '@/utils/formatters.js'
+import {useToast} from 'vue-toastification'
+import {Search, Trash2, Ticket, DollarSign, Landmark, CreditCard} from '@/components/icons/index.js'
+import {Picture, Plus, Close} from '@element-plus/icons-vue'
+import {getOrderById} from '@/api/orderService.js'
 
 const posStore = usePosStore()
 const toast = useToast()
@@ -322,10 +316,83 @@ const onConfirmOrderDetails = () => {
   }
 }
 
+const generateBillPreview = () => {
+  try {
+    console.log('=== BILL PREVIEW TEST ===')
+    console.log('Current order items:', posStore.orderItems)
+    console.log('Total:', posStore.total)
+
+    // Create a preview order object
+    const previewOrder = {
+      id: 'PREVIEW',
+      tableName: posStore.currentTable?.name || 'Mang đi',
+      type: posStore.currentTable ? 'AT_TABLE' : 'TAKE_AWAY',
+      staffUsername: 'Preview Staff',
+      customerName: 'Khách hàng test',
+      customerPhone: '0123456789',
+      paymentMethod: selectedPaymentMethod.value || 'CASH',
+      createdAt: new Date(),
+      paidAt: new Date(),
+      subTotal: posStore.subTotal,
+      discountAmount: posStore.discount,
+      totalAmount: posStore.total,
+      orderDetails: posStore.orderItems.map(item => ({
+        productName: item.productName,
+        quantity: item.quantity,
+        priceAtOrder: item.priceAtOrder,
+        lineTotal: item.quantity * item.priceAtOrder,
+        notes: item.notes
+      }))
+    }
+
+    const billContent = generateBillContent(previewOrder)
+    downloadBill(billContent, `bill_preview.txt`)
+    toast.success('Bill preview đã được tải xuống!')
+  } catch (error) {
+    console.error('Bill preview error:', error)
+    toast.error('Lỗi tạo bill preview: ' + error.message)
+  }
+}
+
 const onPay = async (paymentMethod) => {
-  const success = await posStore.pay(paymentMethod, selectedCustomerId.value)
-  if (success) {
-    // (Modal đã tự đóng trong store)
+  console.log('=== POS PAYMENT STARTED ===')
+  console.log('Payment method:', paymentMethod)
+  console.log('Customer ID:', selectedCustomerId.value)
+
+  try {
+    // Store order ID before payment (since closePosModal clears it)
+    const orderId = posStore.activeOrder?.id
+    console.log('Order ID before payment:', orderId)
+
+    // Use posStore to complete the payment (like Orders.vue does)
+    const success = await posStore.pay(paymentMethod, selectedCustomerId.value)
+    console.log('Payment result:', success)
+
+    if (success && orderId) {
+      // Fetch updated order data for bill printing (like Orders.vue does)
+      const response = await getOrderById(orderId)
+      const updatedOrder = response.data
+
+      console.log('=== PAYMENT SUCCESSFUL ===')
+      console.log('Fetched order data:', updatedOrder)
+
+      // Auto-generate bill after payment
+      const billContent = generateBillContent(updatedOrder)
+      console.log('Bill content generated, length:', billContent.length)
+
+      downloadBill(billContent, `bill_${updatedOrder.id}.txt`)
+      console.log('Bill downloaded as:', `bill_${updatedOrder.id}.txt`)
+
+      toast.success('Thanh toán thành công! Bill đã được tải xuống.')
+
+      // Modal closes automatically via posStore.pay()
+    } else {
+      console.log('=== PAYMENT FAILED ===')
+      toast.error('Thanh toán thất bại!')
+    }
+  } catch (error) {
+    console.error('Payment error:', error)
+    toast.error('Lỗi thanh toán: ' + error.message)
   }
 }
 
@@ -378,6 +445,81 @@ const onSelectTable = async (table) => {
   if (success) {
     activeTab.value = 'payment'
   }
+}
+
+const generateBillContent = (order) => {
+  console.log('Generating bill for order:', order)
+
+  if (!order) {
+    throw new Error('Order object is null or undefined')
+  }
+
+  const date = new Date(order.createdAt).toLocaleString('vi-VN')
+  const paidDate = order.paidAt ? new Date(order.paidAt).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN')
+
+  let bill = `
+══════════════════════════════════════════
+           COFFEE SHOP - HOA BILL
+══════════════════════════════════════════
+
+Mã đơn: #${order.id || 'N/A'}
+Bàn: ${order.tableName || 'Mang đi'}
+Loại: ${order.type === 'AT_TABLE' ? 'Tại bàn' : 'Mang đi'}
+Nhân viên: ${order.staffUsername || 'N/A'}
+Khách hàng: ${order.customerName || 'Khách vãng lai'}
+SĐT: ${order.customerPhone || 'N/A'}
+
+Ngày tạo: ${date}
+Ngày thanh toán: ${paidDate}
+Phương thức: ${order.paymentMethod || 'N/A'}
+
+══════════════════════════════════════════
+                 CHI TIẾT ĐƠN HÀNG
+══════════════════════════════════════════
+
+`
+
+  if (order.orderDetails && order.orderDetails.length > 0) {
+    order.orderDetails.forEach((item, index) => {
+      bill += `${index + 1}. ${item.productName || 'N/A'}\n`
+      bill += `   Số lượng: ${item.quantity || 0}\n`
+      bill += `   Đơn giá: ${formatCurrency(item.priceAtOrder || 0)}\n`
+      bill += `   Thành tiền: ${formatCurrency(item.lineTotal || 0)}\n`
+      if (item.notes) {
+        bill += `   Ghi chú: ${item.notes}\n`
+      }
+      bill += `\n`
+    })
+  } else {
+    bill += 'Không có chi tiết đơn hàng\n\n'
+  }
+
+  bill += `══════════════════════════════════════════\n`
+  bill += `Tổng tiền: ${formatCurrency(order.subTotal || 0)}\n`
+  if (order.discountAmount > 0) {
+    bill += `Giảm giá: -${formatCurrency(order.discountAmount)}\n`
+  }
+  bill += `THÀNH TIỀN: ${formatCurrency(order.totalAmount || 0)}\n`
+  bill += `══════════════════════════════════════════\n\n`
+
+  bill += `Cảm ơn quý khách đã ghé thăm!\n`
+  bill += `Hẹn gặp lại quý khách lần sau!\n\n`
+
+  bill += `Thời gian in: ${new Date().toLocaleString('vi-VN')}\n`
+
+  return bill
+}
+
+const downloadBill = (content, filename) => {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
 }
 </script>
 
