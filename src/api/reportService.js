@@ -126,6 +126,28 @@ export const getPaymentMethodStats = (startDate, endDate) => {
 }
 
 /**
+ * Lấy tổng chi phí vận hành trong khoảng ngày
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ */
+export const getTotalExpenses = (startDate, endDate) => {
+    return apiClient.get('/api/v1/reports/total-expenses', {
+        params: { startDate, endDate }
+    })
+}
+
+/**
+ * Lấy tổng chi phí nhập nguyên liệu đã hoàn tất trong khoảng ngày
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ */
+export const getTotalImportedIngredientCost = (startDate, endDate) => {
+    return apiClient.get('/api/v1/reports/total-imported-ingredients', {
+        params: { startDate, endDate }
+    })
+}
+
+/**
  * So sánh Doanh thu 2 kỳ
  * @param {string} currentStart - "YYYY-MM-DD"
  * @param {string} currentEnd - "YYYY-MM-DD"

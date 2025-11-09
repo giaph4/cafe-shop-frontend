@@ -42,8 +42,8 @@
                     </template>
                 </el-alert>
 
-                <el-row :gutter="20" class="kpi-cards" v-loading="loading.profit">
-                    <el-col :span="6">
+                <el-row :gutter="20" class="kpi-cards" v-loading="loading.profit || loading.financialTotals">
+                    <el-col :span="8">
                         <el-card shadow="hover" class="kpi-card">
                             <div class="kpi-content">
                                 <div class="kpi-icon revenue-icon">💰</div>
@@ -55,7 +55,7 @@
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="6">
+                    <el-col :span="8">
                         <el-card shadow="hover" class="kpi-card">
                             <div class="kpi-content">
                                 <div class="kpi-icon cost-icon">📦</div>
@@ -67,7 +67,7 @@
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="6">
+                    <el-col :span="8">
                         <el-card shadow="hover" class="kpi-card">
                             <div class="kpi-content">
                                 <div class="kpi-icon profit-icon">📈</div>
@@ -79,14 +79,38 @@
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="6">
+                    <el-col :span="8">
+                        <el-card shadow="hover" class="kpi-card">
+                            <div class="kpi-content">
+                                <div class="kpi-icon expense-icon">🧾</div>
+                                <div class="kpi-text">
+                                    <div class="kpi-title">Tổng Chi phí vận hành</div>
+                                    <div class="kpi-value expense">{{ formatCurrency(totalExpenses) }}</div>
+                                    <div class="kpi-desc">Bao gồm lương, thuê mặt bằng, marketing...</div>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-card shadow="hover" class="kpi-card">
+                            <div class="kpi-content">
+                                <div class="kpi-icon import-icon">🚚</div>
+                                <div class="kpi-text">
+                                    <div class="kpi-title">Chi phí nhập nguyên liệu</div>
+                                    <div class="kpi-value import">{{ formatCurrency(totalImportedIngredientCost) }}</div>
+                                    <div class="kpi-desc">Các đơn nhập kho đã hoàn tất</div>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="8">
                         <el-card shadow="hover" class="kpi-card">
                             <div class="kpi-content">
                                 <div class="kpi-icon margin-icon">📊</div>
                                 <div class="kpi-text">
                                     <div class="kpi-title">Tỷ suất lợi nhuận</div>
-                                    <div class="kpi-value margin">{{ profitMargin }}%</div>
-                                    <div class="kpi-desc">Lợi nhuận / Doanh thu</div>
+                                    <div class="kpi-value margin">{{ profitMarginDisplay }}</div>
+                                    <div class="kpi-desc">Sau khi trừ chi phí vận hành & nhập nguyên liệu</div>
                                 </div>
                             </div>
                         </el-card>
@@ -475,6 +499,8 @@ import {
     getCategorySales,
     getHourlySales,
     getPaymentMethodStats,
+    getTotalExpenses,
+    getTotalImportedIngredientCost,
     exportInventoryToExcel,
     exportExpensesToExcel
 } from '@/api/reportService.js'
@@ -516,6 +542,9 @@ const topCustomers = ref([])
 const staffPerformance = ref([])
 const paymentMethodStats = ref([])
 
+const totalExpenses = ref(0)
+const totalImportedIngredientCost = ref(0)
+
 const chartData = reactive({
     revenue: { labels: [], datasets: [] },
     bestSellers: { labels: [], datasets: [] },
@@ -530,6 +559,7 @@ const chartData = reactive({
 
 const loading = reactive({
     profit: false,
+    financialTotals: false,
     revenue: false,
     bestSellers: false,
     expenses: false,
@@ -574,13 +604,30 @@ const paymentHeaders = [
     { text: "Tỷ lệ", value: "percentage", width: 120, sortable: true }
 ]
 
+const netProfit = computed(() => {
+    const grossProfit = Number(profitStats.value?.totalProfit) || 0
+    const operatingCost = Number(totalExpenses.value) || 0
+    const importCost = Number(totalImportedIngredientCost.value) || 0
+    return grossProfit - operatingCost - importCost
+})
+
 const profitMargin = computed(() => {
-    if (!profitStats.value || !profitStats.value.totalRevenue || profitStats.value.totalRevenue === 0) return '0.00'
+    const revenue = Number(profitStats.value?.totalRevenue) || 0
+    if (revenue === 0) return 0
     try {
-        const margin = (profitStats.value.totalProfit / profitStats.value.totalRevenue) * 100
-        return margin.toFixed(2)
+        return (netProfit.value / revenue) * 100
     } catch (e) {
-        return '0.00'
+        return 0
+    }
+})
+
+const profitMarginDisplay = computed(() => {
+    try {
+        const margin = Number.isFinite(profitMargin.value) ? profitMargin.value : 0
+        const formattedMargin = margin.toFixed(2)
+        return `${formattedMargin}% (${formatCurrency(netProfit.value)})`
+    } catch (e) {
+        return `0.00% (${formatCurrency(0)})`
     }
 })
 
@@ -653,6 +700,21 @@ const fetchAllReports = async () => {
         .then(res => { profitStats.value = res.data })
         .catch(() => toast.error('Lỗi tải báo cáo lợi nhuận'))
         .finally(() => { loading.profit = false })
+
+    // 1b. Fetch total expenses & imported ingredient costs
+    loading.financialTotals = true
+    Promise.all([
+        getTotalExpenses(start, end),
+        getTotalImportedIngredientCost(start, end)
+    ])
+        .then(([expenseRes, importsRes]) => {
+            const expenseValue = expenseRes.data?.totalExpenses ?? expenseRes.data ?? 0
+            const importValue = importsRes.data?.totalImportedIngredientCost ?? importsRes.data ?? 0
+            totalExpenses.value = isNaN(Number(expenseValue)) ? 0 : Number(expenseValue)
+            totalImportedIngredientCost.value = isNaN(Number(importValue)) ? 0 : Number(importValue)
+        })
+        .catch(() => toast.error('Lỗi tải tổng chi phí'))
+        .finally(() => { loading.financialTotals = false })
 
     // 2. Fetch Revenue by Date (Line Chart)
     loading.revenue = true
@@ -939,6 +1001,7 @@ onMounted(() => {
 }
 
 .kpi-card {
+    margin-top: 20px;
     transition: all 0.3s;
 }
 
@@ -976,6 +1039,14 @@ onMounted(() => {
 
 .margin-icon {
     background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+}
+
+.expense-icon {
+    background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+}
+
+.import-icon {
+    background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
 }
 
 .kpi-text {
@@ -1018,6 +1089,14 @@ onMounted(() => {
 
 .kpi-value.profit {
     color: #67C23A;
+}
+
+.kpi-value.expense {
+    color: #9C27B0;
+}
+
+.kpi-value.import {
+    color: #00ACC1;
 }
 
 .chart-card {

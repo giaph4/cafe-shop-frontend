@@ -1,18 +1,23 @@
 <template>
-    <el-aside class="sidebar" width="250px">
-        <div class="logo">
-            <router-link to="/">
-                <img src="https://scontent.fsgn2-4.fna.fbcdn.net/v/t39.30808-1/488254814_1121102093151861_7125486509227688983_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=101&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeHnPNmbK6-RM1CbxwWQo38paUWjPCRSEXFpRaM8JFIRcdM3FgWwO4e7PSxSAT-TceDLibeRE_C9kNJMBxyQj1nK&_nc_ohc=rFGH2zQ6cGgQ7kNvwGjQkMK&_nc_oc=AdkF2QV7mpYqGFVx6XfFO_ab56a-XunhRFBKBFwUUxZ5b6JKY3jBEbrB1Dg2sallJk0&_nc_zt=24&_nc_ht=scontent.fsgn2-4.fna&_nc_gid=pt-PlS4Z9gd_DH2FMDUCKw&oh=00_AfdhxqBTnDBjA250ZVv-RnshlD1bWxe_pC8hI6wYljUfGg&oe=690BFAAE"
-                    alt="Logo" />
-                <span>Coffee BestDN</span>
+    <el-aside class="sidebar" :class="{ collapsed: isCollapsed }" :width="sidebarWidth">
+        <div class="sidebar-header">
+            <router-link class="logo" to="/">
+                <img src="@/assets/logo.png"
+                    alt="Logo" class="img-logo" />
+                <transition name="fade">
+                    <span v-if="!isCollapsed">Coffee Siu</span>
+                </transition>
             </router-link>
         </div>
 
-        <el-menu :default-active="activeMenu" class="sidebar-menu" background-color="var(--sidebar-bg)"
-            text-color="var(--sidebar-text)" active-text-color="var(--sidebar-active-text)" router :collapse="false">
+        <el-menu :default-active="activeMenu" class="sidebar-menu" :class="{ collapsed: isCollapsed }"
+            background-color="var(--sidebar-bg)" text-color="var(--sidebar-text)"
+            active-text-color="var(--sidebar-active-text)" router :collapse="isCollapsed" :collapse-transition="false">
             <template v-for="route in menuRoutes" :key="route.path">
                 <el-menu-item v-if="route.meta.title && hasPermission(route)" :index="'/' + route.path">
-                    <component :is="icons[route.meta.icon]" class="menu-icon" />
+                    <el-icon class="menu-icon">
+                        <component :is="icons[route.meta.icon]" />
+                    </el-icon>
                     <template #title>{{ route.meta.title }}</template>
                 </el-menu-item>
             </template>
@@ -25,10 +30,17 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import * as icons from '@/components/icons'
+import { useSidebarStore } from '@/store/sidebar'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+
+const sidebarStore = useSidebarStore()
+
+const isCollapsed = computed(() => sidebarStore.isCollapsed)
+
+const sidebarWidth = computed(() => isCollapsed.value ? '80px' : '260px')
 
 const menuRoutes = computed(() => {
     return router.options.routes.find(r => r.path === '/')?.children || []
@@ -57,22 +69,34 @@ const activeMenu = computed(() => {
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+    transition: width 0.25s ease;
 }
 
-.logo {
-    height: 70px;
+.sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar-header {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 20px;
+    padding: 0 16px;
+    height: 70px;
     border-bottom: 1px solid #F5F5F5;
+    gap: 12px;
 }
 
-.logo a {
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 16px 0;
+}
+
+.logo {
     display: flex;
     align-items: center;
     text-decoration: none;
     gap: 12px;
+    color: inherit;
 }
 
 .logo img {
@@ -91,6 +115,10 @@ const activeMenu = computed(() => {
     background-clip: text;
 }
 
+.sidebar.collapsed .logo span {
+    display: none;
+}
+
 .sidebar-menu {
     flex: 1;
     border-right: none !important;
@@ -98,6 +126,28 @@ const activeMenu = computed(() => {
     overflow-x: hidden;
     padding: 12px;
     background: #F8F6F3 !important;
+}
+
+.sidebar-menu.collapsed {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sidebar.collapsed .el-menu-item {
+    justify-content: center;
+    align-items: center !important;
+    display: flex !important;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    max-width: 56px;
+    margin: 6px 0;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(139, 115, 85, 0.12) !important;
+    box-shadow: 0 6px 14px rgba(139, 115, 85, 0.12);
 }
 
 .sidebar-menu::-webkit-scrollbar {
@@ -122,9 +172,41 @@ const activeMenu = computed(() => {
 }
 
 .el-menu-item .menu-icon {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     margin-right: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar.collapsed .el-menu-item .menu-icon {
+    margin-right: 0;
+    display: inline-flex;
+}
+
+.sidebar.collapsed .el-menu-item .el-menu-item__content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.sidebar.collapsed .el-menu-item:hover,
+.sidebar.collapsed .el-menu-item.is-active {
+    transform: none;
+}
+
+.sidebar.collapsed .el-menu-item:hover {
+    background: rgba(139, 115, 85, 0.2) !important;
+    color: #6F5B45 !important;
+}
+
+.sidebar.collapsed .el-menu-item.is-active {
+    background: linear-gradient(135deg, #8B7355 0%, #6F5B45 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 10px 20px rgba(139, 115, 85, 0.25);
 }
 
 .el-menu-item:hover {

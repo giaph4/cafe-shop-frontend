@@ -3,25 +3,13 @@
         <div class="login-left">
             <div class="brand-section">
                 <div class="logo-circle">
-                    <img src="https://scontent.fsgn2-4.fna.fbcdn.net/v/t39.30808-1/488254814_1121102093151861_7125486509227688983_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=101&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeHnPNmbK6-RM1CbxwWQo38paUWjPCRSEXFpRaM8JFIRcdM3FgWwO4e7PSxSAT-TceDLibeRE_C9kNJMBxyQj1nK&_nc_ohc=rFGH2zQ6cGgQ7kNvwGjQkMK&_nc_oc=AdkF2QV7mpYqGFVx6XfFO_ab56a-XunhRFBKBFwUUxZ5b6JKY3jBEbrB1Dg2sallJk0&_nc_zt=24&_nc_ht=scontent.fsgn2-4.fna&_nc_gid=pt-PlS4Z9gd_DH2FMDUCKw&oh=00_AfdhxqBTnDBjA250ZVv-RnshlD1bWxe_pC8hI6wYljUfGg&oe=690BFAAE"
-                         alt="Coffee Shop Logo" />
+                    <img src="@/assets/logo.png"
+                         alt="Coffee Shop Logo"/>
                 </div>
-                <h1 class="brand-title">Coffee BestDN</h1>
-                <p class="brand-subtitle">Hệ thống quản lý quán cafe hiện đại</p>
-                <div class="features">
-                    <div class="feature-item">
-                        <span class="feature-icon">☕</span>
-                        <span>Quản lý đơn hàng</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">📊</span>
-                        <span>Báo cáo doanh thu</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">👥</span>
-                        <span>Quản lý nhân viên</span>
-                    </div>
-                </div>
+                <h1 class="brand-title">Siu - Coffee Shop</h1>
+                <p class="brand-subtitle">
+                    "Cùng Siu - Coffee Shop, thưởng thức hương vị của niềm vui cùng Messi!"
+                </p>
             </div>
         </div>
 
@@ -55,7 +43,7 @@
                         />
                     </el-form-item>
 
-                    <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon class="error-alert" />
+                    <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon class="error-alert"/>
 
                     <el-button
                         type="primary"
@@ -82,9 +70,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useAuthStore } from '@/store/auth'
-import { useToast } from 'vue-toastification'
+import {ref} from 'vue'
+import {useAuthStore} from '@/store/auth'
+import {useToast} from 'vue-toastification'
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -104,7 +92,7 @@ const handleLogin = async () => {
         })
 
         // Auth store (đã sửa) sẽ tự động giải mã token và lấy tên
-        toast.success(`Chào mừng trở lại, ${authStore.userFullName}!`)
+        toast.success(`Chào mừng trở lại, ${authStore.userFullName}! hẹ hẹ`)
         // Điều hướng đã được xử lý trong authStore
 
     } catch (error) {
@@ -137,13 +125,12 @@ const handleLogin = async () => {
 }
 
 .brand-section {
-    max-width: 500px;
+    max-width: 800px;
     text-align: center;
 }
 
 .logo-circle {
-    width: 120px;
-    height: 120px;
+    width: 500px;
     margin: 0 auto 30px;
     border-radius: 50%;
     overflow: hidden;

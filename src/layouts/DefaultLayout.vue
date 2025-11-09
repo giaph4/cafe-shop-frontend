@@ -1,5 +1,5 @@
 <template>
-    <el-container class="app-layout">
+    <el-container class="app-layout" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
         <Sidebar />
 
         <el-container class="main-container" direction="vertical">
@@ -17,8 +17,14 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import Navbar from '@/components/Navbar.vue'
+import { useSidebarStore } from '@/store/sidebar'
+
+const sidebarStore = useSidebarStore()
+
+const isSidebarCollapsed = computed(() => sidebarStore.isCollapsed)
 </script>
 
 <style scoped>
@@ -27,9 +33,14 @@ import Navbar from '@/components/Navbar.vue'
     background: #F8F9FA;
 }
 
+.app-layout.sidebar-collapsed .main-container {
+    transition: margin-left 0.25s ease;
+}
+
 .main-container {
     overflow: hidden;
     background: #F8F9FA;
+    transition: margin-left 0.25s ease;
 }
 
 .app-main {

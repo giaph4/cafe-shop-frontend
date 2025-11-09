@@ -1,4 +1,3 @@
-// src/api/customerService.js
 import apiClient from './axios'
 
 /**
@@ -45,4 +44,13 @@ export const searchCustomersSimple = (keyword) => {
         keyword: keyword
     }
     return apiClient.get('/api/v1/customers', { params })
+}
+
+/**
+ * Lấy lịch sử mua hàng của khách hàng
+ * @param {number} id - ID khách hàng
+ * @param {object} params - { startDate, endDate, status, page, size }
+ */
+export const getCustomerPurchaseHistory = (id, params) => {
+    return apiClient.get(`/api/v1/customers/${id}/purchase-history`, { params })
 }
