@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container fade-in-up">
+    <div class="app-page-container custom-height animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">Quản lý Bàn</h1>
             <el-button type="primary" @click="openCreateModal">
@@ -116,7 +116,7 @@ const headers = [
     { text: "Tên Bàn", value: "name", sortable: true },
     { text: "Sức chứa", value: "capacity", sortable: true, width: 200 },
     { text: "Trạng thái", value: "status", width: 300 },
-    { text: "Hành động", value: "actions", width: 300 },
+    { text: "Hành động", value: "actions", width: 200 },
 ]
 
 const filteredTables = computed(() => {
@@ -239,5 +239,9 @@ onMounted(() => {
 </script>
 
 <style>
+
+.custom-height {
+    min-height: 105vh;
+}
 
 </style>

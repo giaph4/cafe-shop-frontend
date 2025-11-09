@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', {
 
     actions: {
         /**
-         * (HÀM MỚI) Xử lý sau khi login/register thành công
+         * Xử lý sau khi login/register thành công
          */
         _handleAuthSuccess(tokenString) { // Renamed argument for clarity
             // 1. Lưu token vào state và localStorage
@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * (CẬP NHẬT) Action Đăng nhập
+         * Action Đăng nhập
          */
         async login(credentials) {
             try {
@@ -75,35 +75,32 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * (MỚI) Action Đăng ký
+         * Action Đăng ký
          */
         async register(userData) {
             try {
                 // 1. Gọi API register
                 const response = await authService.register(userData)
 
-                // API trả về token y hệt login [cite: giaph4/cafe-shop-backend/cafe-shop-backend-0a2a327b746e18257452b0f82b74bc84858fdcc6/src/main/java/com/giapho/coffee_shop_backend/service/AuthenticationService.java]
                 const { token } = response.data
-
                 // 2. Xử lý thành công (coi như đã login)
                 this._handleAuthSuccess(token)
 
                 return response
             } catch (error) {
                 console.error('Register failed:', error)
-                throw error // Ném lỗi để form Register bắt
+                throw error
             }
         },
 
         /**
-         * (GIỮ NGUYÊN) Action Đăng xuất
+         * Action Đăng xuất
          */
         logout() {
             this.token = null
             this.user = null
             localStorage.removeItem('token')
             localStorage.removeItem('user')
-            // Axios header will be cleared automatically by interceptor when token is null
             router.replace('/login')
         },
     }

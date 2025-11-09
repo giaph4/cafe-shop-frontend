@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container">
+    <div class="app-page-container animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">Quản lý Khách hàng</h1>
             <el-button type="primary" @click="openCreateModal">
@@ -31,6 +31,9 @@
             </template>
 
             <template #item-actions="item">
+                <el-button type="info" plain size="small" @click="openHistoryModal(item)">
+                    Lịch sử đơn hàng
+                </el-button>
                 <el-button type="primary" plain size="small" @click="openEditModal(item)">
                     Sửa
                 </el-button>
@@ -44,6 +47,11 @@
         </EasyDataTable>
 
         <CustomerFormModal v-model:visible="modalVisible" :customer="selectedCustomer" @success="handleModalSuccess" />
+        <CustomerPurchaseHistoryModal
+            v-if="historyCustomerId"
+            v-model:visible="historyModalVisible"
+            :customer-id="historyCustomerId"
+        />
 
     </div>
 </template>
@@ -56,6 +64,7 @@ import { useToast } from 'vue-toastification'
 import { Plus } from '@element-plus/icons-vue'
 import { searchCustomers, deleteCustomer } from '@/api/customerService'
 import CustomerFormModal from '@/components/CustomerFormModal.vue'
+import CustomerPurchaseHistoryModal from '@/components/CustomerPurchaseHistoryModal.vue'
 
 const toast = useToast()
 
@@ -71,6 +80,8 @@ const serverOptions = ref({
 
 const modalVisible = ref(false)
 const selectedCustomer = ref(null)
+const historyModalVisible = ref(false)
+const historyCustomerId = ref(null)
 
 const searchQuery = ref('')
 let searchTimer = null
@@ -125,6 +136,11 @@ const openEditModal = (customer) => {
     modalVisible.value = true
 }
 
+const openHistoryModal = (customer) => {
+    historyCustomerId.value = customer.id
+    historyModalVisible.value = true
+}
+
 const handleDelete = async (id) => {
     try {
         // API backend sẽ kiểm tra (nếu có)
@@ -146,6 +162,12 @@ watch(serverOptions, (newValue, oldValue) => {
     fetchData()
 }, { deep: true })
 
+watch(historyModalVisible, (visible) => {
+    if (!visible) {
+        historyCustomerId.value = null
+    }
+})
+
 onMounted(() => {
     fetchData()
 })
@@ -154,15 +176,11 @@ onMounted(() => {
 <style scoped>
 .app-page-container {
     padding: 20px;
+    min-height: 105vh;
 }
 
 .filter-card {
     margin-bottom: 20px;
 }
 
-.data-table {
-    --easy-table-header-font-size: 14px;
-    --easy-table-header-font-weight: 600;
-    --easy-table-body-row-font-size: 14px;
-}
 </style>

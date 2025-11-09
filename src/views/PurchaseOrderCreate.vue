@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container po-create-page fade-in-up">
+    <div class="app-page-container po-create-page animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">
                 <el-icon style="margin-right: 8px; font-size: 1.5rem;"><DocumentAdd /></el-icon>

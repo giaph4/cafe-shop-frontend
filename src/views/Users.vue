@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container">
+    <div class="app-page-container animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">Quản lý Nhân viên</h1>
             <el-button type="primary" @click="openRegisterModal">Thêm Nhân viên</el-button>

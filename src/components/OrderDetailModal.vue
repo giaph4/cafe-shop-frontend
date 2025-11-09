@@ -3,7 +3,7 @@
         :model-value="visible" 
         @update:model-value="$emit('update:visible', $event)" 
         title="Chi tiết Đơn hàng"
-        width="1000px" 
+        width="1000px"
         @open="fetchOrderDetails"
         destroy-on-close
         :append-to-body="true">

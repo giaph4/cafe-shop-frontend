@@ -58,9 +58,9 @@
                     <div class="demo-accounts">
                         <p class="demo-title">Tài khoản demo:</p>
                         <div class="demo-list">
-                            <span class="demo-item">👨‍💼 admin / password123</span>
-                            <span class="demo-item">👤 manager01 / password123</span>
-                            <span class="demo-item">👤 staff01 / password123</span>
+                            <span class="demo-item">🏆messi / password1wc8bld</span>
+                            <span class="demo-item">🗣️ronaldo / 0wc3/5</span>
+                            <span class="demo-item">📜hẹ hẹ/ password123</span>
                         </div>
                     </div>
                 </el-form>
@@ -77,8 +77,8 @@ import {useToast} from 'vue-toastification'
 const authStore = useAuthStore()
 const toast = useToast()
 
-const username = ref('admin')
-const password = ref('password123')
+const username = ref('')
+const password = ref('')
 const loading = ref(false)
 const errorMsg = ref(null)
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container">
+    <div class="app-page-container animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">Quản lý Nhập hàng</h1>
             <el-button type="primary" @click="goToCreatePage">
@@ -230,31 +230,12 @@ onMounted(() => {
 <style scoped>
 .app-page-container {
     padding: 20px;
+    min-height: 105vh;
 }
 
 .filter-card {
     margin-bottom: 20px;
 }
 
-.w-100 {
-    width: 100%;
-}
 
-.data-table {
-    --easy-table-header-font-size: 14px;
-    --easy-table-header-font-weight: 600;
-    --easy-table-body-row-font-size: 14px;
-}
-
-.date-filters {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.date-separator {
-    font-weight: 600;
-    color: #757575;
-    padding: 0 8px;
-}
 </style>

@@ -176,6 +176,7 @@ onMounted(() => {
 <style scoped>
 .app-page-container {
     padding: 20px;
+    min-height: 105vh;
 }
 
 .filter-card {

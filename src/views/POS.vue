@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container pos-page">
+    <div class="app-page-container pos-page animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">Bán Hàng (POS)</h1>
             <div class="header-actions">

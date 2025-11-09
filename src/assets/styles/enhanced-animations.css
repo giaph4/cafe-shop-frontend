@@ -4,7 +4,6 @@
 .hover-rotate {
 }
 
-/* Pulse Glow Animation */
 @keyframes pulse-glow {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(139, 115, 85, 0.7);

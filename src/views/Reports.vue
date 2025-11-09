@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <el-tabs v-model="activeTab" class="report-tabs">
+        <el-tabs v-model="activeTab" class="report-tabs animate__animated animate__fadeInUp stagger-item">
 
             <el-tab-pane label="📊 Tổng quan" name="revenue">
                 <el-alert type="info" :closable="false" style="margin-bottom: 20px;">

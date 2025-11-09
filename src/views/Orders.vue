@@ -1,5 +1,5 @@
 <template>
-    <div class="app-page-container">
+    <div class="app-page-container animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">Lịch sử Đơn hàng</h1>
         </div>
