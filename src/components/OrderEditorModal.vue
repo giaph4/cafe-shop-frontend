@@ -500,6 +500,8 @@ const downloadBill = (content, filename) => {
   link.download = filename
   document.body.appendChild(link)
   link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
 }
 </script>
 

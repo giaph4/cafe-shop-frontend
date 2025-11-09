@@ -206,9 +206,9 @@
                     </template>
                 </el-alert>
                 <el-card class="box-card chart-card" v-loading="loading.expenses">
-                    <template #header><span>Chi phí theo ngày (Cột chồng)</span></template>
+                    <template #header><span>Chi phí theo ngày</span></template>
                     <div class="chart-container" style="height: 500px;">
-                        <StackedBarChart v-if="chartData.expenses.labels.length" :chartData="chartData.expenses" />
+                        <BarChart v-if="chartData.expenses.labels.length" :chartData="chartData.expenses" />
                     </div>
                 </el-card>
             </el-tab-pane>
@@ -239,7 +239,7 @@
                         <strong>Phân tích con người:</strong> Xem khách hàng VIP và nhân viên xuất sắc để có chiến lược chăm sóc và khen thưởng phù hợp.
                     </template>
                 </el-alert>
-                
+
                 <el-row :gutter="20">
                     <el-col :span="12">
                         <el-card class="box-card" v-loading="loading.customers">
@@ -272,7 +272,7 @@
                             </EasyDataTable>
                         </el-card>
                     </el-col>
-                    
+
                     <el-col :span="12">
                         <el-card class="box-card" v-loading="loading.staff">
                             <template #header>
@@ -313,7 +313,7 @@
                         <strong>Phân tích thanh toán:</strong> Hiểu rõ khách hàng thích thanh toán bằng cách nào để chuẩn bị đầy đủ phương thức.
                     </template>
                 </el-alert>
-                
+
                 <el-row :gutter="20">
                     <el-col :span="12">
                         <el-card class="box-card chart-card" v-loading="loading.paymentMethods">
@@ -323,7 +323,7 @@
                             </div>
                         </el-card>
                     </el-col>
-                    
+
                     <el-col :span="12">
                         <el-card class="box-card" v-loading="loading.paymentMethods">
                             <template #header><span>Chi tiết Thống kê</span></template>
@@ -355,7 +355,7 @@
                         <strong>Xuất báo cáo:</strong> Tải xuống file Excel chứa chi tiết để phân tích offline hoặc lưu trữ.
                     </template>
                 </el-alert>
-                
+
                 <el-row :gutter="20">
                     <el-col :span="8">
                         <el-card class="box-card export-card">
@@ -392,7 +392,7 @@
                             </div>
                         </el-card>
                     </el-col>
-                    
+
                     <el-col :span="8">
                         <el-card class="box-card export-card">
                             <template #header>
@@ -413,7 +413,7 @@
                             </div>
                         </el-card>
                     </el-col>
-                    
+
                     <el-col :span="8">
                         <el-card class="box-card export-card">
                             <template #header>
@@ -480,7 +480,8 @@ import {
 } from '@/api/reportService.js'
 import { formatCurrency, formatDateISO, formatStackedBarChartData } from '@/utils/formatters.js'
 import { getDefaultDateRange, getDateRangeByFilter } from '@/utils/dateHelpers'
-import { createBarChartData, createPieChartData } from '@/utils/chartHelpers'
+import { createBarChartData, createPieChartData, createLineChartData } from '@/utils/chartHelpers'
+import { getChartColors } from '@/utils/chartColors'
 
 import LineChart from '@/components/charts/LineChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
@@ -498,7 +499,7 @@ const endDate = ref(formatDateISO(defaultDates[1]))
 
 const handleQuickFilter = () => {
     if (quickFilter.value === 'custom') return
-    
+
     const [start, end] = getDateRangeByFilter(quickFilter.value)
     startDate.value = formatDateISO(start)
     endDate.value = formatDateISO(end)
@@ -524,6 +525,7 @@ const chartData = reactive({
     hourly: { labels: [], datasets: [] },
     tables: { labels: [], datasets: [] },
     paymentMethods: { labels: [], datasets: [] },
+
 })
 
 const loading = reactive({
@@ -585,7 +587,7 @@ const profitMargin = computed(() => {
 const peakHour = computed(() => {
     if (!hourlyStats.value || !hourlyStats.value.length) return 'N/A'
     try {
-        const peak = hourlyStats.value.reduce((max, curr) => 
+        const peak = hourlyStats.value.reduce((max, curr) =>
             (curr.orders > max.orders) ? curr : max
         )
         return peak?.hour || 'N/A'
@@ -606,40 +608,33 @@ const totalHourlyOrders = computed(() => {
 const chartDataArea = computed(() => {
     if (!chartData.revenue.labels.length) return { labels: [], datasets: [] }
 
-    return {
-        labels: chartData.revenue.labels,
-        datasets: [
-            {
-                label: 'Doanh thu',
-                backgroundColor: 'rgba(139, 115, 85, 0.3)',
-                borderColor: '#8B7355',
-                tension: 0.4,
-                fill: true,
-                data: chartData.revenue.datasets[0]?.data || [],
-            },
-        ],
-    }
+    const data = createLineChartData(
+        chartData.revenue.labels,
+        chartData.revenue.datasets[0]?.data || [],
+        'Doanh thu',
+        { fill: true, tension: 0.4 }
+    )
+
+    // Make background more transparent for area chart
+    data.datasets[0].backgroundColor = data.datasets[0].backgroundColor.replace('0.8)', '0.3)')
+
+    return data
 })
 
 const processRevenueData = (apiData) => {
-    chartData.revenue = {
-        labels: Object.keys(apiData),
-        datasets: [{
-            label: 'Doanh thu',
-            backgroundColor: 'rgba(139, 115, 85, 0.2)',
-            borderColor: '#8B7355',
-            tension: 0.1,
-            fill: false,
-            data: Object.values(apiData),
-        }],
-    }
+    chartData.revenue = createLineChartData(
+        Object.keys(apiData),
+        Object.values(apiData),
+        'Doanh thu',
+        { fill: false, tension: 0.1 }
+    )
 }
 const processBestSellerData = (apiData) => {
     if (!apiData || !apiData.length) {
         chartData.bestSellers = { labels: [], datasets: [] }
         return
     }
-    
+
     chartData.bestSellers = createBarChartData(
         apiData.map(item => item.productName),
         apiData.map(item => item.totalRevenueGenerated),
@@ -679,10 +674,10 @@ const fetchAllReports = async () => {
         .then(res => { chartData.expenses = formatStackedBarChartData(res.data) })
         .catch(() => toast.error('Lỗi tải biểu đồ chi phí'))
         .finally(() => { loading.expenses = false })
-    
+
     // 5. Fetch Category Sales
     fetchCategorySales()
-    
+
     // 6. Fetch Top Products by Quantity
     fetchTopProducts()
 }
@@ -706,28 +701,30 @@ const fetchHourlySales = async () => {
         const today = new Date().toISOString().split('T')[0]
         const response = await getHourlySales(today)
         const data = response.data
-        
+
         hourlyStats.value = data.map(item => ({
             hour: `${item.hour}:00`,
             orders: item.orderCount,
             revenue: item.revenue
         }))
 
+        const colors = getChartColors(2)
+
         chartData.hourly = {
             labels: hourlyStats.value.map(h => h.hour),
             datasets: [
                 {
                     label: 'Số đơn hàng',
-                    backgroundColor: '#8B7355',
-                    borderColor: '#8B7355',
+                    backgroundColor: colors[0],
+                    borderColor: colors[0],
                     data: hourlyStats.value.map(h => h.orders),
                     yAxisID: 'y',
                 },
                 {
-                    label: 'Doanh thu (triệu đồng)',
-                    backgroundColor: '#A68A6D',
-                    borderColor: '#A68A6D',
-                    data: hourlyStats.value.map(h => Math.round(h.revenue / 1000000)),
+                    label: 'Doanh thu',
+                    backgroundColor: colors[1],
+                    borderColor: colors[1],
+                    data: hourlyStats.value.map(h => Math.round(h.revenue)),
                     yAxisID: 'y1',
                 }
             ]
@@ -746,7 +743,7 @@ const fetchTopProducts = async () => {
         const end = formatDateISO(endDate.value)
         const response = await getBestSellers(start, end, 10, 'quantity')
         const data = response.data
-        
+
         chartData.topProducts = createBarChartData(
             data.map(item => item.productName),
             data.map(item => item.totalQuantitySold),
@@ -768,7 +765,7 @@ const fetchCategorySales = async () => {
         const end = formatDateISO(endDate.value)
         const response = await getCategorySales(start, end)
         const data = response.data
-        
+
         chartData.categories = createBarChartData(
             data.map(item => item.categoryName),
             data.map(item => item.totalRevenue),
@@ -849,7 +846,7 @@ const fetchPaymentMethodStats = async () => {
         const end = formatDateISO(endDate.value)
         const response = await getPaymentMethodStats(start, end)
         paymentMethodStats.value = response.data
-        
+
         chartData.paymentMethods = createPieChartData(
             response.data.map(item => item.paymentMethod),
             response.data.map(item => item.totalAmount),

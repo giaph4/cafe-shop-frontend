@@ -1,9 +1,9 @@
 <template>
-    <Bar :data="chartData" :options="chartOptions" />
+    <Bar :data="chartData" :options="chartOptions"/>
 </template>
 
 <script setup>
-import { Bar } from 'vue-chartjs'
+import {Bar} from 'vue-chartjs'
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -29,6 +29,11 @@ defineProps({
         required: true,
     },
 
+    // mau sac
+    chartColors: {
+        default: () => (['#FF6384', '#36A2EB', '#FFCE56'])
+    },
+
     chartOptions: {
         type: Object,
         default: () => ({
@@ -46,8 +51,9 @@ defineProps({
                 },
                 y: {
                     stacked: true,
-            },
-        }),
+                },
+            }
+        })
     },
 })
 </script>

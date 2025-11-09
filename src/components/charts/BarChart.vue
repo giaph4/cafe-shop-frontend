@@ -33,6 +33,37 @@ defineProps({
         default: () => ({
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
         }),
     },
 })

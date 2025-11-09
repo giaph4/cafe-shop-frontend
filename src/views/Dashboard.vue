@@ -117,7 +117,7 @@ import { getProfitReport, getRevenueByDateRange, getBestSellers } from '@/api/re
 import { formatCurrency, formatDateISO } from '@/utils/formatters'
 import { useToast } from 'vue-toastification'
 import { getDefaultDateRange, getDateRangeByFilter } from '@/utils/dateHelpers'
-import { createBarChartData } from '@/utils/chartHelpers'
+import { createBarChartData, createLineChartData } from '@/utils/chartHelpers'
 
 import LineChart from '@/components/charts/LineChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
@@ -162,38 +162,26 @@ const loading = reactive({
 const chartDataArea = computed(() => {
     if (!chartData.revenue.labels.length) return { labels: [], datasets: [] }
 
-    return {
-        labels: chartData.revenue.labels,
-        datasets: [
-            {
-                label: 'Doanh thu',
-                backgroundColor: 'rgba(139, 115, 85, 0.3)',
-                borderColor: '#8B7355',
-                tension: 0.4,
-                fill: true,
-                data: chartData.revenue.datasets[0]?.data || [],
-            },
-        ],
-    }
+    const data = createLineChartData(
+        chartData.revenue.labels,
+        chartData.revenue.datasets[0]?.data || [],
+        'Doanh thu',
+        { fill: true, tension: 0.4 }
+    )
+    
+    // Make background more transparent for area chart
+    data.datasets[0].backgroundColor = data.datasets[0].backgroundColor.replace('0.8)', '0.3)')
+    
+    return data
 })
 
 const processRevenueData = (apiData) => {
-    const labels = Object.keys(apiData)
-    const data = Object.values(apiData)
-
-    chartData.revenue = {
-        labels: labels,
-        datasets: [
-            {
-                label: 'Doanh thu',
-                backgroundColor: 'rgba(139, 115, 85, 0.2)',
-                borderColor: '#8B7355',
-                tension: 0.1,
-                fill: false,
-                data: data,
-            },
-        ],
-    }
+    chartData.revenue = createLineChartData(
+        Object.keys(apiData),
+        Object.values(apiData),
+        'Doanh thu',
+        { fill: false, tension: 0.1 }
+    )
 }
 
 const processBestSellerData = (apiData) => {

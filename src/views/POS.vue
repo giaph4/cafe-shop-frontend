@@ -570,6 +570,7 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 
 
 .product-card {
+  max-height: 300px;
   cursor: pointer;
   transition: all 0.2s ease;
   background: #FFFFFF;
@@ -587,17 +588,20 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 
 .product-image {
   width: 100%;
-  height: 140px;
+  max-height: 140px;
+  min-height: 140px;
   border-radius: 8px;
   overflow: hidden;
   display: block;
   margin-bottom: 8px;
+  object-fit: cover;
+
 }
 
 :deep(.product-image img) {
   width: 100%;
   height: 140px;
-  object-fit: cover;
+  object-fit: fill;
   border-radius: 8px;
 }
 

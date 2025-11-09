@@ -1,3 +1,5 @@
+import { getChartColors } from './chartColors.js'
+
 /**
  * Định dạng số thành tiền tệ VND
  * @param {number} value - Số tiền
@@ -33,21 +35,6 @@ export const formatDateISO = (date) => {
     }
 };
 
-const EXPENSE_COLORS = {
-    UTILITY: 'rgba(255, 99, 132, 0.7)',
-    SALARY: 'rgba(54, 162, 235, 0.7)',
-    RENT: 'rgba(255, 206, 86, 0.7)',
-    MARKETING: 'rgba(75, 192, 192, 0.7)',
-    INGREDIENT_PURCHASE: 'rgba(153, 102, 255, 0.7)',
-    OTHER: 'rgba(201, 203, 207, 0.7)',
-};
-const DEFAULT_COLOR = 'rgba(100, 100, 100, 0.7)';
-
-/**
- *  Chuyển đổi dữ liệu API chi phí sang định dạng Stacked Bar Chart
- * @param {object} apiData - Dữ liệu từ API (ví dụ: {"2025-11-01": {"SALARY": 500}})
- * @returns {object} - Dữ liệu cho Chart.js (labels, datasets)
- */
 export const formatStackedBarChartData = (apiData) => {
     const labels = Object.keys(apiData); // ['2025-11-01', '2025-11-02', ...]
     const categories = new Set(); // Set các loại chi phí (SALARY, RENT, ...)
@@ -59,11 +46,14 @@ export const formatStackedBarChartData = (apiData) => {
         });
     });
 
-    const datasets = Array.from(categories).map(category => {
+    const categoryArray = Array.from(categories);
+    const colors = getChartColors(categoryArray.length);
+
+    const datasets = categoryArray.map((category, index) => {
         // Tạo dataset cho mỗi loại (ví dụ: { label: 'SALARY', data: [...] })
         return {
             label: category,
-            backgroundColor: EXPENSE_COLORS[category] || DEFAULT_COLOR,
+            backgroundColor: colors[index],
             data: labels.map(date => apiData[date][category] || 0) // Lấy data cho mỗi ngày, nếu không có thì là 0
         };
     });
