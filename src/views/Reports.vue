@@ -62,7 +62,7 @@
                                 <div class="kpi-text">
                                     <div class="kpi-title">Giá vốn hàng bán</div>
                                     <div class="kpi-value cost">{{ formatCurrency(profitStats.totalCostOfGoodsSold) }}</div>
-                                    <div class="kpi-desc">Chi phí nguyên vật liệu</div>
+                                    <div class="kpi-desc">Chưa tính chi phí và tiền nguyên vật liệu</div>
                                 </div>
                             </div>
                         </el-card>
