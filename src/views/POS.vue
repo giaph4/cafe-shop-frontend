@@ -27,24 +27,35 @@
             </div>
         </div>
 
-        <el-row :gutter="20" class="pos-main-content">
-            <!-- Khu vực Menu/Sản phẩm -->
-            <el-col :span="14">
-                <div class="menu-section">
+
+        <div class="pos-content">
+            <div class="pos-layout">
+                <section class="menu-section">
                     <div class="menu-header-bar">
-                        <span class="menu-title">Menu Sản phẩm</span>
+                        <div class="menu-header-left">
+                            <span class="menu-title">Menu Sản phẩm</span>
+                            <el-tag v-if="filteredProducts.length" type="success" effect="plain" round>
+                                {{ filteredProducts.length }} món khả dụng
+                            </el-tag>
+                        </div>
                         <div class="menu-filters">
                             <el-input
                                 v-model="productSearch"
                                 placeholder="Tìm món..."
                                 clearable
-                                style="width: 200px;"
-                            />
+                                class="filter-control"
+                            >
+                                <template #prefix>
+                                    <el-icon>
+                                        <Search/>
+                                    </el-icon>
+                                </template>
+                            </el-input>
                             <el-select
                                 v-model="selectedCategory"
                                 placeholder="Danh mục"
                                 clearable
-                                style="width: 150px;"
+                                class="filter-control"
                             >
                                 <el-option label="Tất cả" :value="null"/>
                                 <el-option
@@ -58,7 +69,7 @@
                                 v-model="priceRange"
                                 placeholder="Giá bán"
                                 clearable
-                                style="width: 150px;"
+                                class="filter-control"
                             >
                                 <el-option label="Tất cả" :value="null"/>
                                 <el-option label="< 50k" value="0-50000"/>
@@ -89,41 +100,76 @@
                             </el-image>
                             <div class="product-info">
                                 <h4 class="product-name">{{ product.name }}</h4>
-                                <p class="product-price">{{ formatCurrency(product.price) }}</p>
+                                <div class="product-meta">
+                                    <span class="product-category">{{ product.categoryName || 'Chưa phân loại' }}</span>
+                                    <span class="product-price">{{ formatCurrency(product.price) }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </el-col>
+                </section>
 
-            <!-- Khu vực Sơ đồ Bàn -->
-            <el-col :span="10">
-                <div class="table-section">
-                    <div class="table-header-bar">
-                        <span class="table-title">Sơ đồ Bàn</span>
-                        <el-input
-                            v-model="tableSearch"
-                            placeholder="Tìm bàn..."
-                            clearable
-                            style="width: 200px;"
-                        />
-                    </div>
-                    <div v-loading="loadingTables" class="table-grid">
-                        <div
-                            v-for="table in filteredTables"
-                            :key="table.id"
-                            class="table-card"
-                            :class="getTableClass(table.status)"
-                            @click="openOrderModal(table)"
-                        >
-                            <div class="table-name">{{ table.name }}</div>
-                            <div class="table-status">{{ getStatusText(table.status) }}</div>
-                            <div class="table-capacity">{{ table.capacity }} chỗ</div>
+                <section class="table-board">
+                    <div class="table-board__header">
+                        <div>
+                            <h2>Sơ đồ Bàn</h2>
+                            <p>Quản lý tình trạng phục vụ và đặt chỗ theo thời gian thực</p>
+                        </div>
+                        <div class="table-board__actions">
+                            <el-input
+                                v-model="tableSearch"
+                                placeholder="Tìm bàn..."
+                                clearable
+                                class="filter-control"
+                            >
+                                <template #prefix>
+                                    <el-icon>
+                                        <Search/>
+                                    </el-icon>
+                                </template>
+                            </el-input>
+                            <el-segmented
+                                v-model="tableStatusFilter"
+                                :options="tableStatusSegments"
+                                size="large"
+                            />
                         </div>
                     </div>
-                </div>
-            </el-col>
-        </el-row>
+
+                    <div v-loading="loadingTables" class="board-grid">
+                        <el-empty
+                            v-if="displayTables.length === 0 && !loadingTables"
+                            description="Không có bàn phù hợp"
+                        />
+                        <div
+                            v-for="table in displayTables"
+                            :key="table.id"
+                            class="board-card"
+                            :class="`board-card--${table.status.toLowerCase()}`"
+                            @click="openOrderModal(table)"
+                        >
+                            <div class="board-card__top">
+                                <span class="board-card__name">{{ table.name }}</span>
+                                <el-tag effect="dark" round :type="statusMeta[table.status].tagType">
+                                    {{ statusMeta[table.status].label }}
+                                </el-tag>
+                            </div>
+                            <div class="board-card__info">
+                                <span>
+                                    <el-icon>
+                                        <UserFilled/>
+                                    </el-icon>
+                                    {{ table.capacity }} chỗ
+                                </span>
+                                <span>
+                                    {{ statusMeta[table.status].note }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
 
         <!-- Giỏ hàng tạm (floating) -->
         <transition name="slide-up">
@@ -273,6 +319,32 @@ const dialogTableSearch = ref('')
 const tempCart = ref([])
 const showTableSelection = ref(false)
 const selectedCustomerId = ref(null)
+const tableStatusFilter = ref('ALL')
+
+const tableStatusSegments = [
+    { label: 'Tất cả', value: 'ALL' },
+    { label: 'Trống', value: 'EMPTY' },
+    { label: 'Phục vụ', value: 'SERVING' },
+    { label: 'Đặt trước', value: 'RESERVED' }
+]
+
+const statusMeta = {
+    EMPTY: {
+        label: 'Bàn trống',
+        tagType: 'success',
+        note: 'Sẵn sàng phục vụ'
+    },
+    SERVING: {
+        label: 'Đang phục vụ',
+        tagType: 'warning',
+        note: 'Đã có khách'
+    },
+    RESERVED: {
+        label: 'Đã đặt',
+        tagType: 'info',
+        note: 'Giữ bàn cho khách'
+    }
+}
 
 const filteredProducts = computed(() => {
     let result = products.value
@@ -295,15 +367,19 @@ const filteredProducts = computed(() => {
     // Filter by price range
     if (priceRange.value) {
         const [min, max] = priceRange.value.split('-').map(Number)
-        result = result.filter(p => p.price >= min && p.price <= max)
+        result = result.fiylter(p => p.price >= min && p.price <= max)
     }
 
     return result
 })
 
 const filteredTables = computed(() => {
-    if (!tableSearch.value) return tables.value
-    return tables.value.filter(t =>
+    let result = tables.value
+    if (tableStatusFilter.value !== 'ALL') {
+        result = result.filter((table) => table.status === tableStatusFilter.value)
+    }
+    if (!tableSearch.value) return result
+    return result.filter((t) =>
         t.name.toLowerCase().includes(tableSearch.value.toLowerCase())
     )
 })
@@ -327,6 +403,23 @@ const selectedCustomer = computed(() => {
     if (!selectedCustomerId.value) return null
     return customers.value.find(c => c.id === selectedCustomerId.value)
 })
+
+const tableSummary = computed(() => {
+    const summary = {
+        total: tables.value.length,
+        EMPTY: 0,
+        SERVING: 0,
+        RESERVED: 0
+    }
+    tables.value.forEach((table) => {
+        if (summary[table.status] !== undefined) {
+            summary[table.status] += 1
+        }
+    })
+    return summary
+})
+
+const displayTables = computed(() => filteredTables.value)
 
 const fetchTables = async () => {
     loadingTables.value = true
@@ -498,83 +591,109 @@ onMounted(() => {
 // Theo dõi Pinia store để refresh bàn khi modal đóng
 watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     if (oldValue === true && newValue === false) {
-        fetchTables() // Refresh danh sách bàn khi modal đóng
+        fetchTables()
     }
 })
 </script>
 
 <style>
-.app-page-container {
-    padding: 20px;
-}
 
-.header-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.pos-main-content {
-    margin-top: 20px;
-}
-
-/* Menu Section */
-.menu-section {
-    min-height: calc(100vh - 100px);
-    max-height: 200vh;
-    background: #FDFCFB;
-    border-radius: 16px;
-    border: 2px solid #E8E6E3;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+.pos-content {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    gap: 24px;
+}
+
+.pos-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.pos-layout .menu-section {
+    flex: 1.6;
+}
+
+.pos-layout .table-board {
+    flex: 1;
+}
+
+.filter-control {
+    min-width: 160px;
+}
+
+.menu-section {
+    background: #fefcf9;
+    border-radius: 20px;
+    border: 1px solid #f0eae3;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.04);
+    padding: 0 24px 24px;
 }
 
 .menu-header-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
-    background: linear-gradient(135deg, #F8F6F3 0%, #F5F3F0 100%);
-    border-bottom: 2px solid #E8E6E3;
+    padding: 24px 0;
+}
+
+.menu-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .menu-title {
-    font-size: 1.125rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    color: #212121;
+    color: #1f2937;
 }
 
 .menu-filters {
     display: flex;
-    gap: 12px;
+    gap: 16px;
     align-items: center;
 }
 
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
-    max-height: 70vh;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    max-height: 68vh;
     overflow-y: auto;
+    padding-bottom: 8px;
 }
+
 
 
 .product-card {
-    max-height: 300px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    background: #FFFFFF;
-    border-radius: 12px;
-    border: 2px solid #E8E6E3;
-    padding: 10px;
-    margin-top: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.product-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    border: 1px solid rgba(139, 115, 85, 0.08);
+    pointer-events: none;
 }
 
 .product-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(139, 115, 85, 0.15);
-    border-color: #8B7355;
+    transform: translateY(-6px);
+    box-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
+    border-color: rgba(139, 115, 85, 0.2);
 }
 
 .product-image {
@@ -609,11 +728,26 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 }
 
 .product-info {
-    padding: 12px 8px;
-    background: #FFFFFF;
-    border-top: 1px solid #E8E6E3;
-    overflow-y: auto;
-    max-height: 80px;
+    padding: 0 4px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.product-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.product-category {
+    background: rgba(139, 115, 85, 0.1);
+    color: #8b7355;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-weight: 600;
 }
 
 .product-name {
@@ -629,18 +763,18 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     -webkit-box-orient: vertical;
 }
 
-.product-grid, .table-grid {
+.product-grid, .board-grid {
     scrollbar-width: thin;
     scrollbar-color: #c0c0c0 #f8f8f8;
 }
 
 .product-grid::-webkit-scrollbar,
-.table-grid::-webkit-scrollbar {
+.board-grid::-webkit-scrollbar {
     width: 6px;
 }
 
 .product-grid::-webkit-scrollbar-thumb,
-.table-grid::-webkit-scrollbar-thumb {
+.board-grid::-webkit-scrollbar-thumb {
     background-color: #bdbdbd;
     border-radius: 8px;
 }
@@ -650,109 +784,120 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 }
 
 
+
 .product-price {
     margin: 0;
-    color: #8B7355 !important;
+    color: #8b7355 !important;
     font-weight: 700;
-    font-size: 1rem;
+    align-items: center;
 }
 
-/* Table Section */
-.table-section {
-    min-height: calc(100vh - 100px);
-    max-height: 200vh;
-    background: #FDFCFB;
+.table-board__header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.table-board__header p {
+    margin: 4px 0 0;
+    color: #6b7280;
+}
+
+.table-board__actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.table-board__summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.summary-card {
     border-radius: 16px;
-    border: 2px solid #E8E6E3;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    padding: 16px;
+    box-shadow: 0 18px 30px rgba(15, 23, 42, 0.06);
+    color: #1f2937;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    gap: 6px;
 }
 
-.table-header-bar {
+.summary-card.total { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); }
+.summary-card.empty { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); }
+.summary-card.serving { background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); }
+.summary-card.reserved { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); }
+
+.summary-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.summary-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+
+.board-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    max-height: 68vh;
+    overflow-y: auto;
+    padding-bottom: 8px;
+}
+
+.board-card {
+    border-radius: 18px;
+    padding: 18px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid transparent;
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+    min-height: 180px;
+}
+
+.board-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
+}
+
+.board-card--empty { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+.board-card--serving { background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); }
+.board-card--reserved { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); }
+
+.board-card__top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
-    background: linear-gradient(135deg, #F8F6F3 0%, #F5F3F0 100%);
-    border-bottom: 2px solid #E8E6E3;
 }
 
-.table-title {
-    font-size: 1.125rem;
+.board-card__name {
+    font-size: 1.2rem;
     font-weight: 700;
-    color: #212121;
+    color: #1f2937;
 }
 
-.table-grid {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 15px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 15px;
-    align-content: start;
+.board-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #374151;
 }
 
-.table-card {
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
-    background: #FFFFFF;
-    border-radius: 12px;
-    border: 2px solid #E8E6E3;
-    padding: 16px 12px;
-}
-
-.table-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(139, 115, 85, 0.15);
-    border-color: #8B7355;
-}
-
-.table-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 5px;
-}
-
-.table-status {
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-}
-
-.table-capacity {
-    font-size: 0.8rem;
-    color: #909399;
-}
-
-.table-card.status-empty {
-    border-color: var(--el-color-success-light-3);
-    background-color: var(--el-color-success-light-9);
-}
-
-.table-card.status-empty .table-status {
-    color: var(--el-color-success);
-}
-
-.table-card.status-serving {
-    border-color: var(--el-color-danger-light-3);
-    background-color: var(--el-color-danger-light-9);
-}
-
-.table-card.status-serving .table-status {
-    color: var(--el-color-danger);
-}
-
-.table-card.status-reserved {
-    border-color: var(--el-color-warning-light-3);
-    background-color: var(--el-color-warning-light-9);
-}
-
-.table-card.status-reserved .table-status {
-    color: var(--el-color-warning);
+.board-card__info span {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
 }
 
 /* Floating Cart */

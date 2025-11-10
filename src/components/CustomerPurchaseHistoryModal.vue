@@ -33,19 +33,19 @@
             />
 
             <div v-if="summaryStats.totalOrders > 0" class="summary-grid mb-4">
-                <div class="summary-card">
+                <div class="summary-card card-hover card-blue">
                     <span class="summary-label">Tổng số đơn</span>
                     <span class="summary-value">{{ summaryStats.totalOrders }}</span>
                 </div>
-                <div class="summary-card">
+                <div class="summary-card card-hover card-red">
                     <span class="summary-label">Tổng doanh thu</span>
                     <span class="summary-value">{{ formatCurrency(summaryStats.totalAmount) }}</span>
                 </div>
-                <div class="summary-card">
+                <div class="summary-card card-hover card-green">
                     <span class="summary-label">Giá trị trung bình</span>
                     <span class="summary-value">{{ formatCurrency(summaryStats.averageOrderValue) }}</span>
                 </div>
-                <div class="summary-card">
+                <div class="summary-card card-hover card-yellow">
                     <span class="summary-label">Giao dịch gần nhất</span>
                     <span class="summary-value">{{ formatDateTime(summaryStats.lastPurchaseDate) }}</span>
                 </div>
@@ -668,6 +668,26 @@ const handleClose = () => {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.card-blue {
+    background: #f0f0ff;
+    opacity: 0.9;
+}
+
+.card-red {
+    background: #fadada;
+    opacity: 0.9;
+}
+
+.card-green {
+    background: #dbf8db;
+    opacity: 0.9;
+}
+
+.card-yellow {
+    background: #fbf8c8;
+    opacity: 0.9;
 }
 
 .summary-label {
