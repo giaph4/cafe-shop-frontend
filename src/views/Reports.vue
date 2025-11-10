@@ -38,7 +38,8 @@
             <el-tab-pane label="📊 Tổng quan" name="revenue">
                 <el-alert type="info" :closable="false" style="margin-bottom: 20px;">
                     <template #title>
-                        <strong>Hướng dẫn:</strong> Tab này hiển thị tổng quan về doanh thu, lợi nhuận và các chỉ số kinh doanh quan trọng trong khoảng thời gian đã chọn.
+                        <strong>Hướng dẫn:</strong> Tab này hiển thị tổng quan về doanh thu, lợi nhuận và các chỉ số
+                        kinh doanh quan trọng trong khoảng thời gian đã chọn.
                     </template>
                 </el-alert>
 
@@ -61,7 +62,10 @@
                                 <div class="kpi-icon cost-icon">📦</div>
                                 <div class="kpi-text">
                                     <div class="kpi-title">Giá vốn hàng bán</div>
-                                    <div class="kpi-value cost">{{ formatCurrency(profitStats.totalCostOfGoodsSold) }}</div>
+                                    <div class="kpi-value cost">{{
+                                            formatCurrency(profitStats.totalCostOfGoodsSold)
+                                        }}
+                                    </div>
                                     <div class="kpi-desc">Chưa tính chi phí và tiền nguyên vật liệu</div>
                                 </div>
                             </div>
@@ -97,7 +101,10 @@
                                 <div class="kpi-icon import-icon">🚚</div>
                                 <div class="kpi-text">
                                     <div class="kpi-title">Chi phí nhập nguyên liệu</div>
-                                    <div class="kpi-value import">{{ formatCurrency(totalImportedIngredientCost) }}</div>
+                                    <div class="kpi-value import">{{
+                                            formatCurrency(totalImportedIngredientCost)
+                                        }}
+                                    </div>
                                     <div class="kpi-desc">Các đơn nhập kho đã hoàn tất</div>
                                 </div>
                             </div>
@@ -130,9 +137,12 @@
                                 </div>
                             </template>
                             <div class="chart-container">
-                                <LineChart v-if="chartType === 'line' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
-                                <BarChart v-if="chartType === 'bar' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
-                                <LineChart v-if="chartType === 'area' && chartData.revenue.labels.length" :chartData="chartDataArea" />
+                                <LineChart v-if="chartType === 'line' && chartData.revenue.labels.length"
+                                           :chartData="chartData.revenue"/>
+                                <BarChart v-if="chartType === 'bar' && chartData.revenue.labels.length"
+                                          :chartData="chartData.revenue"/>
+                                <LineChart v-if="chartType === 'area' && chartData.revenue.labels.length"
+                                           :chartData="chartDataArea"/>
                             </div>
                         </el-card>
                     </el-col>
@@ -141,7 +151,7 @@
                             <template #header><span>Top 5 Sản phẩm (Theo Doanh thu)</span></template>
                             <div class="chart-container">
                                 <BarChart v-if="chartData.bestSellers.labels.length"
-                                    :chartData="chartData.bestSellers" />
+                                          :chartData="chartData.bestSellers"/>
                             </div>
                         </el-card>
                     </el-col>
@@ -157,7 +167,7 @@
                                 </div>
                             </template>
                             <div class="chart-container">
-                                <BarChart v-if="chartData.hourly.labels.length" :chartData="chartData.hourly" />
+                                <BarChart v-if="chartData.hourly.labels.length" :chartData="chartData.hourly"/>
                             </div>
                             <div class="chart-summary">
                                 <div class="summary-item">
@@ -180,7 +190,7 @@
                                 </div>
                             </template>
                             <div class="chart-container" v-loading="loading.categories">
-                                <BarChart v-if="chartData.categories.labels.length" :chartData="chartData.categories" />
+                                <BarChart v-if="chartData.categories.labels.length" :chartData="chartData.categories"/>
                             </div>
                         </el-card>
                     </el-col>
@@ -190,9 +200,77 @@
             <el-tab-pane label="☕ Sản phẩm" name="products">
                 <el-alert type="success" :closable="false" style="margin-bottom: 20px;">
                     <template #title>
-                        <strong>Phân tích sản phẩm:</strong> Xem sản phẩm nào bán chạy nhất, danh mục nào có doanh thu cao để tối ưu menu và kho hàng.
+                        <strong>Phân tích sản phẩm:</strong> Xem sản phẩm nào bán chạy nhất, danh mục nào có doanh thu
+                        cao để tối ưu menu và kho hàng.
                     </template>
                 </el-alert>
+
+                <el-row :gutter="20" style="margin-bottom: 20px;">
+                    <el-col :span="24">
+                        <el-card class="box-card product-summary-card" v-loading="loading.productSummary">
+                            <template #header>
+                                <div class="chart-header product-summary-header">
+                                    <div class="product-summary-title">
+                                        <span>Thống kê bán hàng theo sản phẩm</span>
+                                        <el-tag type="primary" size="small">API</el-tag>
+                                    </div>
+                                    <div class="product-summary-totals">
+                                        <div class="summary-pill">
+                                            <span class="pill-label">Tổng lượng bán</span>
+                                            <span class="pill-value">{{ totalQuantitySoldDisplay }}</span>
+                                        </div>
+                                        <div class="summary-pill">
+                                            <span class="pill-label">Tổng doanh thu</span>
+                                            <span class="pill-value">{{ totalRevenueGeneratedDisplay }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+
+                            <EasyDataTable
+                                :headers="productSummaryHeaders"
+                                :items="productSummaryItems"
+                                :loading="loading.productSummary"
+                                table-class-name="data-table"
+                                :row-class-name="productSummaryRowClass"
+                                show-index
+                                alternating
+                            >
+                                <template #item-index="{ index }">
+                                    <span>{{ index }}</span>
+                                </template>
+
+                                <template #item-productName="{ productName, productId }">
+                                    <div class="product-name-cell">
+                                        <span>{{ productName }}</span>
+                                        <el-tag
+                                            v-if="productRankSets.top.has(productId ?? productName)"
+                                            type="success"
+                                            size="small"
+                                        >Top 5
+                                        </el-tag>
+                                        <el-tag
+                                            v-else-if="productRankSets.bottom.has(productId ?? productName)"
+                                            type="danger"
+                                            size="small"
+                                        >Bottom 5
+                                        </el-tag>
+                                    </div>
+                                </template>
+
+                                <template #item-totalQuantitySold="{ totalQuantitySold }">
+                                    {{ (Number(totalQuantitySold) || 0).toLocaleString('vi-VN') }}
+                                </template>
+
+                                <template #item-totalRevenueGenerated="{ totalRevenueGenerated }">
+                                    {{ formatCurrency(Number(totalRevenueGenerated) || 0) }}
+                                </template>
+                            </EasyDataTable>
+                        </el-card>
+                    </el-col>
+                </el-row>
+
                 <el-row :gutter="20">
                     <el-col :span="12">
                         <el-card class="box-card chart-card" v-loading="loading.bestSellers">
@@ -203,7 +281,12 @@
                                 </div>
                             </template>
                             <div class="chart-container">
-                                <BarChart v-if="chartData.topProducts.labels.length" :chartData="chartData.topProducts" />
+                                <BarChart v-if="chartData.topProducts.labels.length"
+                                          :chartData="chartData.topProducts"/>
+                            </div>
+                            <div class="chart-container">
+                                <PieChart v-if="chartData.topProducts.labels.length"
+                                          :chartData="chartData.topProducts"/>
                             </div>
                         </el-card>
                     </el-col>
@@ -216,7 +299,10 @@
                                 </div>
                             </template>
                             <div class="chart-container">
-                                <BarChart v-if="chartData.categories.labels.length" :chartData="chartData.categories" />
+                                <BarChart v-if="chartData.categories.labels.length" :chartData="chartData.categories"/>
+                            </div>
+                            <div class="chart-container">
+                                <PieChart v-if="chartData.categories.labels.length" :chartData="chartData.categories"/>
                             </div>
                         </el-card>
                     </el-col>
@@ -226,13 +312,14 @@
             <el-tab-pane label="💸 Chi phí" name="expenses">
                 <el-alert type="warning" :closable="false" style="margin-bottom: 20px;">
                     <template #title>
-                        <strong>Quản lý chi phí:</strong> Theo dõi các khoản chi phí vận hành hàng ngày để kiểm soát ngân sách và tối ưu lợi nhuận.
+                        <strong>Quản lý chi phí:</strong> Theo dõi các khoản chi phí vận hành hàng ngày để kiểm soát
+                        ngân sách và tối ưu lợi nhuận.
                     </template>
                 </el-alert>
                 <el-card class="box-card chart-card" v-loading="loading.expenses">
                     <template #header><span>Chi phí theo ngày</span></template>
                     <div class="chart-container" style="height: 500px;">
-                        <BarChart v-if="chartData.expenses.labels.length" :chartData="chartData.expenses" />
+                        <BarChart v-if="chartData.expenses.labels.length" :chartData="chartData.expenses"/>
                     </div>
                 </el-card>
             </el-tab-pane>
@@ -240,7 +327,8 @@
             <el-tab-pane label="📦 Tồn kho" name="inventory">
                 <el-alert type="error" :closable="false" style="margin-bottom: 20px;">
                     <template #title>
-                        <strong>Cảnh báo tồn kho:</strong> Kiểm tra nguyên vật liệu sắp hết để đặt hàng kịp thời, tránh gián đoạn kinh doanh.
+                        <strong>Cảnh báo tồn kho:</strong> Kiểm tra nguyên vật liệu sắp hết để đặt hàng kịp thời, tránh
+                        gián đoạn kinh doanh.
                     </template>
                 </el-alert>
                 <el-card class="box-card" v-loading="loading.inventory">
@@ -248,10 +336,11 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <span>Báo cáo Tồn kho</span>
                             <el-switch v-model="lowStockOnly" @change="fetchInventoryData" size="large"
-                                active-text="Chỉ hiển thị hàng sắp hết" />
+                                       active-text="Chỉ hiển thị hàng sắp hết"/>
                         </div>
                     </template>
-                    <EasyDataTable :headers="inventoryHeaders" :items="inventory" :loading="loading.inventory" table-class-name="data-table" show-index :row-class-name="inventoryRowClass">
+                    <EasyDataTable :headers="inventoryHeaders" :items="inventory" :loading="loading.inventory"
+                                   table-class-name="data-table" show-index :row-class-name="inventoryRowClass">
                     </EasyDataTable>
                 </el-card>
 
@@ -260,7 +349,8 @@
             <el-tab-pane label="👥 Khách hàng & Nhân viên" name="people">
                 <el-alert type="success" :closable="false" style="margin-bottom: 20px;">
                     <template #title>
-                        <strong>Phân tích con người:</strong> Xem khách hàng VIP và nhân viên xuất sắc để có chiến lược chăm sóc và khen thưởng phù hợp.
+                        <strong>Phân tích con người:</strong> Xem khách hàng VIP và nhân viên xuất sắc để có chiến lược
+                        chăm sóc và khen thưởng phù hợp.
                     </template>
                 </el-alert>
 
@@ -273,7 +363,8 @@
                                     <el-tag type="warning" size="small">Theo doanh thu</el-tag>
                                 </div>
                             </template>
-                            <EasyDataTable :headers="topCustomersHeaders" :items="topCustomers" :loading="loading.customers" table-class-name="data-table" max-height="500">
+                            <EasyDataTable :headers="topCustomersHeaders" :items="topCustomers"
+                                           :loading="loading.customers" table-class-name="data-table" max-height="500">
                                 <template #item-index="{ index }">
                                     <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
                                     <span v-else>{{ index + 1 }}</span>
@@ -305,7 +396,8 @@
                                     <el-tag type="success" size="small">Leaderboard</el-tag>
                                 </div>
                             </template>
-                            <EasyDataTable :headers="staffHeaders" :items="staffPerformance" :loading="loading.staff" table-class-name="data-table" max-height="500">
+                            <EasyDataTable :headers="staffHeaders" :items="staffPerformance" :loading="loading.staff"
+                                           table-class-name="data-table" max-height="500">
                                 <template #item-index="{ index }">
                                     <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
                                     <span v-else>{{ index + 1 }}</span>
@@ -334,7 +426,8 @@
             <el-tab-pane label="💳 Phương thức Thanh toán" name="payment">
                 <el-alert type="warning" :closable="false" style="margin-bottom: 20px;">
                     <template #title>
-                        <strong>Phân tích thanh toán:</strong> Hiểu rõ khách hàng thích thanh toán bằng cách nào để chuẩn bị đầy đủ phương thức.
+                        <strong>Phân tích thanh toán:</strong> Hiểu rõ khách hàng thích thanh toán bằng cách nào để
+                        chuẩn bị đầy đủ phương thức.
                     </template>
                 </el-alert>
 
@@ -343,7 +436,8 @@
                         <el-card class="box-card chart-card" v-loading="loading.paymentMethods">
                             <template #header><span>Biểu đồ Phương thức Thanh toán</span></template>
                             <div class="chart-container">
-                                <PieChart v-if="chartData.paymentMethods.labels.length" :chartData="chartData.paymentMethods" />
+                                <PieChart v-if="chartData.paymentMethods.labels.length"
+                                          :chartData="chartData.paymentMethods"/>
                             </div>
                         </el-card>
                     </el-col>
@@ -351,10 +445,12 @@
                     <el-col :span="12">
                         <el-card class="box-card" v-loading="loading.paymentMethods">
                             <template #header><span>Chi tiết Thống kê</span></template>
-                            <EasyDataTable :headers="paymentHeaders" :items="paymentMethodStats" :loading="loading.paymentMethods" table-class-name="data-table">
+                            <EasyDataTable :headers="paymentHeaders" :items="paymentMethodStats"
+                                           :loading="loading.paymentMethods" table-class-name="data-table">
                                 <template #item-paymentMethod="{ paymentMethod }">
                                     <el-tag v-if="paymentMethod === 'CASH'" type="success">💵 Tiền mặt</el-tag>
-                                    <el-tag v-else-if="paymentMethod === 'TRANSFER'" type="primary">🏦 Chuyển khoản</el-tag>
+                                    <el-tag v-else-if="paymentMethod === 'TRANSFER'" type="primary">🏦 Chuyển khoản
+                                    </el-tag>
                                     <el-tag v-else-if="paymentMethod === 'CARD'" type="warning">💳 Thẻ</el-tag>
                                     <el-tag v-else type="info">{{ paymentMethod }}</el-tag>
                                 </template>
@@ -364,7 +460,7 @@
                                 </template>
 
                                 <template #item-percentage="{ percentage }">
-                                    <el-progress :percentage="percentage" :stroke-width="12" :show-text="false" />
+                                    <el-progress :percentage="percentage" :stroke-width="12" :show-text="false"/>
                                     <div style="margin-top: 4px; font-weight: 600;">{{ percentage.toFixed(1) }}%</div>
                                 </template>
                             </EasyDataTable>
@@ -376,7 +472,8 @@
             <el-tab-pane label="📥 Xuất Excel" name="export">
                 <el-alert type="info" :closable="false" style="margin-bottom: 20px;">
                     <template #title>
-                        <strong>Xuất báo cáo:</strong> Tải xuống file Excel chứa chi tiết để phân tích offline hoặc lưu trữ.
+                        <strong>Xuất báo cáo:</strong> Tải xuống file Excel chứa chi tiết để phân tích offline hoặc lưu
+                        trữ.
                     </template>
                 </el-alert>
 
@@ -409,8 +506,11 @@
                                         style="width: 100%;"
                                     />
                                 </div>
-                                <el-button type="success" @click="handleExportExcel" :loading="loading.exporting" style="width: 100%;">
-                                    <el-icon style="margin-right: 8px;"><Download /></el-icon>
+                                <el-button type="success" @click="handleExportExcel" :loading="loading.exporting"
+                                           style="width: 100%;">
+                                    <el-icon style="margin-right: 8px;">
+                                        <Download/>
+                                    </el-icon>
                                     Tải xuống
                                 </el-button>
                             </div>
@@ -427,11 +527,15 @@
                             </template>
                             <div style="text-align: center;">
                                 <p>Xuất báo cáo tồn kho hiện tại</p>
-                                <div style="height: 88px; display: flex; align-items: center; justify-content: center; color: #909399;">
+                                <div
+                                    style="height: 88px; display: flex; align-items: center; justify-content: center; color: #909399;">
                                     Xuất tất cả nguyên vật liệu
                                 </div>
-                                <el-button type="primary" @click="handleExportInventory" :loading="loading.exporting" style="width: 100%;">
-                                    <el-icon style="margin-right: 8px;"><Download /></el-icon>
+                                <el-button type="primary" @click="handleExportInventory" :loading="loading.exporting"
+                                           style="width: 100%;">
+                                    <el-icon style="margin-right: 8px;">
+                                        <Download/>
+                                    </el-icon>
                                     Tải xuống
                                 </el-button>
                             </div>
@@ -466,8 +570,11 @@
                                         style="width: 100%;"
                                     />
                                 </div>
-                                <el-button type="warning" @click="handleExportExpenses" :loading="loading.exporting" style="width: 100%;">
-                                    <el-icon style="margin-right: 8px;"><Download /></el-icon>
+                                <el-button type="warning" @click="handleExportExpenses" :loading="loading.exporting"
+                                           style="width: 100%;">
+                                    <el-icon style="margin-right: 8px;">
+                                        <Download/>
+                                    </el-icon>
                                     Tải xuống
                                 </el-button>
                             </div>
@@ -481,10 +588,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { useToast } from 'vue-toastification'
-import { saveAs } from 'file-saver'
-import { Download } from '@element-plus/icons-vue'
+import {ref, reactive, onMounted, computed} from 'vue'
+import {useToast} from 'vue-toastification'
+import {saveAs} from 'file-saver'
+import {Download} from '@element-plus/icons-vue'
 import EasyDataTable from 'vue3-easy-data-table'
 import 'vue3-easy-data-table/dist/style.css'
 import {
@@ -499,15 +606,16 @@ import {
     getCategorySales,
     getHourlySales,
     getPaymentMethodStats,
+    getProductSalesSummary,
     getTotalExpenses,
     getTotalImportedIngredientCost,
     exportInventoryToExcel,
     exportExpensesToExcel
 } from '@/api/reportService.js'
-import { formatCurrency, formatDateISO, formatStackedBarChartData } from '@/utils/formatters.js'
-import { getDefaultDateRange, getDateRangeByFilter } from '@/utils/dateHelpers'
-import { createBarChartData, createPieChartData, createLineChartData } from '@/utils/chartHelpers'
-import { getChartColors } from '@/utils/chartColors'
+import {formatCurrency, formatDateISO, formatStackedBarChartData} from '@/utils/formatters.js'
+import {getDefaultDateRange, getDateRangeByFilter} from '@/utils/dateHelpers'
+import {createBarChartData, createPieChartData, createLineChartData} from '@/utils/chartHelpers'
+import {getChartColors} from '@/utils/chartColors'
 
 import LineChart from '@/components/charts/LineChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
@@ -532,8 +640,13 @@ const handleQuickFilter = () => {
     fetchAllReports()
 }
 
-const profitStats = ref({ totalRevenue: 0, totalCostOfGoodsSold: 0, totalProfit: 0 })
+const profitStats = ref({totalRevenue: 0, totalCostOfGoodsSold: 0, totalProfit: 0})
 const inventory = ref([])
+const productSalesSummary = ref({
+    products: [],
+    totalQuantitySold: 0,
+    totalRevenueGenerated: 0
+})
 const lowStockOnly = ref(false)
 const exportStartDate = ref(formatDateISO(defaultDates[0]))
 const exportEndDate = ref(formatDateISO(defaultDates[1]))
@@ -541,20 +654,22 @@ const hourlyStats = ref([])
 const topCustomers = ref([])
 const staffPerformance = ref([])
 const paymentMethodStats = ref([])
+const productSummaryChartMode = ref('revenue')
 
 const totalExpenses = ref(0)
 const totalImportedIngredientCost = ref(0)
 
 const chartData = reactive({
-    revenue: { labels: [], datasets: [] },
-    bestSellers: { labels: [], datasets: [] },
-    expenses: { labels: [], datasets: [] },
-    topProducts: { labels: [], datasets: [] },
-    categories: { labels: [], datasets: [] },
-    hourly: { labels: [], datasets: [] },
-    tables: { labels: [], datasets: [] },
-    paymentMethods: { labels: [], datasets: [] },
-
+    revenue: {labels: [], datasets: []},
+    bestSellers: {labels: [], datasets: []},
+    expenses: {labels: [], datasets: []},
+    topProducts: {labels: [], datasets: []},
+    categories: {labels: [], datasets: []},
+    hourly: {labels: [], datasets: []},
+    tables: {labels: [], datasets: []},
+    paymentMethods: {labels: [], datasets: []},
+    productSummaryRevenue: {labels: [], datasets: []},
+    productSummaryQuantity: {labels: [], datasets: []},
 })
 
 const loading = reactive({
@@ -570,38 +685,46 @@ const loading = reactive({
     hourly: false,
     categories: false,
     paymentMethods: false,
+    productSummary: false,
 })
 
 // Table headers
 const inventoryHeaders = [
-    { text: "Tên Nguyên vật liệu", value: "name", minWidth: 300, sortable: true },
-    { text: "Tồn kho", value: "quantityOnHand", width: 120, sortable: true },
-    { text: "Đơn vị", value: "unit", width: 100 },
-    { text: "Ngưỡng cảnh báo", value: "reorderLevel", width: 150, sortable: true }
+    {text: "Tên Nguyên vật liệu", value: "name", minWidth: 300, sortable: true},
+    {text: "Tồn kho", value: "quantityOnHand", width: 120, sortable: true},
+    {text: "Đơn vị", value: "unit", width: 100},
+    {text: "Ngưỡng cảnh báo", value: "reorderLevel", width: 150, sortable: true}
 ]
 
 const topCustomersHeaders = [
-    { text: "#", value: "index", width: 60 },
-    { text: "Tên khách hàng", value: "customerName", minWidth: 200 },
-    { text: "SĐT", value: "phone", width: 140 },
-    { text: "Số đơn", value: "totalOrders", width: 100, sortable: true },
-    { text: "Tổng chi tiêu", value: "totalSpent", width: 160, sortable: true },
-    { text: "TB/Đơn", value: "averageOrderValue", width: 130 }
+    {text: "#", value: "index", width: 60},
+    {text: "Tên khách hàng", value: "customerName", minWidth: 200},
+    {text: "SĐT", value: "phone", width: 140},
+    {text: "Số đơn", value: "totalOrders", width: 100, sortable: true},
+    {text: "Tổng chi tiêu", value: "totalSpent", width: 160, sortable: true},
+    {text: "TB/Đơn", value: "averageOrderValue", width: 130}
 ]
 
 const staffHeaders = [
-    { text: "#", value: "index", width: 60 },
-    { text: "Nhân viên", value: "fullName", minWidth: 200 },
-    { text: "Số đơn", value: "totalOrders", width: 100, sortable: true },
-    { text: "Doanh thu", value: "totalRevenue", width: 160, sortable: true },
-    { text: "TB/Đơn", value: "averageOrderValue", width: 130 }
+    {text: "#", value: "index", width: 60},
+    {text: "Nhân viên", value: "fullName", minWidth: 200},
+    {text: "Số đơn", value: "totalOrders", width: 100, sortable: true},
+    {text: "Doanh thu", value: "totalRevenue", width: 160, sortable: true},
+    {text: "TB/Đơn", value: "averageOrderValue", width: 130}
 ]
 
 const paymentHeaders = [
-    { text: "Phương thức", value: "paymentMethod", width: 180 },
-    { text: "Số đơn", value: "orderCount", width: 120, sortable: true },
-    { text: "Tổng tiền", value: "totalAmount", width: 160, sortable: true },
-    { text: "Tỷ lệ", value: "percentage", width: 120, sortable: true }
+    {text: "Phương thức", value: "paymentMethod", width: 180},
+    {text: "Số đơn", value: "orderCount", width: 120, sortable: true},
+    {text: "Tổng tiền", value: "totalAmount", width: 160, sortable: true},
+    {text: "Tỷ lệ", value: "percentage", width: 120, sortable: true}
+]
+
+const productSummaryHeaders = [
+    {text: '#', value: 'index', width: 60},
+    {text: 'Sản phẩm', value: 'productName', minWidth: 220, sortable: true},
+    {text: 'Số lượng đã bán', value: 'totalQuantitySold', width: 160, sortable: true},
+    {text: 'Doanh thu', value: 'totalRevenueGenerated', width: 180, sortable: true}
 ]
 
 const netProfit = computed(() => {
@@ -652,14 +775,67 @@ const totalHourlyOrders = computed(() => {
     }
 })
 
+const totalQuantitySoldDisplay = computed(() => {
+    const qty = Number(productSalesSummary.value?.totalQuantitySold) || 0
+    return qty.toLocaleString('vi-VN')
+})
+
+const totalRevenueGeneratedDisplay = computed(() => {
+    const revenue = productSalesSummary.value?.totalRevenueGenerated || 0
+    try {
+        return formatCurrency(revenue)
+    } catch (e) {
+        return formatCurrency(0)
+    }
+})
+
+const productRankSets = computed(() => {
+    const products = Array.isArray(productSalesSummary.value?.products)
+        ? productSalesSummary.value.products
+        : []
+
+    if (!products.length) {
+        return {top: new Set(), bottom: new Set()}
+    }
+
+    const normalized = products.map(item => ({
+        ...item,
+        totalQuantitySold: Number(item.totalQuantitySold) || 0
+    }))
+
+    const descending = [...normalized].sort((a, b) => b.totalQuantitySold - a.totalQuantitySold)
+    const ascending = [...normalized].sort((a, b) => a.totalQuantitySold - b.totalQuantitySold)
+
+    const top = descending.slice(0, 5).map(item => item.productId ?? item.productName)
+    const bottom = ascending.slice(0, 5).map(item => item.productId ?? item.productName)
+
+    return {
+        top: new Set(top),
+        bottom: new Set(bottom)
+    }
+})
+
+
+const productSummaryItems = computed(() => {
+    const products = Array.isArray(productSalesSummary.value?.products)
+        ? productSalesSummary.value.products
+        : []
+
+    return products.map(item => ({
+        ...item,
+        totalQuantitySold: Number(item.totalQuantitySold) || 0,
+        totalRevenueGenerated: Number(item.totalRevenueGenerated) || 0
+    }))
+})
+
 const chartDataArea = computed(() => {
-    if (!chartData.revenue.labels.length) return { labels: [], datasets: [] }
+    if (!chartData.revenue.labels.length) return {labels: [], datasets: []}
 
     const data = createLineChartData(
         chartData.revenue.labels,
         chartData.revenue.datasets[0]?.data || [],
         'Doanh thu',
-        { fill: true, tension: 0.4 }
+        {fill: true, tension: 0.4}
     )
 
     // Make background more transparent for area chart
@@ -673,12 +849,12 @@ const processRevenueData = (apiData) => {
         Object.keys(apiData),
         Object.values(apiData),
         'Doanh thu',
-        { fill: false, tension: 0.1 }
+        {fill: false, tension: 0.1}
     )
 }
 const processBestSellerData = (apiData) => {
     if (!apiData || !apiData.length) {
-        chartData.bestSellers = { labels: [], datasets: [] }
+        chartData.bestSellers = {labels: [], datasets: []}
         return
     }
 
@@ -697,9 +873,13 @@ const fetchAllReports = async () => {
     // 1. Fetch Profit (KPIs)
     loading.profit = true
     getProfitReport(start, end)
-        .then(res => { profitStats.value = res.data })
+        .then(res => {
+            profitStats.value = res.data
+        })
         .catch(() => toast.error('Lỗi tải báo cáo lợi nhuận'))
-        .finally(() => { loading.profit = false })
+        .finally(() => {
+            loading.profit = false
+        })
 
     // 1b. Fetch total expenses & imported ingredient costs
     loading.financialTotals = true
@@ -714,34 +894,51 @@ const fetchAllReports = async () => {
             totalImportedIngredientCost.value = isNaN(Number(importValue)) ? 0 : Number(importValue)
         })
         .catch(() => toast.error('Lỗi tải tổng chi phí'))
-        .finally(() => { loading.financialTotals = false })
+        .finally(() => {
+            loading.financialTotals = false
+        })
 
     // 2. Fetch Revenue by Date (Line Chart)
     loading.revenue = true
     getRevenueByDateRange(start, end)
-        .then(res => { processRevenueData(res.data) })
+        .then(res => {
+            processRevenueData(res.data)
+        })
         .catch(() => toast.error('Lỗi tải biểu đồ doanh thu'))
-        .finally(() => { loading.revenue = false })
+        .finally(() => {
+            loading.revenue = false
+        })
 
     // 3. Fetch Best Sellers (Bar Chart)
     loading.bestSellers = true
     getBestSellers(start, end, 5, 'revenue')
-        .then(res => { processBestSellerData(res.data) })
+        .then(res => {
+            processBestSellerData(res.data)
+        })
         .catch(() => toast.error('Lỗi tải top sản phẩm'))
-        .finally(() => { loading.bestSellers = false })
+        .finally(() => {
+            loading.bestSellers = false
+        })
 
     // 4. Fetch Expenses by Date (Stacked Bar Chart)
     loading.expenses = true
     getExpensesByDateRange(start, end)
-        .then(res => { chartData.expenses = formatStackedBarChartData(res.data) })
+        .then(res => {
+            chartData.expenses = formatStackedBarChartData(res.data)
+        })
         .catch(() => toast.error('Lỗi tải biểu đồ chi phí'))
-        .finally(() => { loading.expenses = false })
+        .finally(() => {
+            loading.expenses = false
+        })
 
     // 5. Fetch Category Sales
     fetchCategorySales()
 
     // 6. Fetch Top Products by Quantity
     fetchTopProducts()
+
+    // 7. Fetch Product Sales Summary
+    fetchProductSalesSummary()
 }
 
 const fetchInventoryData = async () => {
@@ -814,9 +1011,51 @@ const fetchTopProducts = async () => {
     } catch (error) {
         console.error('Error fetching top products:', error)
         toast.error('Lỗi tải top sản phẩm theo số lượng')
-        chartData.topProducts = { labels: [], datasets: [] }
+        chartData.topProducts = {labels: [], datasets: []}
     } finally {
         loading.bestSellers = false
+    }
+}
+
+const fetchProductSalesSummary = async () => {
+    loading.productSummary = true
+    try {
+        const start = formatDateISO(startDate.value)
+        const end = formatDateISO(endDate.value)
+        const response = await getProductSalesSummary(start, end)
+        const data = response.data || {}
+
+        const products = Array.isArray(data.products) ? data.products : []
+
+        productSalesSummary.value = {
+            products,
+            totalQuantitySold: Number(data.totalQuantitySold) || 0,
+            totalRevenueGenerated: data.totalRevenueGenerated || 0
+        }
+
+        chartData.productSummaryRevenue = createBarChartData(
+            products.map(item => item.productName),
+            products.map(item => Number(item.totalRevenueGenerated) || 0),
+            'Doanh thu'
+        )
+
+        chartData.productSummaryQuantity = createBarChartData(
+            products.map(item => item.productName),
+            products.map(item => Number(item.totalQuantitySold) || 0),
+            'Số lượng bán'
+        )
+    } catch (error) {
+        console.error('Error fetching product sales summary:', error)
+        toast.error('Lỗi tải thống kê sản phẩm')
+        productSalesSummary.value = {
+            products: [],
+            totalQuantitySold: 0,
+            totalRevenueGenerated: 0
+        }
+        chartData.productSummaryRevenue = {labels: [], datasets: []}
+        chartData.productSummaryQuantity = {labels: [], datasets: []}
+    } finally {
+        loading.productSummary = false
     }
 }
 
@@ -836,7 +1075,7 @@ const fetchCategorySales = async () => {
     } catch (error) {
         console.error('Error fetching category sales:', error)
         toast.error('Lỗi tải dữ liệu danh mục')
-        chartData.categories = { labels: [], datasets: [] }
+        chartData.categories = {labels: [], datasets: []}
     } finally {
         loading.categories = false
     }
@@ -864,11 +1103,23 @@ const handleExportExcel = async () => {
     }
 }
 
-const inventoryRowClass = ({ row }) => {
+const inventoryRowClass = ({row}) => {
     if (!row) return ''
     if ((row.quantityOnHand !== undefined && row.reorderLevel !== undefined) &&
         (row.quantityOnHand <= row.reorderLevel)) {
         return 'row-danger'
+    }
+    return ''
+}
+
+const productSummaryRowClass = ({row}) => {
+    if (!row) return ''
+    const key = row.productId ?? row.productName
+    if (productRankSets.value.top.has(key)) {
+        return 'row-top-product'
+    }
+    if (productRankSets.value.bottom.has(key)) {
+        return 'row-bottom-product'
     }
     return ''
 }
@@ -1169,7 +1420,84 @@ onMounted(() => {
     --el-table-tr-bg-color: var(--el-color-danger-light-9);
 }
 
-.el-table .row-danger:hover>td {
+.el-table .row-danger:hover > td {
     background-color: var(--el-color-danger-light-8) !important;
 }
+
+.product-summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.product-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.product-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+}
+
+.product-summary-totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.summary-pill {
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 8px 16px;
+    border-radius: 12px;
+    min-width: 160px;
+}
+
+.pill-label {
+    font-size: 0.85rem;
+    color: #909399;
+}
+
+.pill-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #303133;
+}
+
+.product-summary-chart-wrapper {
+    padding: 12px 0 4px;
+}
+
+.product-summary-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.product-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.row-top-product {
+    background: rgba(103, 194, 58, 0.12) !important;
+}
+
+.row-bottom-product {
+    background: rgba(245, 108, 108, 0.12) !important;
+}
+
+.row-top-product:hover,
+.row-bottom-product:hover {
+    filter: brightness(0.98);
+}
+
 </style>

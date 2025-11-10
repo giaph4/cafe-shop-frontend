@@ -249,7 +249,7 @@ const handlePayment = async () => {
 
         const response = await getOrderById(selectedOrder.value.id)
         const updatedOrder = response.data
-t
+
         const billContent = generateBillContent(updatedOrder)
         downloadBill(billContent, `bill_${updatedOrder.id}.txt`)
 

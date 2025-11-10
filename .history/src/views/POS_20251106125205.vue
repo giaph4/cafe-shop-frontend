@@ -26,7 +26,7 @@
   <script setup>
   import { computed, onMounted } from 'vue';
   import { useStore } from 'vuex';
-  import ProductMenu from '@/components/pos/ProductMenu.vue';
+  import ProductMenu from '@/components/ProductMenu.vue';
   import TableGrid from '@/components/pos/TableGrid.vue';
   import TemporaryCart from '@/components/pos/TemporaryCart.vue';
   import ActiveOrderDetails from '@/components/pos/ActiveOrderDetails.vue';

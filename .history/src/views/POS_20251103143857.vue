@@ -57,7 +57,7 @@
   
   // Import các component con
   import CafeTable from '@/components/pos/CafeTable.vue';
-  import ProductMenu from '@/components/pos/ProductMenu.vue';
+  import ProductMenu from '@/components/ProductMenu.vue';
   import TemporaryCart from '@/components/pos/TemporaryCart.vue';
   import ActiveOrderDetails from '@/components/pos/ActiveOrderDetails.vue';
   import OrderHistoryList from '@/components/pos/OrderHistoryList.vue';

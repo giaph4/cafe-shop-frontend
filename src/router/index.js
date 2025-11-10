@@ -4,9 +4,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 // Sửa lỗi: Thêm .js
 import { useAuthStore } from '@/store/auth.js'
 
-import DefaultLayout from '@/layouts/DefaultLayout.vue'
-import Login from '@/views/Login.vue'
-import Dashboard from '@/views/Dashboard.vue'
+const DefaultLayout = () => import('@/layouts/DefaultLayout.vue')
+const Login = () => import('@/views/Login.vue')
+const Dashboard = () => import('@/views/Dashboard.vue')
 
 const POS = () => import('@/views/POS.vue')
 const Orders = () => import('@/views/Orders.vue')
@@ -21,6 +21,7 @@ const PurchaseOrderCreate = () => import('@/views/PurchaseOrderCreate.vue')
 const Expenses = () => import('@/views/Expenses.vue')
 const Reports = () => import('@/views/Reports.vue')
 const Users = () => import('@/views/Users.vue')
+const ShiftSummary = () => import('@/views/ShiftSummary.vue')
 
 const ROLES = {
     ADMIN: 'ROLE_ADMIN',
@@ -123,6 +124,12 @@ const routes = [
                 name: 'Profile',
                 component: () => import('@/views/Profile.vue'),
                 meta: { roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
+            },
+            {
+                path: 'shift-summary',
+                name: 'ShiftSummary',
+                component: ShiftSummary,
+                meta: {roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN], hidden: true }
             }
         ]
     },

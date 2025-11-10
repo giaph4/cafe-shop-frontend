@@ -105,6 +105,17 @@ export const getCategorySales = (startDate, endDate) => {
 }
 
 /**
+ * Lấy báo cáo tổng quan bán hàng theo sản phẩm
+ * @param {string} startDate - "YYYY-MM-DD"
+ * @param {string} endDate - "YYYY-MM-DD"
+ */
+export const getProductSalesSummary = (startDate, endDate) => {
+    return apiClient.get('/api/v1/reports/product-sales-summary', {
+        params: { startDate, endDate }
+    })
+}
+
+/**
  * Lấy Doanh thu theo Giờ (24 giờ)
  * @param {string} date - "YYYY-MM-DD"
  */

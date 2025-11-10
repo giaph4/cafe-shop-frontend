@@ -256,6 +256,7 @@ onMounted(() => {
 <style scoped>
 .app-page-container {
     padding: 20px;
+    height: 105vh;
 }
 
 .w-100 {

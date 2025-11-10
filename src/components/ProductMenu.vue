@@ -42,8 +42,8 @@
 <script setup>
 import {ref, computed} from 'vue';
 import {useStore} from 'vuex';
-import {posStore} from '@/store/posStore'; // Import trực tiếp
-import {formatCurrency} from '@/utils/formatters';
+import {posStore} from '@/store/posStore.js'; // Import trực tiếp
+import {formatCurrency} from '@/utils/formatters.js';
 
 const store = useStore(posStore.key); // Sử dụng store đã import
 const selectedCategory = ref(null);

@@ -8,7 +8,7 @@
                 </div>
                 <h1 class="brand-title">Siu - Coffee Shop</h1>
                 <p class="brand-subtitle">
-                    "Cùng Siu - Coffee Shop, thưởng thức hương vị của niềm vui cùng Messi!"
+                    "Cùng Siu - Coffee Shop, bắt đâu ca làm viêc vơi niềm vui cùng Messi!"
                 </p>
             </div>
         </div>

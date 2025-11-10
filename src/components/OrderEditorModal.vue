@@ -249,6 +249,28 @@ const voucherInput = ref('')
 const selectedPaymentMethod = ref(null)
 const availableTables = ref([])
 
+const normalizeCustomer = (raw) => {
+    if (!raw) return null
+    const id = raw.id ?? raw.customerId
+    if (!id) return null
+    return {
+        id,
+        fullName: raw.fullName || raw.name || raw.customerName || 'Khách hàng',
+        phone: raw.phone || raw.customerPhone || ''
+    }
+}
+
+const upsertCustomerOption = (raw) => {
+    const normalized = normalizeCustomer(raw)
+    if (!normalized) return
+    const existingIndex = customers.value.findIndex((item) => item.id === normalized.id)
+    if (existingIndex === -1) {
+        customers.value.push(normalized)
+    } else {
+        customers.value.splice(existingIndex, 1, normalized)
+    }
+}
+
 onMounted(async () => {
     try {
         const response = await getAvailableProducts()
@@ -323,23 +345,46 @@ const onNoteChange = (orderDetailId, newNote) => {
 
 let customerTimer = null
 const searchCustomers = (query) => {
-    if (query) {
-        customerSearchLoading.value = true
-        clearTimeout(customerTimer)
-        customerTimer = setTimeout(async () => {
-            try {
-                const response = await searchCustomersSimple(query)
-                customers.value = response.data.content
-            } catch (e) {
-                toast.error('Lỗi tìm khách hàng')
-            } finally {
-                customerSearchLoading.value = false
-            }
-        }, 500)
-    } else {
+    const keyword = query?.trim?.() || ''
+    clearTimeout(customerTimer)
+    if (!keyword) {
         customers.value = []
+        customerSearchLoading.value = false
+        return
     }
+    customerSearchLoading.value = true
+    customerTimer = setTimeout(async () => {
+        try {
+            const response = await searchCustomersSimple(keyword)
+            const rawList = Array.isArray(response?.data?.content)
+                ? response.data.content
+                : Array.isArray(response?.data)
+                    ? response.data
+                    : []
+            customers.value = rawList
+                .map(normalizeCustomer)
+                .filter(Boolean)
+        } catch (e) {
+            toast.error('Lỗi tìm khách hàng')
+            customers.value = []
+        } finally {
+            customerSearchLoading.value = false
+        }
+    }, 400)
 }
+
+watch(() => posStore.activeOrder, (order) => {
+    if (order?.customerId) {
+        selectedCustomerId.value = order.customerId
+        upsertCustomerOption({
+            id: order.customerId,
+            fullName: order.customerName || order.customer?.fullName,
+            phone: order.customerPhone || order.customer?.phone,
+        })
+    } else {
+        selectedCustomerId.value = null
+    }
+}, { immediate: true })
 
 const onConfirmOrderDetails = () => {
     if (!posStore.currentTable?.id) {

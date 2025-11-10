@@ -112,8 +112,6 @@
                 <section class="table-board">
                     <div class="table-board__header">
                         <div>
-                            <h2>Sơ đồ Bàn</h2>
-                            <p>Quản lý tình trạng phục vụ và đặt chỗ theo thời gian thực</p>
                         </div>
                         <div class="table-board__actions">
                             <el-input
@@ -322,10 +320,10 @@ const selectedCustomerId = ref(null)
 const tableStatusFilter = ref('ALL')
 
 const tableStatusSegments = [
-    { label: 'Tất cả', value: 'ALL' },
-    { label: 'Trống', value: 'EMPTY' },
-    { label: 'Phục vụ', value: 'SERVING' },
-    { label: 'Đặt trước', value: 'RESERVED' }
+    {label: 'Tất cả', value: 'ALL'},
+    {label: 'Trống', value: 'EMPTY'},
+    {label: 'Phục vụ', value: 'SERVING'},
+    {label: 'Đặt trước', value: 'RESERVED'}
 ]
 
 const statusMeta = {
@@ -570,18 +568,6 @@ const createOrderFromCart = async (table) => {
     }
 }
 
-const getStatusText = (status) => {
-    if (status === 'SERVING') return 'Đang phục vụ'
-    if (status === 'RESERVED') return 'Đã đặt'
-    return 'Còn trống' // EMPTY
-}
-
-const getTableClass = (status) => {
-    if (status === 'SERVING') return 'status-serving'
-    if (status === 'RESERVED') return 'status-reserved'
-    return 'status-empty'
-}
-
 onMounted(() => {
     fetchTables()
     fetchProducts()
@@ -663,7 +649,6 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     overflow-y: auto;
     padding-bottom: 8px;
 }
-
 
 
 .product-card {
@@ -784,7 +769,6 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 }
 
 
-
 .product-price {
     margin: 0;
     color: #8b7355 !important;
@@ -827,10 +811,21 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     gap: 6px;
 }
 
-.summary-card.total { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); }
-.summary-card.empty { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); }
-.summary-card.serving { background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); }
-.summary-card.reserved { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); }
+.summary-card.total {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+}
+
+.summary-card.empty {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+}
+
+.summary-card.serving {
+    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+}
+
+.summary-card.reserved {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+}
 
 .summary-label {
     font-size: 0.85rem;
@@ -871,9 +866,17 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     box-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
 }
 
-.board-card--empty { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
-.board-card--serving { background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); }
-.board-card--reserved { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); }
+.board-card--empty {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.board-card--serving {
+    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+}
+
+.board-card--reserved {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+}
 
 .board-card__top {
     display: flex;
