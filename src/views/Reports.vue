@@ -234,13 +234,8 @@
                                 :loading="loading.productSummary"
                                 table-class-name="data-table"
                                 :row-class-name="productSummaryRowClass"
-                                show-index
                                 alternating
                             >
-                                <template #item-index="{ index }">
-                                    <span>{{ index }}</span>
-                                </template>
-
                                 <template #item-productName="{ productName, productId }">
                                     <div class="product-name-cell">
                                         <span>{{ productName }}</span>

@@ -22,6 +22,7 @@ const Expenses = () => import('@/views/Expenses.vue')
 const Reports = () => import('@/views/Reports.vue')
 const Users = () => import('@/views/Users.vue')
 const ShiftSummary = () => import('@/views/ShiftSummary.vue')
+const LoginHistory = () => import('@/views/LoginHistory.vue')
 
 const ROLES = {
     ADMIN: 'ROLE_ADMIN',
@@ -118,6 +119,12 @@ const routes = [
                 name: 'Users',
                 component: Users,
                 meta: { title: 'Nhân viên', icon: 'UserCog', roles: [ROLES.ADMIN, ROLES.MANAGER] }
+            },
+            {
+                path: 'login-history',
+                name: 'LoginHistory',
+                component: LoginHistory,
+                meta: { roles: [ROLES.ADMIN], hidden: true }
             },
             {
                 path: 'profile',

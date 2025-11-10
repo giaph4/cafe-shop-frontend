@@ -2,7 +2,12 @@
     <div class="app-page-container animate__animated animate__fadeInUp stagger-item">
         <div class="page-header">
             <h1 class="page-title">Quản lý Nhân viên</h1>
-            <el-button type="primary" @click="openRegisterModal">Thêm Nhân viên</el-button>
+            <div class="header-actions">
+                <el-button type="info" plain @click="goToLoginHistory">
+                    Lịch sử đăng nhập
+                </el-button>
+                <el-button type="primary" @click="openRegisterModal">Thêm Nhân viên</el-button>
+            </div>
         </div>
 
         <el-card class="box-card filter-card">
@@ -93,6 +98,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import EasyDataTable from 'vue3-easy-data-table'
 import 'vue3-easy-data-table/dist/style.css'
 import { useToast } from 'vue-toastification'
@@ -102,6 +108,7 @@ import UserFormModal from '@/components/UserFormModal.vue'
 import UserRegisterModal from '@/components/UserRegisterModal.vue'
 
 const toast = useToast()
+const router = useRouter()
 
 const searchQuery = ref('')
 const filterRole = ref('')
@@ -206,6 +213,10 @@ const openRegisterModal = () => {
     registerModalVisible.value = true
 }
 
+const goToLoginHistory = () => {
+    router.push({ name: 'LoginHistory' })
+}
+
 // Khi modal sửa thành công
 const handleModalSuccess = () => {
     fetchUsers() // Tải lại bảng
@@ -235,6 +246,11 @@ onMounted(() => {
 <style scoped>
 .app-page-container {
     padding: 20px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
 }
 
 .data-table {
