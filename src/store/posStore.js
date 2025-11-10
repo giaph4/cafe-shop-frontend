@@ -4,9 +4,12 @@ import {useToast} from 'vue-toastification'
 
 import * as orderService from '@/api/orderService.js'
 import {checkVoucher} from '@/api/voucherService.js'
+import {useAuthStore} from '@/store/auth.js'
+import {upsertShiftOrder} from '@/utils/shiftManager.js'
 
 export const usePosStore = defineStore('pos', () => {
     const toast = useToast()
+    const authStore = useAuthStore()
 
     const isModalOpen = ref(false)
     const isLoading = ref(false)
@@ -37,6 +40,7 @@ export const usePosStore = defineStore('pos', () => {
             // API: GET /api/v1/orders/table/{tableId}/pending
             const response = await orderService.getPendingOrderByTable(table.id)
             activeOrder.value = response.data
+            recordShiftOrder(response.data)
         } catch (error) {
             if (error.response && error.response.status === 404) {
                 // Không tìm thấy đơn PENDING -> Sẵn sàng tạo đơn mới
@@ -66,6 +70,12 @@ export const usePosStore = defineStore('pos', () => {
         activeOrder.value = null
     }
 
+    const recordShiftOrder = (order) => {
+        const user = authStore.user
+        if (!order || !user?.userId) return
+        upsertShiftOrder({user, order})
+    }
+
     /**
      * (Hàm Nội bộ) Tạo đơn hàng mới trước khi thêm món
      */
@@ -92,6 +102,7 @@ export const usePosStore = defineStore('pos', () => {
             const response = await orderService.createOrder(createRequest)
             activeOrder.value = response.data
             toast.success(`Đã tạo đơn #${response.data.id} cho ${currentTable.value.name}`)
+            recordShiftOrder(response.data)
         } catch (error) {
             const errorMsg = error.response?.data?.message || 'Lỗi khi tạo đơn hàng mới'
             toast.error(errorMsg)
@@ -116,6 +127,7 @@ export const usePosStore = defineStore('pos', () => {
                 // API: POST /api/v1/orders/{orderId}/items
                 const response = await orderService.addItemToOrder(activeOrder.value.id, itemData)
                 activeOrder.value = response.data // Cập nhật lại toàn bộ đơn hàng
+                recordShiftOrder(response.data)
                 toast.success('Đã thêm món')
             } catch (error) {
                 toast.error('Lỗi khi thêm món')
@@ -134,6 +146,7 @@ export const usePosStore = defineStore('pos', () => {
             // API: PUT /api/v1/orders/{orderId}/items/{orderDetailId}
             const response = await orderService.updateItemInOrder(activeOrder.value.id, orderDetailId, updateData)
             activeOrder.value = response.data
+            recordShiftOrder(response.data)
             // toast.success('Cập nhật số lượng thành công') // (Tắt toast cho mượt)
         } catch (error) {
             toast.error('Lỗi khi cập nhật món')
@@ -151,6 +164,7 @@ export const usePosStore = defineStore('pos', () => {
             // API: DELETE /api/v1/orders/{orderId}/items/{orderDetailId}
             const response = await orderService.removeItemFromOrder(activeOrder.value.id, orderDetailId)
             activeOrder.value = response.data
+            recordShiftOrder(response.data)
             toast.success('Đã xóa món')
 
             // Nếu không còn món nào trong đơn, tự động hủy đơn
@@ -187,6 +201,7 @@ export const usePosStore = defineStore('pos', () => {
             // API: POST /api/v1/orders/{orderId}/voucher
             const response = await orderService.applyVoucher(activeOrder.value.id, code)
             activeOrder.value = response.data
+            recordShiftOrder(response.data)
             toast.success(`Áp dụng voucher ${code} thành công!`)
         } catch (error) {
             const msg = error.response?.data?.message || 'Lỗi khi áp dụng voucher'
@@ -205,6 +220,7 @@ export const usePosStore = defineStore('pos', () => {
             // API: DELETE /api/v1/orders/{orderId}/voucher
             const response = await orderService.removeVoucher(activeOrder.value.id)
             activeOrder.value = response.data
+            recordShiftOrder(response.data)
             toast.info('Đã gỡ voucher')
         } catch (error) {
             toast.error('Lỗi khi gỡ voucher')
@@ -225,6 +241,7 @@ export const usePosStore = defineStore('pos', () => {
             // API: POST /api/v1/orders/{orderId}/payment
             const response = await orderService.payOrder(activeOrder.value.id, {paymentMethod, customerId})
             activeOrder.value = response.data // Đơn hàng đã PAID
+            recordShiftOrder(response.data)
             toast.success(`Thanh toán thành công đơn #${response.data.id}`)
             closePosModal() // Đóng modal
             return true // Báo thành công
@@ -251,6 +268,7 @@ export const usePosStore = defineStore('pos', () => {
             // API: POST /api/v1/orders/{orderId}/cancel
             const response = await orderService.cancelOrder(activeOrder.value.id)
             activeOrder.value = response.data // Đơn hàng đã CANCELLED
+            recordShiftOrder(response.data)
             toast.success(`Đã hủy đơn #${response.data.id}`)
             closePosModal() // Đóng modal
             return true // Báo thành công
@@ -287,6 +305,7 @@ export const usePosStore = defineStore('pos', () => {
 
             const response = await orderService.createOrder(cleanRequest)
             toast.success(`Đã tạo đơn #${response.data.id}`)
+            recordShiftOrder(response.data)
             return response.data
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || 'Lỗi khi tạo đơn hàng'

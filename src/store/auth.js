@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import router from '@/router'
 import { jwtDecode } from 'jwt-decode'
 import * as authService from '@/api/authService.js' // <-- THAY ĐỔI: Import service mới
+import { startShiftSession, clearShiftSession } from '@/utils/shiftManager.js'
 
 // Hàm helper giải mã token (giữ nguyên)
 function decodeToken(token) {
@@ -52,7 +53,10 @@ export const useAuthStore = defineStore('auth', {
             this.user = decodeToken(tokenString)
             localStorage.setItem('user', JSON.stringify(this.user))
 
-            // 4. Điều hướng về trang chủ
+            // 4. Khởi tạo ca làm việc cho người dùng
+            startShiftSession(this.user)
+
+            // 5. Điều hướng về trang chủ
             router.push('/')
         },
 
@@ -97,10 +101,14 @@ export const useAuthStore = defineStore('auth', {
          * Action Đăng xuất
          */
         logout() {
+            const userId = this.user?.userId
             this.token = null
             this.user = null
             localStorage.removeItem('token')
             localStorage.removeItem('user')
+            if (userId) {
+                clearShiftSession(userId)
+            }
             router.replace('/login')
         },
     }
