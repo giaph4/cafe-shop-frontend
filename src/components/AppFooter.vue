@@ -1,111 +1,106 @@
 <template>
     <footer class="app-footer">
-        <div class="footer-hero">
-            <div class="hero-info">
-                <div class="hero-icon">
-                    <Coffee size="24" />
-                </div>
-                <div class="hero-text">
-                    <h2 class="hero-title">Coffee Siu Admin</h2>
-                    <p class="hero-subtitle">Nền tảng quản lý toàn diện giúp đồng bộ mọi hoạt động trong quán cà phê của bạn.</p>
-                </div>
-            </div>
-
-            <div class="hero-highlights">
-                <div class="highlight-card">
-                    <Sparkles size="18" />
-                    <div>
-                        <span class="highlight-title">Trải nghiệm trực quan</span>
-                        <p>Cập nhật thời gian thực, thao tác mượt mà trên mọi thiết bị.</p>
+        <div class="footer-wrapper">
+            <div class="footer-header">
+                <div class="brand-block">
+                    <div class="brand-icon">
+                        <img class="brand-icon" src="@/assets/logo.png" alt="Coffee Shop Logo"/>
+                    </div>
+                    <div class="brand-copy">
+                        <h2 class="brand-title">Coffee Siu Cafe Management</h2>
+                        <p class="brand-subtitle">
+                            Giải pháp điều hành quán cafe toàn diện: POS, kho, menu, khách hàng thân thiết.
+                        </p>
                     </div>
                 </div>
-                <div class="highlight-card">
-                    <Users size="18" />
-                    <div>
-                        <span class="highlight-title">20+ nhân sự tin dùng</span>
-                        <p>Phối hợp chặt giữa barista, thu ngân và quản lý ca.</p>
-                    </div>
+                <a class="cta-button" href="tel:0329463763">Nhấn để gọi tư vấn</a>
+            </div>
+
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3 class="footer-title">Liên hệ trực tiếp</h3>
+                    <ul class="footer-list">
+                        <li>
+                            <span class="list-label">Người phụ trách:</span>
+                            <span>Huỳnh Gia Pho</span>
+                        </li>
+                        <li>
+                            <span class="list-label">Hotline/Zalo:</span>
+                            <a href="tel:0329463763">0329 463 763</a>
+                        </li>
+                        <li>
+                            <span class="list-label">Hình thức làm việc:</span>
+                            <span>Hỗ trợ triển khai trực tuyến & trực tiếp theo nhu cầu quán</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3 class="footer-title">Kênh trực tuyến</h3>
+                    <ul class="footer-links">
+                        <li>
+                            <a
+                                href="https://github.com/giaph4"
+                                target="_blank"
+                                rel="noopener"
+                            >
+                                <span class="link-icon">💻</span>
+                                GitHub: giaph4
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                href="https://www.facebook.com/giapho.huynh.1503"
+                                target="_blank"
+                                rel="noopener"
+                            >
+                                <span class="link-icon">🌐</span>
+                                Facebook cá nhân
+                            </a>
+                        </li>
+                        <li>
+                            <span class="coming-soon">
+                                <span class="link-icon">📄</span>
+                                Tài liệu triển khai: đang cập nhật
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3 class="footer-title">Giải pháp hệ thống</h3>
+                    <ul class="footer-list bullets">
+                        <li>Quản lý bán hàng theo quầy, bàn và mang đi trong cùng giao diện.</li>
+                        <li>Đồng bộ kho nguyên liệu, định lượng pha chế và cảnh báo tồn kho.</li>
+                        <li>Báo cáo doanh thu tức thời, phân tích lợi nhuận theo sản phẩm.</li>
+                        <li>Chương trình khách hàng thân thiết và voucher linh hoạt.</li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3 class="footer-title">Quy trình triển khai</h3>
+                    <ul class="footer-list">
+                        <li>
+                            <span class="list-label">1. Khảo sát & tư vấn:</span>
+                            <span>Thu thập quy trình phục vụ, menu và mô hình bán hàng.</span>
+                        </li>
+                        <li>
+                            <span class="list-label">2. Thiết lập hệ thống:</span>
+                            <span>Cấu hình POS, phân quyền nhân viên, nhập danh mục sản phẩm.</span>
+                        </li>
+                        <li>
+                            <span class="list-label">3. Đào tạo & bàn giao:</span>
+                            <span>Hướng dẫn sử dụng chi tiết và theo dõi vận hành trong tuần đầu.</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </div>
 
-        <div class="footer-grid">
-            <div class="footer-column">
-                <h4>Điều hướng nhanh</h4>
-                <nav>
-                    <a href="/">Trang tổng quan</a>
-                    <a href="/pos">Điểm bán (POS)</a>
-                    <a href="/reports">Báo cáo nâng cao</a>
-                    <a href="/inventory">Quản lý kho</a>
-                    <a href="/users">Nhân viên & phân quyền</a>
-                </nav>
-            </div>
-
-            <div class="footer-column">
-                <h4>Vận hành quán</h4>
-                <ul>
-                    <li>
-                        <Clock size="17" />
-                        <span>Giờ mở cửa: 06:00 - 22:00 mỗi ngày</span>
-                    </li>
-                    <li>
-                        <MapPin size="17" />
-                        <span>40 Trần Quốc Toản, Hải Châu, Đà Nẵng</span>
-                    </li>
-                    <li>
-                        <Phone size="17" />
-                        <a href="tel:+840123456789">Hotline: 0123 456 789</a>
-                    </li>
-                    <li>
-                        <MessageCircle size="17" />
-                        <a href="https://zalo.me/0123456789" target="_blank" rel="noopener">Zalo hỗ trợ: @coffeesiu</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="footer-column">
-                <h4>Hỗ trợ & Tài liệu</h4>
-                <ul>
-                    <li>
-                        <BookOpen size="17" />
-                        <a href="/guides">Hướng dẫn sử dụng</a>
-                    </li>
-                    <li>
-                        <ShieldCheck size="17" />
-                        <a href="/policies">Chính sách bảo mật</a>
-                    </li>
-                    <li>
-                        <Headphones size="17" />
-                        <a href="mailto:support@coffeesiu.vn">support@coffeesiu.vn</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="footer-column newsletter">
-                <h4>Bản tin & Cập nhật</h4>
-                <p class="newsletter-text">Nhận mẹo vận hành, ưu đãi phần mềm và câu chuyện thành công mỗi tuần.</p>
-                <form class="newsletter-form" @submit.prevent>
-                    <label class="sr-only" for="newsletter-email">Email nhận bản tin</label>
-                    <input id="newsletter-email" type="email" placeholder="Nhập email của bạn" />
-                    <button type="submit">Đăng ký</button>
-                </form>
-                <span class="newsletter-note">* Chúng tôi chỉ gửi tối đa 2 email mỗi tuần.</span>
-            </div>
-        </div>
-
-        <div class="footer-bottom">
-            <div class="footer-bottom-left">
-                <span>© {{ currentYear }} Huỳnh Gia Pho · Coffee Siu Admin</span>
-                <small>Made with ☕ &nbsp;tại Việt Nam</small>
-            </div>
-            <div class="footer-bottom-right">
-                <div class="footer-social">
-                    <a href="https://github.com/giaph4" target="_blank" rel="noopener" aria-label="GitHub">
-                        <Github size="18" />
-                    </a>
-                    <a href="https://www.instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
-                        <Instagram size="18" />
-                    </a>
+            <div class="footer-bottom">
+                <span>© {{ currentYear }} Cafe Management System. All rights reserved.</span>
+                <div class="footer-meta">
+                    <span>Phát triển bởi Huỳnh Gia Pho</span>
+                    <span>Cafe Siu Dashboard • Nền tảng quản lý vận hành</span>
                 </div>
             </div>
         </div>
@@ -113,306 +108,244 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import {
-    Coffee,
-    Github,
-    Phone,
-    MapPin,
-    Instagram,
-    Clock,
-    Sparkles,
-    Users,
-    MessageCircle,
-    BookOpen,
-    ShieldCheck,
-    Headphones
-} from 'lucide-vue-next'
-
-const currentYear = computed(() => new Date().getFullYear())
+const currentYear = new Date().getFullYear()
 </script>
 
 <style scoped>
 .app-footer {
-    margin-top: 28px;
+    --primary-color: #409eff;
+    --text-color-primary: #111827;
+    --text-color-secondary: #4b5563;
+    --border-color: rgb(234, 234, 207);
+
+    background: linear-gradient(
+        135deg,
+        rgb(206, 231, 234),
+        rgb(255, 255, 255)
+    );
+    border-top: 1px solid var(--border-color);
+    backdrop-filter: blur(6px);
+    padding: 32px 24px;
+    color: var(--text-color-primary);
+    flex-shrink: 0;
     border-radius: 20px;
-    background: linear-gradient(160deg, rgba(255, 250, 240, 0.92), rgba(240, 226, 205, 0.92));
-    border: 1px solid rgba(139, 115, 85, 0.22);
-    box-shadow: 0 18px 36px rgba(111, 91, 69, 0.14);
-    color: #3e2d1c;
-    overflow: hidden;
+    box-shadow:  20px 10px 18px rgba(1, 7, 14, 0.25);
 }
 
-.footer-hero {
+.footer-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.footer-header {
+    display: flex;
     justify-content: space-between;
-    gap: 24px;
-    padding: 32px 36px 20px;
-    background: rgba(255, 255, 255, 0.6);
-}
-
-.hero-info {
-    display: flex;
-    gap: 18px;
     align-items: center;
-    min-width: 260px;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
-.hero-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    background: rgba(111, 91, 69, 0.16);
+.brand-block {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.brand-icon {
+    width: 56px;
+    border-radius: 50%;
+    background: rgba(255, 183, 77, 0.18);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6f4f2c;
+    font-size: 28px;
 }
 
-.hero-text {
-    max-width: 340px;
-}
-
-.hero-title {
+.brand-title {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     font-weight: 700;
 }
 
-.hero-subtitle {
-    margin: 8px 0 0;
-    font-size: 0.92rem;
-    color: rgba(62, 45, 28, 0.78);
+.brand-subtitle {
+    margin: 4px 0 0;
+    color: var(--text-color-secondary);
+    line-height: 1.6;
 }
 
-.hero-highlights {
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
-
-.highlight-card {
-    display: flex;
-    gap: 12px;
-    padding: 16px 20px;
-    background: rgba(255, 255, 255, 0.82);
-    border-radius: 16px;
-    box-shadow: 0 12px 22px rgba(111, 91, 69, 0.12);
-    max-width: 240px;
-}
-
-.highlight-card svg {
-    color: #b77942;
-    flex-shrink: 0;
-}
-
-.highlight-title {
+.cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: var(--primary-color, #409eff);
+    color: #ffffff;
+    text-decoration: none;
     font-weight: 600;
-    font-size: 0.95rem;
-    color: #3e2d1c;
+    box-shadow: 0 10px 18px rgba(64, 158, 255, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.highlight-card p {
-    margin: 6px 0 0;
-    font-size: 0.82rem;
-    color: rgba(62, 45, 28, 0.7);
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 24px rgba(64, 158, 255, 0.3);
 }
 
 .footer-grid {
     display: grid;
-    gap: 30px;
-    padding: 16px 36px 32px;
-    background: rgba(255, 255, 255, 0.78);
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 28px;
 }
 
-.footer-column h4 {
-    margin: 0 0 14px;
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(62, 45, 28, 0.68);
-}
-
-.footer-column nav,
-.footer-column ul {
+.footer-column {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+}
+
+.footer-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-color-primary);
+}
+
+.footer-list,
+.footer-links {
+    list-style: none;
     margin: 0;
     padding: 0;
-    list-style: none;
-}
-
-.footer-column a {
-    color: #3e2d1c;
-    text-decoration: none;
-    font-size: 0.88rem;
-    transition: color 0.2s ease;
-}
-
-.footer-column a:hover {
-    color: #b77942;
-}
-
-.footer-column li {
     display: flex;
-    gap: 8px;
-    align-items: flex-start;
-    font-size: 0.88rem;
-    color: #3e2d1c;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--text-color-secondary);
 }
 
-.footer-column li svg {
-    margin-top: 2px;
-    color: #b77942;
+.footer-list.bullets {
+    gap: 12px;
 }
 
-.newsletter-text {
-    margin: 0 0 12px;
-    font-size: 0.88rem;
-    color: rgba(62, 45, 28, 0.75);
+.footer-list.bullets li {
+    position: relative;
+    padding-left: 18px;
+    line-height: 1.6;
 }
 
-.newsletter-form {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-.newsletter-form input {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(111, 91, 69, 0.25);
-    background: rgba(255, 255, 255, 0.95);
-    color: #3e2d1c;
-    font-size: 0.88rem;
-}
-
-.newsletter-form input:focus {
-    outline: none;
-    border-color: #b77942;
-    box-shadow: 0 0 0 3px rgba(183, 121, 66, 0.25);
-}
-
-.newsletter-form button {
-    padding: 10px 16px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #c68b45, #9c6230);
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.newsletter-form button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 20px rgba(156, 98, 48, 0.28);
-}
-
-.newsletter-note {
-    font-size: 0.78rem;
-    color: rgba(62, 45, 28, 0.6);
-}
-
-.sr-only {
+.footer-list.bullets li::before {
+    content: '';
     position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    top: 10px;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    opacity: 0.6;
 }
 
-.footer-bottom {
-    border-top: 1px solid rgba(139, 115, 85, 0.18);
-    padding: 16px 36px 24px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 14px;
-    align-items: center;
-    font-size: 0.82rem;
-    background: rgba(248, 242, 233, 0.9);
-}
-
-.footer-bottom-left {
+.footer-list li,
+.footer-links li {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    color: rgba(62, 45, 28, 0.75);
 }
 
-.footer-bottom-right {
-    display: flex;
+.list-label {
+    font-weight: 600;
+    color: var(--text-color-primary);
+}
+
+.footer-links a {
+    display: inline-flex;
     align-items: center;
+    gap: 8px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+
+.link-icon {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(64, 158, 255, 0.12);
+    font-size: 0.85rem;
+}
+
+.coming-soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color-secondary, #6b7280);
+}
+
+.footer-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+}
+
+.footer-meta {
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px;
 }
 
-.footer-social {
+.footer-meta span {
     display: inline-flex;
-    gap: 12px;
+    align-items: center;
+    gap: 6px;
+    padding-right: 12px;
+    border-right: 1px solid rgba(19, 84, 197, 0.7);
 }
 
-.footer-social a {
-    color: #3e2d1c;
-    display: inline-flex;
-    padding: 8px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.72);
-    transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.footer-social a:hover {
-    background: rgba(183, 121, 66, 0.22);
-    transform: translateY(-1px);
-}
-
-@media (max-width: 1024px) {
-    .footer-hero {
-        padding: 28px;
-    }
-
-    .hero-text {
-        max-width: 100%;
-    }
-
-    .hero-highlights {
-        justify-content: flex-start;
-    }
-
-    .footer-grid {
-        padding: 16px 28px 28px;
-    }
+.footer-meta span:last-child {
+    border-right: none;
+    padding-right: 0;
 }
 
 @media (max-width: 768px) {
-    .footer-hero {
-        padding: 24px;
+    .app-footer {
+        padding: 28px 18px;
+    }
+
+    .footer-wrapper {
+        gap: 28px;
     }
 
     .footer-grid {
-        padding: 16px 24px 28px;
+        gap: 20px;
     }
 
-    .newsletter-form {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .newsletter-form button {
+    .cta-button {
         width: 100%;
+        justify-content: center;
     }
 
-    .footer-bottom {
-        padding: 16px 24px 22px;
+    .footer-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .footer-meta span {
+        border-right: none;
+        padding-right: 0;
     }
 }
 </style>

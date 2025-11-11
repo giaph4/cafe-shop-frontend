@@ -1,0 +1,201 @@
+export const messages = {
+  vi: {
+    common: {
+      appName: 'Coffee Siu Admin',
+      theme: 'Chủ đề',
+      themeLight: 'Chế độ sáng',
+      themeDark: 'Chế độ tối',
+      language: 'Ngôn ngữ',
+      languageVietnamese: 'Tiếng Việt',
+      languageEnglish: 'Tiếng Anh',
+      cancel: 'Hủy',
+      confirm: 'Đồng ý',
+      logout: 'Đăng xuất',
+      profile: 'Thông tin cá nhân',
+      reload: 'Tải lại',
+      close: 'Đóng',
+      open: 'Mở',
+      save: 'Lưu',
+      searchPlaceholder: 'Tìm kiếm...'
+    },
+    routes: {
+      dashboard: 'Tổng quan',
+      pos: 'Bán hàng (POS)',
+      orders: 'Lịch sử Đơn hàng',
+      tables: 'Quản lý Bàn',
+      customers: 'Khách hàng',
+      products: 'Sản phẩm',
+      categories: 'Danh mục',
+      inventory: 'Tồn kho',
+      suppliers: 'Nhà cung cấp',
+      purchaseOrders: 'Nhập hàng',
+      purchaseOrderCreate: 'Tạo đơn nhập',
+      expenses: 'Chi phí',
+      reports: 'Báo cáo',
+      users: 'Nhân viên',
+      profile: 'Hồ sơ cá nhân',
+      shiftSummary: 'Tổng kết ca',
+      loginHistory: 'Lịch sử đăng nhập'
+    },
+    navbar: {
+      toggleSidebar: 'Đổi trạng thái thanh điều hướng',
+      defaultTitle: 'Bảng điều khiển',
+      themeLabel: 'Chủ đề',
+      languageLabel: 'Ngôn ngữ',
+      sidebarExpand: 'Mở rộng sidebar',
+      sidebarCollapse: 'Thu gọn sidebar',
+      profile: 'Thông tin cá nhân',
+      logout: 'Đăng xuất',
+      logoutTitle: 'Xác nhận đăng xuất',
+      logoutQuestion: 'Bạn có muốn kết ca trước khi đăng xuất khỏi hệ thống POS không?',
+      logoutWithoutShift: 'Đăng xuất không kết ca',
+      logoutWithShift: 'Đăng xuất và kết ca'
+    },
+    sidebar: {
+      brand: 'Coffee Siu'
+    },
+    footer: {
+      heroTitle: 'Coffee Siu Admin',
+      heroSubtitle: 'Nền tảng quản lý toàn diện giúp đồng bộ mọi hoạt động trong quán cà phê của bạn.',
+      highlightExperienceTitle: 'Trải nghiệm trực quan',
+      highlightExperienceDescription: 'Cập nhật thời gian thực, thao tác mượt mà trên mọi thiết bị.',
+      highlightTeamTitle: '20+ nhân sự tin dùng',
+      highlightTeamDescription: 'Phối hợp chặt giữa barista, thu ngân và quản lý ca.',
+      quickNavigation: 'Điều hướng nhanh',
+      navDashboard: 'Trang tổng quan',
+      navPos: 'Điểm bán (POS)',
+      navReports: 'Báo cáo nâng cao',
+      navInventory: 'Quản lý kho',
+      navUsers: 'Nhân viên & phân quyền',
+      operations: 'Vận hành quán',
+      openingHours: 'Giờ mở cửa: 06:00 - 22:00 mỗi ngày',
+      address: '834/3 Trần Cao Vân, TP. Đà Nẵng',
+      hotline: 'Hotline: 0123 456 789',
+      zalo: 'Zalo hỗ trợ: @coffeesiu',
+      support: 'Hỗ trợ & Tài liệu',
+      docs: 'Hướng dẫn sử dụng',
+      privacy: 'Chính sách bảo mật',
+      email: 'support@coffeesiu.vn',
+      newsletterTitle: 'Bản tin & Cập nhật',
+      newsletterDescription: 'Nhận mẹo vận hành, ưu đãi phần mềm và câu chuyện thành công mỗi tuần.',
+      newsletterPlaceholder: 'Nhập email của bạn',
+      newsletterSubmit: 'Đăng ký',
+      newsletterNote: '* Chúng tôi chỉ gửi tối đa 2 email mỗi tuần.',
+      copyright: '© {year} Huỳnh Gia Pho · Coffee Siu Admin',
+      madeWithLove: 'Made with ☕ tại Việt Nam'
+    },
+    theme: {
+      light: 'Chế độ sáng',
+      dark: 'Chế độ tối'
+    },
+    language: {
+      vi: 'Tiếng Việt',
+      en: 'Tiếng Anh'
+    },
+    status: {
+      empty: 'Trống',
+      serving: 'Đang phục vụ',
+      reserved: 'Đã đặt'
+    }
+  },
+  en: {
+    common: {
+      appName: 'Coffee Siu Admin',
+      theme: 'Theme',
+      themeLight: 'Light mode',
+      themeDark: 'Dark mode',
+      language: 'Language',
+      languageVietnamese: 'Vietnamese',
+      languageEnglish: 'English',
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      logout: 'Sign out',
+      profile: 'Profile',
+      reload: 'Reload',
+      close: 'Close',
+      open: 'Open',
+      save: 'Save',
+      searchPlaceholder: 'Search...'
+    },
+    routes: {
+      dashboard: 'Dashboard',
+      pos: 'Point of Sale (POS)',
+      orders: 'Order History',
+      tables: 'Table Management',
+      customers: 'Customers',
+      products: 'Products',
+      categories: 'Categories',
+      inventory: 'Inventory',
+      suppliers: 'Suppliers',
+      purchaseOrders: 'Purchase Orders',
+      purchaseOrderCreate: 'Create Purchase Order',
+      expenses: 'Expenses',
+      reports: 'Reports',
+      users: 'Staff',
+      profile: 'Profile',
+      shiftSummary: 'Shift Summary',
+      loginHistory: 'Login History'
+    },
+    navbar: {
+      toggleSidebar: 'Toggle sidebar',
+      defaultTitle: 'Dashboard',
+      themeLabel: 'Theme',
+      languageLabel: 'Language',
+      sidebarExpand: 'Expand sidebar',
+      sidebarCollapse: 'Collapse sidebar',
+      profile: 'Profile',
+      logout: 'Sign out',
+      logoutTitle: 'Sign-out confirmation',
+      logoutQuestion: 'Do you want to close the shift report before signing out of the POS system?',
+      logoutWithoutShift: 'Sign out without shift summary',
+      logoutWithShift: 'Sign out and close shift',
+      cancel: 'Cancel'
+    },
+    sidebar: {
+      brand: 'Coffee Siu'
+    },
+    footer: {
+      heroTitle: 'Coffee Siu Admin',
+      heroSubtitle: 'A unified management platform that keeps every cafe operation in sync.',
+      highlightExperienceTitle: 'Intuitive experience',
+      highlightExperienceDescription: 'Real-time updates with smooth interactions on every device.',
+      highlightTeamTitle: 'Trusted by 20+ staff members',
+      highlightTeamDescription: 'Keeps baristas, cashiers, and shift managers aligned.',
+      quickNavigation: 'Quick navigation',
+      navDashboard: 'Dashboard',
+      navPos: 'Point of Sale (POS)',
+      navReports: 'Advanced reports',
+      navInventory: 'Inventory management',
+      navUsers: 'Staff & permissions',
+      operations: 'Cafe operations',
+      openingHours: 'Opening hours: 06:00 - 22:00 daily',
+      address: '834/3 Tran Cao Van, Da Nang City',
+      hotline: 'Hotline: +84 0123 456 789',
+      zalo: 'Zalo support: @coffeesiu',
+      support: 'Support & resources',
+      docs: 'User guides',
+      privacy: 'Privacy policy',
+      email: 'support@coffeesiu.vn',
+      newsletterTitle: 'Newsletter & updates',
+      newsletterDescription: 'Get weekly operating tips, product offers, and success stories.',
+      newsletterPlaceholder: 'Enter your email',
+      newsletterSubmit: 'Subscribe',
+      newsletterNote: '* We only send at most 2 emails per week.',
+      copyright: '© {year} Huynh Gia Pho · Coffee Siu Admin',
+      madeWithLove: 'Made with ☕ in Vietnam'
+    },
+    theme: {
+      light: 'Light mode',
+      dark: 'Dark mode'
+    },
+    language: {
+      vi: 'Vietnamese',
+      en: 'English'
+    },
+    status: {
+      empty: 'Empty',
+      serving: 'Serving',
+      reserved: 'Reserved'
+    }
+  }
+}

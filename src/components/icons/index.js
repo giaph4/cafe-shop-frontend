@@ -27,7 +27,10 @@ import {
     Search,
     Notebook,
     Image,
-    X
+    X,
+    Sun,
+    Moon,
+    Languages
 } from 'lucide-vue-next'
 
 export {
@@ -58,5 +61,8 @@ export {
     Search,
     Notebook,
     Image,
-    X
+    X,
+    Sun,
+    Moon,
+    Languages
 }

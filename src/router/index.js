@@ -40,103 +40,103 @@ const routes = [
                 path: '',
                 name: 'Dashboard',
                 component: Dashboard,
-                meta: { title: 'Tổng quan', icon: 'LayoutDashboard', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Tổng quan', titleKey: 'routes.dashboard', icon: 'LayoutDashboard', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'pos',
                 name: 'POS',
                 component: POS,
-                meta: { title: 'Bán hàng (POS)', icon: 'Map', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Bán hàng (POS)', titleKey: 'routes.pos', icon: 'Map', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'orders',
                 name: 'Orders',
                 component: Orders,
-                meta: { title: 'Lịch sử Đơn hàng', icon: 'ShoppingCart', roles: [ROLES.MANAGER, ROLES.ADMIN, ROLES.MANAGER] }
+                meta: { title: 'Lịch sử Đơn hàng', titleKey: 'routes.orders', icon: 'ShoppingCart', roles: [ROLES.MANAGER, ROLES.ADMIN, ROLES.MANAGER] }
             },
             {
                 path: 'tables',
                 name: 'Tables',
                 component: Tables,
-                meta: { title: 'Quản lý Bàn', icon: 'Armchair', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Quản lý Bàn', titleKey: 'routes.tables', icon: 'Armchair', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'customers',
                 name: 'Customers',
                 component: Customers,
-                meta: { title: 'Khách hàng', icon: 'Users', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Khách hàng', titleKey: 'routes.customers', icon: 'Users', roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'products',
                 name: 'Products',
                 component: Products,
-                meta: { title: 'Sản phẩm', icon: 'Coffee', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Sản phẩm', titleKey: 'routes.products', icon: 'Coffee', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'categories',
                 name: 'Categories',
                 component: Categories,
-                meta: { title: 'Danh mục', icon: 'ClipboardList', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Danh mục', titleKey: 'routes.categories', icon: 'ClipboardList', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'inventory',
                 name: 'Inventory',
                 component: Inventory,
-                meta: { title: 'Tồn kho', icon: 'Archive', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Tồn kho', titleKey: 'routes.inventory', icon: 'Archive', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'purchase-orders',
                 name: 'PurchaseOrders',
                 component: PurchaseOrders,
-                meta: { title: 'Nhập hàng', icon: 'Truck', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Nhập hàng', titleKey: 'routes.purchaseOrders', icon: 'Truck', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'purchase-orders/create',
                 name: 'PurchaseOrderCreate',
                 component: PurchaseOrderCreate,
-                meta: { roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { roles: [ROLES.MANAGER, ROLES.ADMIN], titleKey: 'routes.purchaseOrderCreate' }
             },
             {
                 path: 'suppliers',
                 name: 'Suppliers',
                 component: Suppliers,
-                meta: { title: 'Nhà cung cấp', icon: 'Contact', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Nhà cung cấp', titleKey: 'routes.suppliers', icon: 'Contact', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'expenses',
                 name: 'Expenses',
                 component: Expenses,
-                meta: { title: 'Chi phí', icon: 'Calculator', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Chi phí', titleKey: 'routes.expenses', icon: 'Calculator', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'reports',
                 name: 'Reports',
                 component: Reports,
-                meta: { title: 'Báo cáo', icon: 'BarChart3', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { title: 'Báo cáo', titleKey: 'routes.reports', icon: 'BarChart3', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'users',
                 name: 'Users',
                 component: Users,
-                meta: { title: 'Nhân viên', icon: 'UserCog', roles: [ROLES.ADMIN, ROLES.MANAGER] }
+                meta: { title: 'Nhân viên', titleKey: 'routes.users', icon: 'UserCog', roles: [ROLES.ADMIN, ROLES.MANAGER] }
             },
             {
                 path: 'login-history',
                 name: 'LoginHistory',
                 component: LoginHistory,
-                meta: { roles: [ROLES.ADMIN], hidden: true }
+                meta: { roles: [ROLES.ADMIN], hidden: true, titleKey: 'routes.loginHistory' }
             },
             {
                 path: 'profile',
                 name: 'Profile',
                 component: () => import('@/views/Profile.vue'),
-                meta: { roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN] }
+                meta: { roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN], titleKey: 'routes.profile' }
             },
             {
                 path: 'shift-summary',
                 name: 'ShiftSummary',
                 component: ShiftSummary,
-                meta: {roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN], hidden: true }
+                meta: {roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN], hidden: true, titleKey: 'routes.shiftSummary' }
             }
         ]
     },

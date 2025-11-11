@@ -1,18 +1,50 @@
 <template>
   <div id="app" class="modern-app">
-      <router-view :key="route.fullPath"/>
+    <router-view :key="route.fullPath" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { useSettingsStore } from '@/store/settings.js'
 
 const route = useRoute()
 const router = useRouter()
 const isLoading = ref(false)
+const settingsStore = useSettingsStore()
+const { locale } = useI18n()
 
-// Show loading on route change
+const applyTheme = (theme) => {
+  if (typeof window === 'undefined') return
+  const root = document.documentElement
+  root.classList.remove('theme-dark')
+  if (theme === 'dark') {
+    root.classList.add('theme-dark')
+  }
+}
+
+onMounted(() => {
+  applyTheme(settingsStore.theme)
+})
+
+watch(
+  () => settingsStore.theme,
+  (newTheme) => {
+    applyTheme(newTheme)
+  },
+  { immediate: true }
+)
+
+watch(
+  () => settingsStore.locale,
+  (newLocale) => {
+    locale.value = newLocale
+  },
+  { immediate: true }
+)
+
 router.beforeEach((to, from, next) => {
   isLoading.value = true
   next()
@@ -29,15 +61,16 @@ router.afterEach(() => {
 @import '@/assets/main.css';
 
 .modern-app {
-  background: #F8F9FA;
+  background: var(--app-bg-color);
   min-height: 100vh;
+  transition: background-color 0.3s ease;
 }
 
 body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #F8F9FA;
+  background: var(--app-bg-color);
 }
 
 /* Override CSS Variables cho vue3-easy-data-table */

@@ -6,6 +6,7 @@ import ElementPlus from 'element-plus'
 import Toast from 'vue-toastification'
 import VueApexCharts from 'vue3-apexcharts'
 import AOS from 'aos'
+import { i18n } from './i18n'
 
 import 'element-plus/dist/index.css'
 import 'vue-toastification/dist/index.css'
@@ -26,6 +27,7 @@ app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
 app.use(VueApexCharts)
+app.use(i18n)
 app.use(Toast, {
   transition: 'Vue-Toastification__bounce',
   maxToasts: 5,

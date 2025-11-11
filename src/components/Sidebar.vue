@@ -1,11 +1,11 @@
 <template>
     <el-aside class="sidebar" :class="{ collapsed: isCollapsed }" :width="sidebarWidth">
         <div class="sidebar-header">
-            <router-link class="logo" to="/">
+            <router-link class="logo" to="/" :aria-label="t('sidebar.brand')">
                 <img src="@/assets/logo.png"
                     alt="Logo" class="img-logo" />
                 <transition name="fade">
-                    <span v-if="!isCollapsed">Coffee Siu</span>
+                    <span v-if="!isCollapsed">{{ t('sidebar.brand') }}</span>
                 </transition>
             </router-link>
         </div>
@@ -14,11 +14,11 @@
             background-color="var(--sidebar-bg)" text-color="var(--sidebar-text)"
             active-text-color="var(--sidebar-active-text)" router :collapse="isCollapsed" :collapse-transition="false">
             <template v-for="route in menuRoutes" :key="route.path">
-                <el-menu-item v-if="route.meta.title && hasPermission(route)" :index="'/' + route.path">
-                    <el-icon class="menu-icon">
-                        <component :is="icons[route.meta.icon]" />
+                <el-menu-item v-if="shouldDisplayRoute(route)" :index="'/' + route.path">
+                    <el-icon v-if="getIcon(route)" class="menu-icon">
+                        <component :is="getIcon(route)" />
                     </el-icon>
-                    <template #title>{{ route.meta.title }}</template>
+                    <template #title>{{ getTitle(route) }}</template>
                 </el-menu-item>
             </template>
         </el-menu>
@@ -31,12 +31,14 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import * as icons from '@/components/icons'
 import { useSidebarStore } from '@/store/sidebar'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
 const sidebarStore = useSidebarStore()
+const { t } = useI18n()
 
 const isCollapsed = computed(() => sidebarStore.isCollapsed)
 
@@ -49,6 +51,9 @@ const menuRoutes = computed(() => {
 const userRoles = computed(() => authStore.user?.roles || [])
 
 const hasPermission = (route) => {
+    if (route.meta?.hidden) {
+        return false
+    }
     if (route.meta && route.meta.roles) {
         return route.meta.roles.some(role => userRoles.value.includes(role))
     }
@@ -58,14 +63,42 @@ const hasPermission = (route) => {
 const activeMenu = computed(() => {
     return route.matched[1]?.path || route.path
 })
+
+const hasTitle = (route) => {
+    return Boolean(route.meta?.titleKey || route.meta?.title)
+}
+
+const getTitle = (route) => {
+    if (route.meta?.titleKey) {
+        return t(route.meta.titleKey)
+    }
+    return route.meta?.title || ''
+}
+
+const hasIcon = (route) => {
+    const iconKey = route.meta?.icon
+    return Boolean(iconKey && icons[iconKey])
+}
+
+const getIcon = (route) => {
+    if (!hasIcon(route)) return null
+    return icons[route.meta.icon]
+}
+
+const shouldDisplayRoute = (route) => {
+    if (!hasPermission(route)) return false
+    if (!hasTitle(route)) return false
+    if (!hasIcon(route)) return false
+    return true
+}
 </script>
 
 <style scoped>
 .sidebar {
     width: 260px;
     height: 100vh;
-    background: #F8F6F3;
-    border-right: 1px solid #E8E6E3;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border-color);
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
@@ -125,7 +158,7 @@ const activeMenu = computed(() => {
     overflow-y: auto;
     overflow-x: hidden;
     padding: 12px;
-    background: #F8F6F3 !important;
+    background: var(--sidebar-bg) !important;
 }
 
 .sidebar-menu.collapsed {
@@ -159,7 +192,7 @@ const activeMenu = computed(() => {
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb {
-    background: #E0E0E0;
+    background: var(--scrollbar-thumb);
     border-radius: 10px;
 }
 
@@ -167,7 +200,7 @@ const activeMenu = computed(() => {
     font-weight: 500;
     border-radius: 12px !important;
     margin-bottom: 6px;
-    color: #757575 !important;
+    color: var(--sidebar-text) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

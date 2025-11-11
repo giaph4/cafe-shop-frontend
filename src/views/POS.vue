@@ -364,8 +364,13 @@ const filteredProducts = computed(() => {
 
     // Filter by price range
     if (priceRange.value) {
-        const [min, max] = priceRange.value.split('-').map(Number)
-        result = result.fiylter(p => p.price >= min && p.price <= max)
+        const [min, max] = priceRange.value.split('-').map((part) => Number(part))
+        const minValue = Number.isFinite(min) ? min : 0
+        const maxValue = Number.isFinite(max) ? max : Number.POSITIVE_INFINITY
+        result = result.filter(p => {
+            const price = Number(p.price) || 0
+            return price >= minValue && price <= maxValue
+        })
     }
 
     return result

@@ -1,50 +1,98 @@
 <template>
     <el-header class="navbar" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
-        <button class="sidebar-toggle" type="button" @click="emitToggleSidebar" :aria-label="isSidebarCollapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'">
+        <button
+            class="sidebar-toggle"
+            type="button"
+            @click="emitToggleSidebar"
+            :aria-label="isSidebarCollapsed ? t('navbar.sidebarExpand') : t('navbar.sidebarCollapse')"
+        >
             <component :is="isSidebarCollapsed ? ChevronRight : ChevronLeft" class="sidebar-toggle-icon" />
         </button>
         <div class="page-title">
-            {{ $route.meta.title || 'Dashboard' }}
+            {{ currentTitle }}
         </div>
 
-        <div class="user-menu">
-            <el-dropdown @command="handleCommand">
-                <span class="el-dropdown-link">
-                    <UserCircle class="user-icon" />
-                    <span class="user-name">{{ authStore.user.fullName }}</span>
-                    <ChevronDown class="arrow-icon" />
-                </span>
-                <template #dropdown>
-                    <el-dropdown-menu>
-                        <el-dropdown-item command="profile">
-                            Thông tin cá nhân
-                        </el-dropdown-item>
-                        <el-dropdown-item command="logout" divided>
-                            Đăng xuất
-                        </el-dropdown-item>
-                    </el-dropdown-menu>
-                </template>
-            </el-dropdown>
+        <div class="navbar-controls">
+            <div class="control-group">
+                <el-icon class="control-icon">
+                    <component :is="themeIcon" />
+                </el-icon>
+                <el-select
+                    v-model="currentTheme"
+                    size="small"
+                    class="control-select"
+                    :placeholder="t('common.theme')"
+                >
+                    <el-option
+                        v-for="option in themeOptions"
+                        :key="option.value"
+                        :value="option.value"
+                        :label="option.label"
+                    />
+                </el-select>
+            </div>
+            <div class="control-group">
+                <el-icon class="control-icon">
+                    <Languages />
+                </el-icon>
+                <el-select
+                    v-model="currentLocale"
+                    size="small"
+                    class="control-select"
+                    :placeholder="t('common.language')"
+                >
+                    <el-option
+                        v-for="option in languageOptions"
+                        :key="option.value"
+                        :value="option.value"
+                        :label="option.label"
+                    />
+                </el-select>
+            </div>
+            <div class="user-menu">
+                <el-dropdown @command="handleCommand">
+                    <span class="el-dropdown-link">
+                        <UserCircle class="user-icon" />
+                        <span class="user-name">{{ authStore.user.fullName }}</span>
+                        <ChevronDown class="arrow-icon" />
+                    </span>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item command="profile">
+                                {{ t('navbar.profile') }}
+                            </el-dropdown-item>
+                            <el-dropdown-item command="logout" divided>
+                                {{ t('navbar.logout') }}
+                            </el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
+            </div>
         </div>
 
         <el-dialog
             v-model="logoutDialogVisible"
-            title="Xác nhận đăng xuất"
+            :title="t('navbar.logoutTitle')"
             width="460px"
             :close-on-click-modal="false"
         >
             <p class="logout-dialog-text">
-                Bạn có muốn kết ca trước khi đăng xuất khỏi hệ thống POS không?
+                {{ t('navbar.logoutQuestion') }}
             </p>
             <template #footer>
                 <div class="logout-dialog-actions">
-                    <el-button @click="logoutDialogVisible = false" :disabled="isGeneratingSummary || isLoggingOut">Hủy</el-button>
+                    <el-button
+                        @click="logoutDialogVisible = false"
+                        :disabled="isGeneratingSummary || isLoggingOut"
+                    >
+                        {{ t('common.cancel') }}
+                    </el-button>
                     <el-button
                         @click="logoutWithoutShift"
                         :loading="isLoggingOut"
                         :disabled="isGeneratingSummary"
                     >
-                        Đăng xuất không kết ca
+                        {{ t('navbar.logoutWithoutShift') }}
                     </el-button>
                     <el-button
                         type="primary"
@@ -52,7 +100,7 @@
                         :loading="isGeneratingSummary"
                         :disabled="isLoggingOut"
                     >
-                        Đăng xuất và kết ca
+                        {{ t('navbar.logoutWithShift') }}
                     </el-button>
                 </div>
             </template>
@@ -63,26 +111,61 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/store/auth'
 import { useSidebarStore } from '@/store/sidebar'
 import { buildShiftSummary } from '@/utils/shiftManager.js'
 import { formatCurrency } from '@/utils/formatters.js'
-import { UserCircle, ChevronDown, ChevronLeft, ChevronRight } from '@/components/icons'
+import { UserCircle, ChevronDown, ChevronLeft, ChevronRight, Sun, Moon, Languages } from '@/components/icons'
 import { useShiftSummaryStore } from '@/store/shiftSummary.js'
+import { useI18n } from 'vue-i18n'
+import { useSettingsStore } from '@/store/settings.js'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 const sidebarStore = useSidebarStore()
 const toast = useToast()
 const shiftSummaryStore = useShiftSummaryStore()
+const settingsStore = useSettingsStore()
+const { t } = useI18n()
 
 const logoutDialogVisible = ref(false)
 const isGeneratingSummary = ref(false)
 const isLoggingOut = ref(false)
 
 const isSidebarCollapsed = computed(() => sidebarStore.isCollapsed)
+
+const currentTheme = computed({
+    get: () => settingsStore.theme,
+    set: (value) => settingsStore.setTheme(value)
+})
+
+const currentLocale = computed({
+    get: () => settingsStore.locale,
+    set: (value) => settingsStore.setLocale(value)
+})
+
+const themeOptions = computed(() => [
+    { label: t('common.themeLight'), value: 'light' },
+    { label: t('common.themeDark'), value: 'dark' }
+])
+
+const languageOptions = computed(() => [
+    { label: t('common.languageVietnamese'), value: 'vi' },
+    { label: t('common.languageEnglish'), value: 'en' }
+])
+
+const themeIcon = computed(() => (currentTheme.value === 'dark' ? Moon : Sun))
+
+const currentTitle = computed(() => {
+    const meta = route.meta || {}
+    if (meta.titleKey) {
+        return t(meta.titleKey)
+    }
+    return meta.title || t('navbar.defaultTitle')
+})
 
 const emitToggleSidebar = () => {
     sidebarStore.toggle()
@@ -153,10 +236,11 @@ const handleCommand = (command) => {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    background: #FDFCFB;
-    border-bottom: 1px solid #E8E6E3;
+    background: var(--navbar-bg);
+    border-bottom: 1px solid var(--navbar-border-color);
     padding: 0 32px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .navbar.sidebar-collapsed {
@@ -190,8 +274,34 @@ const handleCommand = (command) => {
 .page-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #212121;
+    color: var(--app-text-color);
     letter-spacing: -0.5px;
+}
+
+.navbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: var(--app-surface-muted);
+    border: 1px solid var(--app-border-color);
+    box-shadow: var(--card-shadow);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.control-icon {
+    color: var(--app-text-secondary);
+}
+
+.control-select {
+    min-width: 140px;
 }
 
 .user-menu {
@@ -208,6 +318,8 @@ const handleCommand = (command) => {
     border-radius: 12px;
     transition: all 0.2s;
     gap: 8px;
+    background: var(--app-surface-muted);
+    border: 1px solid transparent;
 }
 
 .el-dropdown-link:hover {
@@ -217,19 +329,19 @@ const handleCommand = (command) => {
 .user-icon {
     width: 28px;
     height: 28px;
-    color: #8B7355;
+    color: var(--el-color-primary);
 }
 
 .user-name {
     font-weight: 600;
-    color: #212121;
+    color: var(--app-text-color);
     font-size: 0.95rem;
 }
 
 .arrow-icon {
     width: 18px;
     height: 18px;
-    color: #757575;
+    color: var(--app-text-secondary);
     transition: transform 0.2s;
 }
 
@@ -240,7 +352,7 @@ const handleCommand = (command) => {
 .logout-dialog-text {
     margin: 0 0 16px;
     font-size: 1rem;
-    color: #414141;
+    color: var(--app-text-color);
     line-height: 1.5;
 }
 

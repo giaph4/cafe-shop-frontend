@@ -92,13 +92,12 @@ const onClose = () => {
 
 watch(() => props.category, (newCategory) => {
     if (newCategory) {
-        // Đang Edit: Đổ dữ liệu vào form
         formData.value = {
             name: newCategory.name,
             description: newCategory.description,
         }
     } else {
-        // Đang Thêm mới: Reset form
+
         onClose()
     }
 })
