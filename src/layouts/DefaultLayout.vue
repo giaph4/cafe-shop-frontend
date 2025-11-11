@@ -6,12 +6,18 @@
             <Navbar />
 
             <el-main class="app-main">
-                <router-view v-slot="{ Component }">
-                    <transition name="fade" mode="out-in">
-                        <component :is="Component" />
-                    </transition>
-                </router-view>
+                <div class="app-content">
+                    <router-view v-slot="{ Component }">
+                        <transition name="fade" mode="out-in">
+                            <component :is="Component" />
+                        </transition>
+                    </router-view>
+                </div>
             </el-main>
+
+            <el-footer class="app-footer-wrapper">
+                <AppFooter />
+            </el-footer>
         </el-container>
     </el-container>
 </template>
@@ -20,6 +26,7 @@
 import { computed } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import Navbar from '@/components/Navbar.vue'
+import AppFooter from '@/components/AppFooter.vue'
 import { useSidebarStore } from '@/store/sidebar'
 
 const sidebarStore = useSidebarStore()
@@ -38,16 +45,27 @@ const isSidebarCollapsed = computed(() => sidebarStore.isCollapsed)
 }
 
 .main-container {
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     background: #F8F9FA;
     transition: margin-left 0.25s ease;
 }
 
 .app-main {
-    height: calc(100vh - 70px);
-    overflow-y: auto;
+    flex: 1;
     background: #F8F9FA;
     padding: 24px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.app-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 100%;
+    padding-bottom: 24px;
 }
 
 .app-main::-webkit-scrollbar {
@@ -67,6 +85,11 @@ const isSidebarCollapsed = computed(() => sidebarStore.isCollapsed)
 
 .app-main::-webkit-scrollbar-thumb:hover {
     background: #9E9E9E;
+}
+
+.app-footer-wrapper {
+    padding: 0 24px 24px;
+    background: #F8F9FA;
 }
 
 /* --- Hiệu ứng chuyển trang --- */

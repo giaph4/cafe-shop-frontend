@@ -4,7 +4,7 @@
  */
 :root {
   --el-color-primary: #409eff; /* (Bạn có thể đổi màu chủ đạo ở đây) */
-  --app-bg-color:rgb(32, 60, 218);
+  --app-bg-color: #f8f5f0;
   --sidebar-bg:rgb(255, 255, 255);
   --sidebar-text: #bfcbd9;
   --sidebar-active-text: #409eff;
