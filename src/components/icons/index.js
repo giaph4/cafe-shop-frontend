@@ -1,4 +1,3 @@
-// src/components/icons/index.js (ĐÃ SỬA LỖI TRIỆT ĐỂ)
 import {
     LayoutDashboard,
     ShoppingCart,
@@ -30,7 +29,8 @@ import {
     X,
     Sun,
     Moon,
-    Languages
+    Languages,
+    Calendar
 } from 'lucide-vue-next'
 
 export {
@@ -64,5 +64,6 @@ export {
     X,
     Sun,
     Moon,
-    Languages
+    Languages,
+    Calendar
 }

@@ -359,10 +359,11 @@
                                 </div>
                             </template>
                             <EasyDataTable :headers="topCustomersHeaders" :items="topCustomers"
-                                           :loading="loading.customers" table-class-name="data-table" max-height="500">
+                                           :loading="loading.customers" table-class-name="data-table" max-height="500"
+                                           show-index>
                                 <template #item-index="{ index }">
                                     <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
-                                    <span v-else>{{ index + 1 }}</span>
+                                    <span v-else>{{ index }}</span>
                                 </template>
 
                                 <template #item-phone="{ customerPhone, phone }">
@@ -392,7 +393,7 @@
                                 </div>
                             </template>
                             <EasyDataTable :headers="staffHeaders" :items="staffPerformance" :loading="loading.staff"
-                                           table-class-name="data-table" max-height="500">
+                                           table-class-name="data-table" max-height="500" show-index>
                                 <template #item-index="{ index }">
                                     <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
                                     <span v-else>{{ index + 1 }}</span>
@@ -692,7 +693,6 @@ const inventoryHeaders = [
 ]
 
 const topCustomersHeaders = [
-    {text: "#", value: "index", width: 60},
     {text: "Tên khách hàng", value: "customerName", minWidth: 200},
     {text: "SĐT", value: "phone", width: 140},
     {text: "Số đơn", value: "totalOrders", width: 100, sortable: true},
@@ -701,7 +701,6 @@ const topCustomersHeaders = [
 ]
 
 const staffHeaders = [
-    {text: "#", value: "index", width: 60},
     {text: "Nhân viên", value: "fullName", minWidth: 200},
     {text: "Số đơn", value: "totalOrders", width: 100, sortable: true},
     {text: "Doanh thu", value: "totalRevenue", width: 160, sortable: true},

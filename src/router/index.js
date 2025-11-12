@@ -24,6 +24,7 @@ const Reports = () => import('@/views/Reports.vue')
 const Users = () => import('@/views/Users.vue')
 const ShiftSummary = () => import('@/views/ShiftSummary.vue')
 const LoginHistory = () => import('@/views/LoginHistory.vue')
+const ShiftManagement = () => import('@/views/ShiftManagement.vue')
 
 const ROLES = {
     ADMIN: 'ROLE_ADMIN',
@@ -120,6 +121,12 @@ const routes = [
                 name: 'AdminAnalytics',
                 component: AdminAnalytics,
                 meta: { title: 'AI Insight', titleKey: 'routes.adminAnalytics', icon: 'Notebook', roles: [ROLES.ADMIN] }
+            },
+            {
+                path: 'shift-management',
+                name: 'ShiftManagement',
+                component: ShiftManagement,
+                meta: { title: 'Quản lý Ca', titleKey: 'routes.shiftManagement', icon: 'Calendar', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'users',
