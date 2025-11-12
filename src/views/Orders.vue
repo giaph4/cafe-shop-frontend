@@ -1,10 +1,10 @@
 <template>
     <div class="app-page-container animate__animated animate__fadeInUp stagger-item">
-        <div class="page-header">
-            <h1 class="page-title">Lịch sử Đơn hàng</h1>
+        <div class="section-header mb-4">
+            <h1 class="section-title">Lịch sử Đơn hàng</h1>
         </div>
 
-        <el-card class="box-card filter-card mb-3">
+        <el-card class="filter-card mb-4">
             <el-row :gutter="20">
                 <el-col :span="6">
                     <el-select v-model="filters.status" placeholder="Lọc theo trạng thái" @change="fetchData" clearable
@@ -43,7 +43,6 @@
 
         <EasyDataTable v-model:server-options="serverOptions" :server-items-length="serverItemsLength"
                        :headers="headers" :items="items" :loading="loading" table-class-name="data-table"
-                       theme-color="#8B7355"
                        buttons-pagination show-index>
             <template #item-id="{ id }">
                 <strong>#{{ id }}</strong>
@@ -85,28 +84,31 @@
 
         <OrderDetailModal v-model:visible="detailModalVisible" :order-id="selectedId"/>
 
-        <el-dialog v-model="paymentModalVisible" title="Thanh toán đơn hàng" width="500px">
+        <el-dialog v-model="paymentModalVisible" class="modern-dialog" :show-close="true" width="520px">
+            <template #header>
+                <div class="modal-header">
+                    <h3 class="modal-title">Thanh toán đơn hàng</h3>
+                </div>
+            </template>
             <div v-if="selectedOrder">
-                <el-descriptions :column="1" border>
+                <el-descriptions :column="1" border class="modal-section">
                     <el-descriptions-item label="Mã đơn">#{{ selectedOrder.id }}</el-descriptions-item>
                     <el-descriptions-item label="Bàn">{{ selectedOrder.tableName || 'Mang đi' }}</el-descriptions-item>
                     <el-descriptions-item label="Tổng tiền">
-                        <strong style="color: #409EFF; font-size: 1.2rem;">{{
-                                formatCurrency(selectedOrder.totalAmount)
-                            }}</strong>
+                        <strong class="modal-highlight">{{ formatCurrency(selectedOrder.totalAmount) }}</strong>
                     </el-descriptions-item>
                 </el-descriptions>
 
                 <el-divider/>
 
-                <div style="text-align: center; color: #909399; font-size: 0.9rem;">
+                <div class="modal-note">
                     <p>💡 Để thêm thông tin khách hàng, vui lòng cập nhật khi tạo đơn hàng</p>
                     <p>Khách hàng nên được chọn ngay từ lúc tạo đơn để đảm bảo thông tin đầy đủ</p>
                 </div>
 
                 <el-divider/>
 
-                <h3>Phương thức thanh toán</h3>
+                <h3 class="modal-subtitle">Phương thức thanh toán</h3>
 
                 <el-form-item>
                     <div class="payment-methods">
@@ -114,7 +116,6 @@
                             size="large"
                             @click="selectedPaymentMethod = 'CASH'"
                             :type="selectedPaymentMethod === 'CASH' ? 'primary' : ''"
-                            style="flex: 1;"
                         >
                             Tiền mặt
                         </el-button>
@@ -122,7 +123,6 @@
                             size="large"
                             @click="selectedPaymentMethod = 'TRANSFER'"
                             :type="selectedPaymentMethod === 'TRANSFER' ? 'primary' : ''"
-                            style="flex: 1;"
                         >
                             Chuyển khoản
                         </el-button>
@@ -130,7 +130,6 @@
                             size="large"
                             @click="selectedPaymentMethod = 'CARD'"
                             :type="selectedPaymentMethod === 'CARD' ? 'primary' : ''"
-                            style="flex: 1;"
                         >
                             Thẻ
                         </el-button>
@@ -139,15 +138,17 @@
             </div>
 
             <template #footer>
-                <el-button @click="paymentModalVisible = false">Hủy</el-button>
-                <el-button
-                    type="primary"
-                    @click="handlePayment"
-                    :disabled="!selectedPaymentMethod"
-                    :loading="paymentLoading"
-                >
-                    Xác nhận thanh toán
-                </el-button>
+                <div class="dialog-footer">
+                    <el-button @click="paymentModalVisible = false">Hủy</el-button>
+                    <el-button
+                        type="primary"
+                        @click="handlePayment"
+                        :disabled="!selectedPaymentMethod"
+                        :loading="paymentLoading"
+                    >
+                        Xác nhận thanh toán
+                    </el-button>
+                </div>
             </template>
         </el-dialog>
     </div>
@@ -384,165 +385,39 @@ onMounted(() => {
 })
 </script>
 
-<style>
-/* FORCE BROWN THEME FOR THIS PAGE */
-.vue3-easy-data-table thead {
-    background: linear-gradient(135deg, #8B7355 0%, #6F5B45 100%) !important;
-}
-
-.vue3-easy-data-table th {
-    background: transparent !important;
-    color: #FFFFFF !important;
-}
-
-.vue3-easy-data-table .header-text {
-    color: #FFFFFF !important;
-}
-
-.vue3-easy-data-table .buttons-pagination button.pagination__active-button {
-    background: linear-gradient(135deg, #8B7355 0%, #6F5B45 100%) !important;
-    color: #FFFFFF !important;
-}
-</style>
-
 <style scoped>
-.app-page-container {
-    padding: 20px;
-}
-
-.filter-card {
-    margin-bottom: 20px;
-}
-
-.w-100 {
-    width: 100%;
-}
-
-/* vue3-easy-data-table styles */
-:deep(.vue3-easy-data-table) {
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border: 2px solid #E0E0E0;
-    background: #FFFFFF;
-}
-
-:deep(.vue3-easy-data-table__main) {
-    background: #FFFFFF;
-}
-
-
-:deep(.vue3-easy-data-table thead tr) {
-    background: transparent !important;
-}
-
-:deep(.vue3-easy-data-table th) {
-    background: transparent !important;
-    color: #FFFFFF !important;
-    font-weight: 700 !important;
-    font-size: 0.875rem !important;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 18px 20px !important;
-    border: none !important;
-}
-
-:deep(.vue3-easy-data-table .header-text) {
-    color: #FFFFFF !important;
-    font-weight: 700 !important;
-}
-
-:deep(.vue3-easy-data-table .sortable) {
-    cursor: pointer;
-}
-
-:deep(.vue3-easy-data-table .sortable .sortType-icon) {
-    color: #FFFFFF !important;
-    opacity: 0.7;
-}
-
-:deep(.vue3-easy-data-table .sortable:hover .sortType-icon) {
-    opacity: 1;
-}
-
-
-:deep(.vue3-easy-data-table td) {
-    padding: 16px 20px !important;
-    font-size: 1rem !important;
-    font-weight: 500 !important;
-    color: #424242 !important;
-    border: none !important;
-}
-
-:deep(.vue3-easy-data-table .buttons-pagination) {
-    padding: 16px 20px;
-    background: #FAFAFA;
-    border-top: 2px solid #E0E0E0;
-}
-
-:deep(.vue3-easy-data-table .buttons-pagination button) {
-    background: #FFFFFF;
-    border: 2px solid #E0E0E0;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-weight: 600;
-    color: #424242;
-    transition: all 0.2s;
-}
-
-:deep(.vue3-easy-data-table .buttons-pagination button:hover:not(.pagination__active-button)) {
-    background: #F5F5F5;
-    border-color: #2196F3;
-    color: #2196F3;
-}
-
-:deep(.vue3-easy-data-table .buttons-pagination button.pagination__active-button) {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-    border-color: #2196F3;
-    color: #FFFFFF;
-    font-weight: 700;
-}
-
-.status-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    border-radius: 9999px;
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.status-tag.pending {
-    background: #FFF3E0;
-    color: #FF9800;
-    border: 2px solid #FF9800;
-}
-
-.status-tag.paid {
-    background: #E8F5E9;
-    color: #4CAF50;
-    border: 2px solid #4CAF50;
-}
-
-.status-tag.cancelled {
-    background: #FFEBEE;
-    color: #F44336;
-    border: 2px solid #F44336;
-}
-
-.payment-methods {
+.modal-header {
     display: flex;
-    gap: 12px;
-    margin-top: 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-4);
 }
 
-.payment-methods .el-button {
-    flex: 1;
-    height: 70px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    border-radius: 12px;
+.modal-title {
+    font-size: var(--font-h4);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary-color);
+}
+
+.modal-highlight {
+    color: var(--color-primary);
+    font-size: var(--font-h4);
+    font-weight: var(--font-semibold);
+}
+
+.modal-note {
+    text-align: center;
+    color: var(--text-secondary-color);
+    font-size: var(--font-body-sm);
+    line-height: 1.6;
+    padding: 0 var(--space-4);
+}
+
+@media (max-width: 768px) {
+    .modal-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
 }
 </style>

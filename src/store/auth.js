@@ -3,7 +3,11 @@ import { defineStore } from 'pinia'
 import router from '@/router'
 import { jwtDecode } from 'jwt-decode'
 import * as authService from '@/api/authService.js' // <-- THAY ĐỔI: Import service mới
+import * as userService from '@/api/userService.js'
+import { normalizeRoles } from '@/utils/roles'
 import { startShiftSession, clearShiftSession } from '@/utils/shiftManager.js'
+
+const USER_STORAGE_KEY = 'user'
 
 // Hàm helper giải mã token (giữ nguyên)
 function decodeToken(token) {
@@ -24,17 +28,37 @@ function decodeToken(token) {
     }
 }
 
+const getStoredUser = () => {
+    const stored = localStorage.getItem(USER_STORAGE_KEY)
+    if (stored) {
+        try {
+            return JSON.parse(stored)
+        } catch (error) {
+            console.warn('Invalid stored user payload, clearing cache.', error)
+            localStorage.removeItem(USER_STORAGE_KEY)
+        }
+    }
+    return decodeToken(localStorage.getItem('token'))
+}
+
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         token: localStorage.getItem('token') || null,
-        user: decodeToken(localStorage.getItem('token')),
+        user: getStoredUser(),
     }),
 
     getters: {
         isAuthenticated: (state) => !!state.token,
-        isAdmin: (state) => state.user?.roles?.includes('ROLE_ADMIN'),
-        isManager: (state) => state.user?.roles?.includes('ROLE_MANAGER') || state.user?.roles?.includes('ROLE_ADMIN'),
-        isStaff: (state) => state.user?.roles?.includes('ROLE_STAFF') || state.user?.roles?.includes('ROLE_MANAGER') || state.user?.roles?.includes('ROLE_ADMIN'),
+        roles: (state) => normalizeRoles(state.user?.roles || []),
+        isAdmin() {
+            return this.roles.includes('ROLE_ADMIN')
+        },
+        isManager() {
+            return this.roles.includes('ROLE_MANAGER') || this.roles.includes('ROLE_ADMIN')
+        },
+        isStaff() {
+            return this.roles.includes('ROLE_STAFF') || this.roles.includes('ROLE_MANAGER') || this.roles.includes('ROLE_ADMIN')
+        },
         userFullName: (state) => state.user?.fullName || state.user?.username || 'User',
     },
 
@@ -42,7 +66,7 @@ export const useAuthStore = defineStore('auth', {
         /**
          * Xử lý sau khi login/register thành công
          */
-        _handleAuthSuccess(tokenString) { // Renamed argument for clarity
+        async _handleAuthSuccess(tokenString) { // Renamed argument for clarity
             // 1. Lưu token vào state và localStorage
             this.token = tokenString
             localStorage.setItem('token', tokenString)
@@ -51,12 +75,15 @@ export const useAuthStore = defineStore('auth', {
 
             // 3. Giải mã token và lưu thông tin user vào state và localStorage
             this.user = decodeToken(tokenString)
-            localStorage.setItem('user', JSON.stringify(this.user))
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(this.user))
 
-            // 4. Khởi tạo ca làm việc cho người dùng
+            // 4. Đồng bộ hồ sơ đầy đủ (bao gồm avatar, địa chỉ)
+            await this.fetchUserProfile()
+
+            // 5. Khởi tạo ca làm việc cho người dùng
             startShiftSession(this.user)
 
-            // 5. Điều hướng về trang chủ
+            // 6. Điều hướng về trang chủ
             router.push('/')
         },
 
@@ -68,7 +95,7 @@ export const useAuthStore = defineStore('auth', {
                 const response = await authService.login(credentials)
                 const { token } = response.data
 
-                this._handleAuthSuccess(token) // Gọi hàm xử lý chung
+                await this._handleAuthSuccess(token) // Gọi hàm xử lý chung
 
                 return response
             } catch (error) {
@@ -88,12 +115,36 @@ export const useAuthStore = defineStore('auth', {
 
                 const { token } = response.data
                 // 2. Xử lý thành công (coi như đã login)
-                this._handleAuthSuccess(token)
+                await this._handleAuthSuccess(token)
 
                 return response
             } catch (error) {
                 console.error('Register failed:', error)
                 throw error
+            }
+        },
+
+        async fetchUserProfile() {
+            try {
+                const userId = this.user?.userId
+                if (!userId) return null
+
+                const response = await userService.getUserById(userId)
+                const profile = response.data
+
+                // Gộp dữ liệu token và hồ sơ để giữ nguyên các quyền/ID đã giải mã
+                this.user = {
+                    ...this.user,
+                    ...profile,
+                    userId: profile.id ?? this.user?.userId,
+                    roles: profile.roles ?? this.user?.roles,
+                }
+
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(this.user))
+                return profile
+            } catch (error) {
+                console.error('Không thể tải thông tin hồ sơ người dùng:', error)
+                return null
             }
         },
 
@@ -105,7 +156,7 @@ export const useAuthStore = defineStore('auth', {
             this.token = null
             this.user = null
             localStorage.removeItem('token')
-            localStorage.removeItem('user')
+            localStorage.removeItem(USER_STORAGE_KEY)
             if (userId) {
                 clearShiftSession(userId)
             }

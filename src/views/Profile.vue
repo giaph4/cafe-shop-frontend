@@ -2,7 +2,7 @@
     <div class="profile-page animate__animated animate__fadeInUp stagger-item">
         <div class="profile-hero" v-if="user">
             <div class="hero-left">
-                <el-avatar :size="120" :src="avatarUrl" class="hero-avatar"/>
+                <el-avatar :size="120" :src="avatarSrc" class="hero-avatar"/>
                 <div class="hero-info">
                     <h1>{{ user.fullName || user.username }}</h1>
                     <p>{{ user.email }}</p>
@@ -143,6 +143,7 @@ import {useAuthStore} from '@/store/auth'
 import EditProfileModal from '@/components/EditProfileModal.vue'
 import ChangePasswordModal from '@/components/ChangePasswordModal.vue'
 import {getUserById} from '@/api/userService'
+import {getUserAvatar} from '@/utils/avatar'
 
 const authStore = useAuthStore()
 const user = ref(null)
@@ -159,11 +160,7 @@ const loadUser = async () => {
     }
 }
 
-const avatarUrl = computed(() => {
-    if (!user.value) return ''
-    const nameSeed = encodeURIComponent(user.value.fullName || user.value.username || 'user')
-    return `https://avatar.iran.liara.run/username?username=${nameSeed}`
-})
+const avatarSrc = computed(() => getUserAvatar(user.value))
 
 const statusText = computed(() => user.value?.status === 'ACTIVE' ? 'Đang hoạt động' : 'Tạm ngưng')
 

@@ -52,8 +52,10 @@
             <div class="user-menu">
                 <el-dropdown @command="handleCommand">
                     <span class="el-dropdown-link">
-                        <UserCircle class="user-icon" />
-                        <span class="user-name">{{ authStore.user.fullName }}</span>
+                        <el-avatar :size="34" :src="userAvatar" class="user-avatar">
+                            <UserCircle class="user-icon" />
+                        </el-avatar>
+                        <span class="user-name">{{ authStore.user?.fullName || authStore.user?.username || 'User' }}</span>
                         <ChevronDown class="arrow-icon" />
                     </span>
                     <template #dropdown>
@@ -121,6 +123,7 @@ import { UserCircle, ChevronDown, ChevronLeft, ChevronRight, Sun, Moon, Language
 import { useShiftSummaryStore } from '@/store/shiftSummary.js'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '@/store/settings.js'
+import { getUserAvatar } from '@/utils/avatar'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -158,6 +161,8 @@ const languageOptions = computed(() => [
 ])
 
 const themeIcon = computed(() => (currentTheme.value === 'dark' ? Moon : Sun))
+
+const userAvatar = computed(() => getUserAvatar(authStore.user))
 
 const currentTitle = computed(() => {
     const meta = route.meta || {}
