@@ -16,6 +16,34 @@ export const formatCurrency = (value) => {
     }).format(value);
 };
 
+export const formatNumber = (value, options = {}) => {
+    const safeValue = Number.isFinite(Number(value)) ? Number(value) : 0
+    return new Intl.NumberFormat('vi-VN', {
+        maximumFractionDigits: 2,
+        ...options
+    }).format(safeValue)
+}
+
+export const formatDateDisplay = (date, options = { day: '2-digit', month: '2-digit', year: 'numeric' }) => {
+    if (!date) return '—'
+    const parsed = new Date(date)
+    if (Number.isNaN(parsed.getTime())) return '—'
+    return new Intl.DateTimeFormat('vi-VN', options).format(parsed)
+}
+
+export const formatDateTimeDisplay = (date) => {
+    if (!date) return '—'
+    const parsed = new Date(date)
+    if (Number.isNaN(parsed.getTime())) return '—'
+    return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(parsed)
+}
+
 /**
  * Định dạng đối tượng Date hoặc chuỗi ngày thành "YYYY-MM-DD"
  * @param {string | Date} date - Ngày cần định dạng

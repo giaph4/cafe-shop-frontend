@@ -4,64 +4,64 @@
  */
 :root {
   color-scheme: light;
-  --el-color-primary: #409eff;
-  --el-color-primary-dark: #2b7cd5;
-  --app-bg-color: #f8f5f0;
-  --app-surface-color: #ffffff;
-  --app-surface-muted: #fdfcfb;
-  --app-border-color: #e8e6e3;
-  --app-text-color: #333333;
-  --app-text-secondary: #6b7280;
-  --sidebar-bg: #ffffff;
-  --sidebar-border-color: #e8e6e3;
-  --sidebar-text: #5c6573;
-  --sidebar-active-text: #409eff;
-  --navbar-bg: #fdfcfb;
-  --navbar-border-color: #e8e6e3;
-  --footer-surface-start: rgba(255, 250, 240, 0.92);
-  --footer-surface-end: rgba(240, 226, 205, 0.92);
-  --scrollbar-track: #f1f1f1;
-  --scrollbar-thumb: #c1c1c1;
-  --scrollbar-thumb-hover: #a8a8a8;
-  --card-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-  --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-dark: var(--color-primary-dark);
+  --app-bg-color: var(--surface-bg);
+  --app-surface-color: var(--surface-card);
+  --app-surface-muted: var(--surface-muted);
+  --app-border-color: var(--border-color-soft);
+  --app-text-color: var(--text-primary-color);
+  --app-text-secondary: var(--text-secondary-color);
+  --sidebar-bg: var(--surface-sidebar);
+  --sidebar-border-color: var(--border-color-soft);
+  --sidebar-text: var(--sidebar-text);
+  --sidebar-active-text: var(--color-primary);
+  --navbar-bg: var(--surface-navbar);
+  --navbar-border-color: var(--border-color-soft);
+  --footer-surface-start: var(--surface-footer-start);
+  --footer-surface-end: var(--surface-footer-end);
+  --scrollbar-track: var(--scrollbar-track);
+  --scrollbar-thumb: var(--scrollbar-thumb);
+  --scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
+  --card-shadow: var(--shadow-card);
+  --card-shadow-hover: var(--shadow-card-hover);
 }
 
 .theme-dark {
   color-scheme: dark;
-  --el-color-primary: #8ab4ff;
-  --el-color-primary-dark: #5b8bd9;
-  --app-bg-color: #111827;
-  --app-surface-color: #1f2937;
-  --app-surface-muted: #1f2937;
-  --app-border-color: rgba(255, 255, 255, 0.08);
-  --app-text-color: #f9fafb;
-  --app-text-secondary: #d1d5db;
-  --sidebar-bg: #1f2937;
-  --sidebar-border-color: rgba(255, 255, 255, 0.06);
-  --sidebar-text: #cbd5f5;
-  --sidebar-active-text: #8ab4ff;
-  --navbar-bg: #1f2937;
-  --navbar-border-color: rgba(255, 255, 255, 0.08);
-  --footer-surface-start: rgba(31, 41, 55, 0.92);
-  --footer-surface-end: rgba(17, 24, 39, 0.92);
-  --scrollbar-track: rgba(255, 255, 255, 0.06);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.18);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
-  --card-shadow: 0 1px 6px rgba(15, 23, 42, 0.6);
-  --card-shadow-hover: 0 10px 30px rgba(15, 23, 42, 0.65);
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-dark: var(--color-primary-dark);
+  --app-bg-color: var(--surface-bg-dark);
+  --app-surface-color: var(--surface-card-dark);
+  --app-surface-muted: var(--surface-muted-dark);
+  --app-border-color: var(--border-color-dark);
+  --app-text-color: var(--text-primary-dark);
+  --app-text-secondary: var(--text-secondary-dark);
+  --sidebar-bg: var(--surface-card-dark);
+  --sidebar-border-color: var(--border-color-dark);
+  --sidebar-text: var(--text-secondary-dark);
+  --sidebar-active-text: var(--color-primary);
+  --navbar-bg: var(--surface-card-dark);
+  --navbar-border-color: var(--border-color-dark);
+  --footer-surface-start: var(--surface-footer-start);
+  --footer-surface-end: var(--surface-footer-end);
+  --scrollbar-track: var(--scrollbar-track-dark);
+  --scrollbar-thumb: var(--scrollbar-thumb-dark);
+  --scrollbar-thumb-hover: var(--scrollbar-thumb-hover-dark);
+  --card-shadow: var(--card-shadow-dark);
+  --card-shadow-hover: var(--card-shadow-hover-dark);
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--app-bg-color);
   color: var(--app-text-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
 ::-webkit-scrollbar {
@@ -85,11 +85,11 @@ body {
 
 
 .el-card {
-  border-radius: 6px;
+  border-radius: var(--radius-large);
   border: 1px solid var(--app-border-color);
   box-shadow: var(--card-shadow);
   background-color: var(--app-surface-color);
-  transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+  transition: box-shadow var(--transition-base), border-color var(--transition-base), background-color var(--transition-base);
 }
 
 .el-card:hover {
@@ -97,7 +97,9 @@ body {
 }
 
 .el-dialog {
-  border-radius: 8px;
+  border-radius: var(--radius-large);
+  background-color: var(--app-surface-color);
+  border: 1px solid var(--app-border-color);
 }
 
 /* * Ghi đè một số style của Element Plus để nhất quán
@@ -125,12 +127,12 @@ body {
 
 /* Style cho các trang (Views) */
 .app-page-container {
-  padding: 20px;
+  padding: var(--space-6);
   background-color: var(--app-surface-color);
-  border-radius: 12px;
+  border-radius: var(--radius-large);
   border: 1px solid var(--app-border-color);
   box-shadow: var(--card-shadow);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .page-header {
@@ -141,9 +143,10 @@ body {
 }
 
 .page-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--app-text-color);
+  font-size: var(--font-h3);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary-color);
+  letter-spacing: -0.02em;
 }
 
 /* Đảm bảo layout của Element chiếm full-height */

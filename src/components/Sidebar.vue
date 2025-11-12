@@ -10,11 +10,34 @@
             </router-link>
         </div>
 
-        <el-menu :default-active="activeMenu" class="sidebar-menu" :class="{ collapsed: isCollapsed }"
+        <el-menu :default-active="activeMenu" :default-openeds="defaultOpenMenus" class="sidebar-menu" :class="{ collapsed: isCollapsed }"
             background-color="var(--sidebar-bg)" text-color="var(--sidebar-text)"
             active-text-color="var(--sidebar-active-text)" router :collapse="isCollapsed" :collapse-transition="false">
             <template v-for="route in menuRoutes" :key="route.path">
-                <el-menu-item v-if="shouldDisplayRoute(route)" :index="'/' + route.path">
+                <template v-if="isGroup(route) && getVisibleChildren(route).length">
+                    <el-sub-menu :index="toMenuIndex(route.path)">
+                        <template #title>
+                            <el-icon v-if="getIcon(route)" class="menu-icon">
+                                <component :is="getIcon(route)" />
+                            </el-icon>
+                            <span>{{ getTitle(route) }}</span>
+                        </template>
+                        <el-menu-item
+                            v-for="child in getVisibleChildren(route)"
+                            :key="child.path"
+                            :index="resolveIndex(route, child)"
+                        >
+                            <el-icon v-if="getIcon(child)" class="menu-icon">
+                                <component :is="getIcon(child)" />
+                            </el-icon>
+                            <template #title>{{ getTitle(child) }}</template>
+                        </el-menu-item>
+                    </el-sub-menu>
+                </template>
+                <el-menu-item
+                    v-else-if="shouldDisplayRoute(route)"
+                    :index="toMenuIndex(route.path)"
+                >
                     <el-icon v-if="getIcon(route)" class="menu-icon">
                         <component :is="getIcon(route)" />
                     </el-icon>
@@ -44,9 +67,87 @@ const isCollapsed = computed(() => sidebarStore.isCollapsed)
 
 const sidebarWidth = computed(() => isCollapsed.value ? '80px' : '260px')
 
-const menuRoutes = computed(() => {
-    return router.options.routes.find(r => r.path === '/')?.children || []
-})
+const MENU_GROUPS = [
+    {
+        key: 'sales-group',
+        titleKey: 'sidebar.sales',
+        icon: 'ShoppingCart',
+        routes: ['pos', 'orders', 'tables', 'customers']
+    },
+    {
+        key: 'catalog-group',
+        titleKey: 'sidebar.catalog',
+        icon: 'Archive',
+        routes: ['products', 'categories', 'inventory', 'suppliers', 'purchase-orders', 'expenses']
+    },
+    {
+        key: 'operations-group',
+        titleKey: 'sidebar.operations',
+        icon: 'ClipboardList',
+        routes: ['shift-management', 'payroll']
+    },
+    {
+        key: 'analytics-group',
+        titleKey: 'sidebar.analytics',
+        icon: 'BarChart3',
+        routes: ['reports', 'analytics/insight']
+    },
+    {
+        key: 'team-group',
+        titleKey: 'sidebar.team',
+        icon: 'Users',
+        routes: ['users']
+    },
+    {
+        key: 'account-group',
+        titleKey: 'sidebar.account',
+        icon: 'UserCircle',
+        routes: ['profile']
+    }
+]
+
+const buildMenuRoutes = () => {
+    const rootRoutes = router.options.routes.find(r => r.path === '/')?.children || []
+    if (!rootRoutes.length) return []
+
+    const visibleRoutes = rootRoutes.filter((route) => !route.meta?.hidden)
+    const routeMap = visibleRoutes.reduce((map, route) => {
+        map.set(route.path || '', route)
+        return map
+    }, new Map())
+
+    const consumed = new Set()
+
+    const groups = MENU_GROUPS.map((group) => {
+        const children = group.routes
+            .map((path) => routeMap.get(path))
+            .filter(Boolean)
+
+        children.forEach((child) => consumed.add(child.path || ''))
+
+        return {
+            path: group.key,
+            meta: { titleKey: group.titleKey, icon: group.icon },
+            children
+        }
+    }).filter((group) => group.children.length > 0)
+
+    const ungrouped = visibleRoutes.filter((route) => !consumed.has(route.path || ''))
+
+    return [...ungrouped, ...groups]
+}
+
+const menuRoutes = computed(() => buildMenuRoutes())
+
+const GROUP_INDEX_PREFIX = 'group:'
+
+const toMenuIndex = (path = '') => {
+    if (!path) return '/'
+    if (MENU_GROUPS.some((group) => group.key === path)) {
+        return `${GROUP_INDEX_PREFIX}${path}`
+    }
+    return path.startsWith('/') ? path : `/${path}`
+}
 
 const userRoles = computed(() => authStore.user?.roles || [])
 
@@ -57,11 +158,12 @@ const hasPermission = (route) => {
     if (route.meta && route.meta.roles) {
         return route.meta.roles.some(role => userRoles.value.includes(role))
     }
-    return false
+    return true
 }
 
 const activeMenu = computed(() => {
-    return route.matched[1]?.path || route.path
+    const matchedPath = route.matched[1]?.path || route.path
+    return matchedPath || '/'
 })
 
 const hasTitle = (route) => {
@@ -85,12 +187,35 @@ const getIcon = (route) => {
     return icons[route.meta.icon]
 }
 
+const isGroup = (route) => Array.isArray(route.children)
+
+const getVisibleChildren = (route) => {
+    if (!isGroup(route)) return []
+    return route.children.filter((child) => shouldDisplayRoute(child))
+}
+
+const resolveIndex = (_parent, child) => {
+    return toMenuIndex(child.path)
+}
+
 const shouldDisplayRoute = (route) => {
     if (!hasPermission(route)) return false
     if (!hasTitle(route)) return false
     if (!hasIcon(route)) return false
     return true
 }
+
+const defaultOpenMenus = computed(() => {
+    const matchedPaths = route.matched
+        .map((record) => (record.path || '').replace(/^\//, ''))
+        .filter(Boolean)
+
+    const group = MENU_GROUPS.find((group) =>
+        group.routes.some((routePath) => matchedPaths.includes(routePath))
+    )
+
+    return group ? [toMenuIndex(group.key)] : []
+})
 </script>
 
 <style scoped>

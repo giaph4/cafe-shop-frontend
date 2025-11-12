@@ -32,6 +32,7 @@ export const messages = {
       purchaseOrderCreate: 'Tạo đơn nhập',
       expenses: 'Chi phí',
       reports: 'Báo cáo',
+      payroll: 'Bảng lương',
       adminAnalytics: 'AI Insight',
       shiftManagement: 'Quản lý Ca',
       users: 'Nhân viên',
@@ -54,7 +55,13 @@ export const messages = {
       logoutWithShift: 'Đăng xuất và kết ca'
     },
     sidebar: {
-      brand: 'Coffee Siu'
+      brand: 'Coffee Siu',
+      sales: 'Bán hàng',
+      catalog: 'Danh mục & Kho',
+      operations: 'Vận hành ca & lương',
+      analytics: 'Phân tích & Báo cáo',
+      team: 'Nhân sự',
+      account: 'Tài khoản'
     },
     footer: {
       heroTitle: 'Coffee Siu Admin',
@@ -133,6 +140,7 @@ export const messages = {
       purchaseOrderCreate: 'Create Purchase Order',
       expenses: 'Expenses',
       reports: 'Reports',
+      payroll: 'Payroll',
       adminAnalytics: 'AI Insight',
       shiftManagement: 'Shift Management',
       users: 'Staff',

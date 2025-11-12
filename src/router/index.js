@@ -25,6 +25,7 @@ const Users = () => import('@/views/Users.vue')
 const ShiftSummary = () => import('@/views/ShiftSummary.vue')
 const LoginHistory = () => import('@/views/LoginHistory.vue')
 const ShiftManagement = () => import('@/views/ShiftManagement.vue')
+const Payroll = () => import('@/views/Payroll.vue')
 
 const ROLES = {
     ADMIN: 'ROLE_ADMIN',
@@ -129,6 +130,12 @@ const routes = [
                 meta: { title: 'Quản lý Ca', titleKey: 'routes.shiftManagement', icon: 'Calendar', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
+                path: 'payroll',
+                name: 'Payroll',
+                component: Payroll,
+                meta: { title: 'Bảng lương', titleKey: 'routes.payroll', icon: 'DollarSign', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+            },
+            {
                 path: 'users',
                 name: 'Users',
                 component: Users,
@@ -144,7 +151,7 @@ const routes = [
                 path: 'profile',
                 name: 'Profile',
                 component: () => import('@/views/Profile.vue'),
-                meta: { roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN], titleKey: 'routes.profile' }
+                meta: { roles: [ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN], titleKey: 'routes.profile', icon: 'UserCircle' }
             },
             {
                 path: 'shift-summary',
