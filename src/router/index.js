@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth.js'
 const DefaultLayout = () => import('@/layouts/DefaultLayout.vue')
 const Login = () => import('@/views/Login.vue')
 const Dashboard = () => import('@/views/Dashboard.vue')
+const AdminAnalytics = () => import('@/views/AdminAnalytics.vue')
 
 const POS = () => import('@/views/POS.vue')
 const Orders = () => import('@/views/Orders.vue')
@@ -113,6 +114,12 @@ const routes = [
                 name: 'Reports',
                 component: Reports,
                 meta: { title: 'Báo cáo', titleKey: 'routes.reports', icon: 'BarChart3', roles: [ROLES.MANAGER, ROLES.ADMIN] }
+            },
+            {
+                path: 'analytics/insight',
+                name: 'AdminAnalytics',
+                component: AdminAnalytics,
+                meta: { title: 'AI Insight', titleKey: 'routes.adminAnalytics', icon: 'Notebook', roles: [ROLES.ADMIN] }
             },
             {
                 path: 'users',
