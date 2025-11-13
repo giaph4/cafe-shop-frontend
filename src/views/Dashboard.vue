@@ -1,352 +1,700 @@
 <template>
-    <div class="app-page-container">
-        <div class="page-header">
-            <h1 class="page-title">Tổng quan Báo cáo</h1>
-            <div class="filter-controls">
-                    <el-radio-group v-model="quickFilter" @change="handleQuickFilter" size="default">
-                        <el-radio-button label="today">Hôm nay</el-radio-button>
-                        <el-radio-button label="week">7 ngày</el-radio-button>
-                        <el-radio-button label="month">30 ngày</el-radio-button>
-                        <el-radio-button label="custom">Tùy chỉnh</el-radio-button>
-                    </el-radio-group>
-                    <div class="date-filters" v-if="quickFilter === 'custom'">
-                        <el-date-picker
-                            v-model="startDate"
-                            type="date"
-                            placeholder="Từ ngày"
-                            @change="fetchDashboardData"
-                            :clearable="false"
-                            format="DD/MM/YYYY"
-                            value-format="YYYY-MM-DD"
-                        />
-                        <span class="date-separator">đến</span>
-                        <el-date-picker
-                            v-model="endDate"
-                            type="date"
-                            placeholder="Đến ngày"
-                            @change="fetchDashboardData"
-                            :clearable="false"
-                            format="DD/MM/YYYY"
-                            value-format="YYYY-MM-DD"
-                        />
-                    </div>
-            </div>
+    <div class="dashboard-page">
+        <div class="view-toggle">
+            <label class="toggle-label" for="dashboard-toggle">Chế độ hiển thị</label>
+            <el-switch
+                id="dashboard-toggle"
+                v-model="showAdvanced"
+                inline-prompt
+                :style="switchStyle"
+                :active-color="SWITCH_COLORS.active"
+                :inactive-color="SWITCH_COLORS.inactive"
+                :active-text="SWITCH_LABELS.active"
+                :inactive-text="SWITCH_LABELS.inactive"
+            />
         </div>
 
-        <el-row :gutter="20" class="kpi-cards">
-            <el-col :span="8" class="animate__animated animate__fadeInUp stagger-item">
-                <el-card shadow="hover" class="kpi-card hover-lift">
-                    <div class="kpi-content">
-                        <div class="kpi-icon gradient-primary">
-                            💰
-                        </div>
-                        <div class="kpi-text">
-                            <div class="kpi-title">Tổng Doanh thu</div>
-                            <div class="kpi-value revenue">{{ formatCurrency(profitStats.totalRevenue) }}</div>
-                        </div>
-                    </div>
-                </el-card>
-            </el-col>
-            <el-col :span="8" class="animate__animated animate__fadeInUp stagger-item">
-                <el-card shadow="hover" class="kpi-card hover-lift">
-                    <div class="kpi-content">
-                        <div class="kpi-icon gradient-danger">
-                            📦
-                        </div>
-                        <div class="kpi-text">
-                            <div class="kpi-title">Tổng Chi phí (Giá vốn)</div>
-                            <div class="kpi-value cost">{{ formatCurrency(profitStats.totalCostOfGoodsSold) }}</div>
-                        </div>
-                    </div>
-                </el-card>
-            </el-col>
-            <el-col :span="8" class="animate__animated animate__fadeInUp stagger-item">
-                <el-card shadow="hover" class="kpi-card hover-lift">
-                    <div class="kpi-content">
-                        <div class="kpi-icon gradient-success">
-                            📈
-                        </div>
-                        <div class="kpi-text">
-                            <div class="kpi-title">Lợi nhuận</div>
-                            <div class="kpi-value profit">{{ formatCurrency(profitStats.totalProfit) }}</div>
-                        </div>
-                    </div>
-                </el-card>
-            </el-col>
-        </el-row>
+        <LegacyDashboard v-if="!showAdvanced"/>
 
-        <el-row :gutter="20">
-            <el-col :span="16">
-                <el-card class="box-card chart-card" v-loading="loading.revenue" data-aos="fade-right" data-aos-delay="200">
+        <div v-else class="advanced-dashboard">
+            <div class="page-header">
+                <div class="page-header__meta">
+                    <h1 class="page-title">{{ pageTitle }}</h1>
+                    <p class="page-subtitle">{{ pageSubtitle }}</p>
+                </div>
+                <div class="page-header__actions">
+                    <el-radio-group
+                        v-if="roleOptions.length > 1"
+                        v-model="activeRole"
+                        size="small"
+                        @change="handleRoleChange"
+                    >
+                        <el-radio-button
+                            v-for="option in roleOptions"
+                            :key="option.value"
+                            :label="option.value"
+                        >
+                            {{ option.label }}
+                        </el-radio-button>
+                    </el-radio-group>
+                    <el-button type="primary" plain size="small" :loading="loading" @click="handleRefresh">
+                        Tải lại
+                    </el-button>
+                    <span v-if="formattedLastUpdated" class="updated-at">Cập nhật lúc {{ formattedLastUpdated }}</span>
+                </div>
+            </div>
+
+            <el-alert
+                v-if="errorMessage"
+                type="error"
+                :closable="false"
+                class="alert-block"
+                :title="errorMessage"
+            />
+
+            <el-skeleton v-if="loading && !dashboardData" :rows="6" animated/>
+
+            <AdminDashboardPanel
+                v-if="activeRole === 'ADMIN' && dashboardData"
+                :data="dashboardData"
+                :revenue-chart-data="adminRevenueChart"
+                :product-chart-data="adminProductChart"
+            />
+            <ManagerDashboardPanel
+                v-if="activeRole === 'MANAGER' && dashboardData"
+                :data="dashboardData"
+                :shift-chart-data="managerShiftChart"
+                :team-chart-data="managerTeamChart"
+            />
+            <StaffDashboardPanel
+                v-if="activeRole === 'STAFF' && dashboardData"
+                :data="dashboardData"
+                title="Dashboard nhân viên"
+                :last-updated="formattedLastUpdated"
+                :performance-chart-data="staffPerformanceChart"
+            />
+
+            <StaffDashboardPanel
+                v-if="shouldShowSelfStaffPanel"
+                :data="selfStaffData"
+                title="Dashboard cá nhân"
+                subtitle="Dữ liệu dành cho nhân viên"
+                :last-updated="formattedSelfUpdated"
+                :performance-chart-data="selfPerformanceChart"
+                class="mt-24"
+            />
+
+            <section v-if="canViewStaffDashboard" class="impersonate-section">
+                <el-card shadow="never" class="impersonate-card">
                     <template #header>
-                        <div class="chart-header">
-                            <span>Doanh thu theo ngày</span>
-                            <el-radio-group v-model="chartType" size="small">
-                                <el-radio-button label="line">Line</el-radio-button>
-                                <el-radio-button label="bar">Bar</el-radio-button>
-                                <el-radio-button label="area">Area</el-radio-button>
-                            </el-radio-group>
-                        </div>
+                        <span>Dashboard nhân viên (xem hộ)</span>
                     </template>
-                    <div class="chart-container">
-                        <LineChart v-if="chartType === 'line' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
-                        <BarChart v-if="chartType === 'bar' && chartData.revenue.labels.length" :chartData="chartData.revenue" />
-                        <LineChart v-if="chartType === 'area' && chartData.revenue.labels.length" :chartData="chartDataArea" />
-                    </div>
-                </el-card>
-            </el-col>
+                    <el-form class="impersonate-form" @submit.prevent="handleFetchStaffDashboard">
+                        <el-row :gutter="12" align="middle">
+                            <el-col :xs="24" :sm="12" :md="8">
+                                <el-form-item label="User ID">
+                                    <el-input
+                                        v-model="impersonate.userId"
+                                        placeholder="Nhập mã nhân viên"
+                                        clearable
+                                    />
+                                </el-form-item>
+                            </el-col>
+                            <el-col :xs="24" :sm="12" :md="8" class="impersonate-actions">
+                                <el-button
+                                    type="primary"
+                                    :loading="impersonate.loading"
+                                    :disabled="!canSubmitImpersonate"
+                                    native-type="submit"
+                                >
+                                    Tải dashboard
+                                </el-button>
+                                <el-button
+                                    :disabled="impersonate.loading || !impersonate.userId"
+                                    @click="resetImpersonation"
+                                >
+                                    Xóa
+                                </el-button>
+                            </el-col>
+                        </el-row>
+                    </el-form>
 
-            <el-col :span="8">
-                <el-card class="box-card chart-card" v-loading="loading.bestSellers" data-aos="fade-left" data-aos-delay="300">
-                    <template #header>
-                        <span>Top 5 Sản phẩm (Theo Doanh thu)</span>
-                    </template>
-                    <div class="chart-container">
-                        <BarChart v-if="chartData.bestSellers.labels.length" :chartData="chartData.bestSellers" />
-                    </div>
-                </el-card>
-            </el-col>
-        </el-row>
+                    <el-alert
+                        v-if="impersonate.error"
+                        type="warning"
+                        :closable="false"
+                        class="alert-block"
+                        :title="impersonate.error"
+                    />
 
+                    <StaffDashboardPanel
+                        v-if="impersonate.data"
+                        :data="impersonate.data"
+                        :title="`Dashboard nhân viên #${impersonate.userId}`"
+                        subtitle="Dữ liệu truy cập hộ"
+                        :last-updated="formattedImpersonateUpdated"
+                        :performance-chart-data="impersonatePerformanceChart"
+                    />
+                </el-card>
+            </section>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { getProfitReport, getRevenueByDateRange, getBestSellers } from '@/api/reportService'
-import { formatCurrency, formatDateISO } from '@/utils/formatters'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { getDefaultDateRange, getDateRangeByFilter } from '@/utils/dateHelpers'
+
+import { useAuthStore } from '@/store/auth'
+import {
+    getAdminDashboard,
+    getManagerDashboard,
+    getStaffDashboard,
+    getStaffDashboardByUserId,
+} from '@/api/dashboardService'
+import { formatDateTimeDisplay } from '@/utils/formatters'
 import { createBarChartData, createLineChartData } from '@/utils/chartHelpers'
 
-import LineChart from '@/components/charts/LineChart.vue'
-import BarChart from '@/components/charts/BarChart.vue'
+import AdminDashboardPanel from '@/components/dashboard/AdminDashboardPanel.vue'
+import ManagerDashboardPanel from '@/components/dashboard/ManagerDashboardPanel.vue'
+import StaffDashboardPanel from '@/components/dashboard/StaffDashboardPanel.vue'
+import LegacyDashboard from '@/components/dashboard/LegacyDashboard.vue'
 
+const CACHE_TTL = 60_000
+const ROLE_PRIORITY = ['ADMIN', 'MANAGER', 'STAFF']
+const ROLE_LABELS = {
+    ADMIN: 'Admin',
+    MANAGER: 'Manager',
+    STAFF: 'Staff',
+}
+const SWITCH_COLORS = {
+    active: '#16a34a',
+    inactive: '#bdbdbd',
+}
+const SWITCH_LABELS = {
+    active: 'Dashboard nâng cao',
+    inactive: 'Dashboard truyền thống',
+}
+const DEFAULT_LABEL_KEYS = ['label', 'date', 'day', 'name', 'period', 'category', 'timestamp']
+const DEFAULT_VALUE_KEYS = ['value', 'amount', 'total', 'count', 'revenue', 'orders', 'score', 'quantity']
+const DASHBOARD_VIEW_STORAGE_KEY = 'dashboard-view-mode'
+
+const authStore = useAuthStore()
 const toast = useToast()
 
-const quickFilter = ref('month')
-const chartType = ref('line')
+const dashboardData = ref(null)
+const selfStaffData = ref(null)
+const loading = ref(false)
+const errorMessage = ref('')
+const lastUpdated = ref('')
+const selfLastUpdated = ref('')
+const dashboardCache = reactive({})
 
-const defaultDates = getDefaultDateRange(30)
-const startDate = ref(formatDateISO(defaultDates[0]))
-const endDate = ref(formatDateISO(defaultDates[1]))
+const impersonate = reactive({
+    userId: '',
+    loading: false,
+    data: null,
+    lastUpdated: '',
+    error: '',
+})
 
-const handleQuickFilter = () => {
-    if (quickFilter.value === 'custom') return
-    
-    const [start, end] = getDateRangeByFilter(quickFilter.value)
-    startDate.value = formatDateISO(start)
-    endDate.value = formatDateISO(end)
-    fetchDashboardData()
+const advancedInitialized = ref(false)
+const showAdvanced = ref(getStoredAdvancedView())
+
+const switchStyle = computed(() => ({
+    '--el-switch-on-color': SWITCH_COLORS.active,
+    '--el-switch-off-color': SWITCH_COLORS.inactive,
+}))
+
+const availableRoles = computed(() => {
+    const roles = authStore.roles || []
+    const set = new Set()
+
+    roles.forEach((role) => {
+        switch (role) {
+            case 'ROLE_ADMIN':
+                set.add('ADMIN')
+                set.add('MANAGER')
+                set.add('STAFF')
+                break
+            case 'ROLE_MANAGER':
+                set.add('MANAGER')
+                set.add('STAFF')
+                break
+            case 'ROLE_STAFF':
+                set.add('STAFF')
+                break
+            default:
+                break
+        }
+    })
+
+    return ROLE_PRIORITY.filter(role => set.has(role))
+})
+
+const activeRole = ref(availableRoles.value[0] ?? 'STAFF')
+
+watch(availableRoles, (roles) => {
+    if (!roles.length) {
+        activeRole.value = 'STAFF'
+        return
+    }
+    if (!roles.includes(activeRole.value)) {
+        activeRole.value = roles[0]
+    }
+    if (showAdvanced.value && advancedInitialized.value) {
+        ensureAdvancedData({ force: true })
+    }
+})
+
+const roleOptions = computed(() => availableRoles.value.map(role => ({
+    value: role,
+    label: ROLE_LABELS[role] ?? role,
+})))
+
+const pageTitle = computed(() => {
+    switch (activeRole.value) {
+        case 'ADMIN':
+            return 'Dashboard quản trị'
+        case 'MANAGER':
+            return 'Dashboard điều hành'
+        case 'STAFF':
+        default:
+            return 'Dashboard nhân viên'
+    }
+})
+
+const pageSubtitle = computed(() => {
+    switch (activeRole.value) {
+        case 'ADMIN':
+            return 'Theo dõi doanh thu, đơn hàng, tồn kho và cảnh báo toàn hệ thống.'
+        case 'MANAGER':
+            return 'Quản lý ca làm việc, hiệu suất đội nhóm và vấn đề vận hành.'
+        case 'STAFF':
+        default:
+            return 'Tổng quan ca làm việc, hiệu suất cá nhân và chấm công.'
+    }
+})
+
+const formattedLastUpdated = computed(() => (lastUpdated.value ? formatDateTimeDisplay(lastUpdated.value) : ''))
+const formattedSelfUpdated = computed(() => (selfLastUpdated.value ? formatDateTimeDisplay(selfLastUpdated.value) : ''))
+const formattedImpersonateUpdated = computed(() => (impersonate.lastUpdated ? formatDateTimeDisplay(impersonate.lastUpdated) : ''))
+
+const shouldShowSelfStaffPanel = computed(() => activeRole.value !== 'STAFF' && !!selfStaffData.value)
+const canViewStaffDashboard = computed(() => availableRoles.value.includes('MANAGER') || availableRoles.value.includes('ADMIN'))
+const canSubmitImpersonate = computed(() => !!impersonate.userId?.trim())
+
+const serviceMap = {
+    ADMIN: getAdminDashboard,
+    MANAGER: getManagerDashboard,
+    STAFF: getStaffDashboard,
 }
 
-const profitStats = ref({
-    totalRevenue: 0,
-    totalCostOfGoodsSold: 0,
-    totalProfit: 0,
-})
+const adminRevenueChart = computed(() => buildLineChart(
+    dashboardData.value?.revenueTrend
+    ?? dashboardData.value?.revenue?.trend
+    ?? dashboardData.value?.revenue?.history
+    ?? dashboardData.value?.revenueHistory
+    ?? [],
+    'Doanh thu',
+    { labelKeys: ['date', 'label', 'period'], valueKeys: ['revenue', 'value', 'amount', 'total'] },
+))
 
-const chartData = reactive({
-    revenue: { labels: [], datasets: [] },
-    bestSellers: { labels: [], datasets: [] },
-    expenses: { labels: [], datasets: [] },
-})
+const adminProductChart = computed(() => buildBarChart(
+    dashboardData.value?.topProducts
+    ?? dashboardData.value?.productStats
+    ?? [],
+    'Doanh thu',
+    { labelKeys: ['productName', 'name', 'label'], valueKeys: ['revenue', 'totalRevenue', 'totalRevenueGenerated', 'amount', 'value'] },
+))
 
-const loading = reactive({
-    profit: false,
-    revenue: false,
-    bestSellers: false,
-    expenses: false,
-})
+const managerShiftChart = computed(() => buildBarChart(
+    dashboardData.value?.shiftOverview?.weeklyDistribution
+    ?? dashboardData.value?.shiftOverview?.dailyDistribution
+    ?? dashboardData.value?.shiftOverview?.scheduleSummary
+    ?? [],
+    'Số ca',
+    { labelKeys: ['day', 'label', 'date', 'name'], valueKeys: ['count', 'value', 'total', 'shifts', 'scheduled'] },
+))
 
-const chartDataArea = computed(() => {
-    if (!chartData.revenue.labels.length) return { labels: [], datasets: [] }
+const managerTeamChart = computed(() => buildLineChart(
+    dashboardData.value?.teamPerformance?.trend
+    ?? dashboardData.value?.teamPerformance?.history
+    ?? [],
+    'Doanh thu',
+    { labelKeys: ['period', 'label', 'date', 'name'], valueKeys: ['revenue', 'value', 'amount', 'totalRevenue'] },
+))
 
-    const data = createLineChartData(
-        chartData.revenue.labels,
-        chartData.revenue.datasets[0]?.data || [],
-        'Doanh thu',
-        { fill: true, tension: 0.4 }
-    )
-    
-    // Make background more transparent for area chart
-    data.datasets[0].backgroundColor = data.datasets[0].backgroundColor.replace('0.8)', '0.3)')
-    
-    return data
-})
+const staffPerformanceChart = computed(() => buildLineChart(
+    dashboardData.value?.performance?.trend
+    ?? dashboardData.value?.performance?.history
+    ?? [],
+    'Doanh thu',
+    { labelKeys: ['period', 'label', 'date', 'name'], valueKeys: ['revenue', 'value', 'amount', 'total'] },
+))
 
-const processRevenueData = (apiData) => {
-    chartData.revenue = createLineChartData(
-        Object.keys(apiData),
-        Object.values(apiData),
-        'Doanh thu',
-        { fill: false, tension: 0.1 }
-    )
+const selfPerformanceChart = computed(() => buildLineChart(
+    selfStaffData.value?.performance?.trend
+    ?? selfStaffData.value?.performance?.history
+    ?? [],
+    'Doanh thu',
+    { labelKeys: ['period', 'label', 'date', 'name'], valueKeys: ['revenue', 'value', 'amount', 'total'] },
+))
+
+const impersonatePerformanceChart = computed(() => buildLineChart(
+    impersonate.data?.performance?.trend
+    ?? impersonate.data?.performance?.history
+    ?? [],
+    'Doanh thu',
+    { labelKeys: ['period', 'label', 'date', 'name'], valueKeys: ['revenue', 'value', 'amount', 'total'] },
+))
+
+function getStoredAdvancedView() {
+    if (typeof window === 'undefined') {
+        return false
+    }
+    return window.localStorage.getItem(DASHBOARD_VIEW_STORAGE_KEY) === 'advanced'
 }
 
-const processBestSellerData = (apiData) => {
-    chartData.bestSellers = createBarChartData(
-        apiData.map(item => item.productName),
-        apiData.map(item => item.totalRevenueGenerated),
-        'Doanh thu'
-    )
+function persistAdvancedView(value) {
+    if (typeof window === 'undefined') {
+        return
+    }
+    window.localStorage.setItem(DASHBOARD_VIEW_STORAGE_KEY, value ? 'advanced' : 'legacy')
 }
 
-const fetchDashboardData = async () => {
-    if (!startDate.value || !endDate.value) {
-        return;
+function cacheKeyForRole(role) {
+    return role.toLowerCase()
+}
+
+function cacheKeyForStaff(userId) {
+    return `staff:${userId ?? 'self'}`
+}
+
+function isCacheValid(entry) {
+    if (!entry || !entry.timestamp) return false
+    const diff = Date.now() - new Date(entry.timestamp).getTime()
+    return diff < CACHE_TTL
+}
+
+function readCache(key) {
+    const entry = dashboardCache[key]
+    if (isCacheValid(entry)) {
+        return entry
+    }
+    return null
+}
+
+function writeCache(key, data) {
+    dashboardCache[key] = {
+        data,
+        timestamp: new Date().toISOString(),
+    }
+    return dashboardCache[key]
+}
+
+function emptyChart() {
+    return { labels: [], datasets: [] }
+}
+
+function extractSeries(source, { labelKeys = DEFAULT_LABEL_KEYS, valueKeys = DEFAULT_VALUE_KEYS } = {}) {
+    if (!source) return []
+
+    let collection = []
+    if (Array.isArray(source)) {
+        collection = source
+    } else if (typeof source === 'object') {
+        collection = Object.entries(source).map(([key, value]) => {
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                return { label: key, ...value }
+            }
+            return { label: key, value }
+        })
     }
 
-    const start = formatDateISO(startDate.value)
-    const end = formatDateISO(endDate.value)
+    return collection
+        .map(item => {
+            const label = [...labelKeys, 'label']
+                .map(key => item?.[key])
+                .find(val => val !== undefined && val !== null && val !== '') ?? ''
 
-    // 1. Fetch Profit (KPIs)
-    loading.profit = true
+            const rawValue = [...valueKeys, 'value', 'count', 'total']
+                .map(key => item?.[key])
+                .find(val => val !== undefined && val !== null)
+
+            let numeric = rawValue
+            if (numeric && typeof numeric === 'object') {
+                numeric = Object.values(numeric).find(val => typeof val === 'number')
+            }
+
+            const value = Number(numeric ?? 0)
+            return {
+                label: label.toString(),
+                value: Number.isFinite(value) ? value : 0,
+            }
+        })
+        .filter(entry => entry.label)
+}
+
+function buildLineChart(source, datasetLabel, options = {}) {
+    const series = extractSeries(source, options)
+    if (!series.length) return emptyChart()
+    const labels = series.map(item => item.label)
+    const values = series.map(item => item.value)
+    return createLineChartData(labels, values, datasetLabel, options.chartOptions ?? { tension: 0.3 })
+}
+
+function buildBarChart(source, datasetLabel, options = {}) {
+    const series = extractSeries(source, options)
+    if (!series.length) return emptyChart()
+    const labels = series.map(item => item.label)
+    const values = series.map(item => item.value)
+    return createBarChartData(labels, values, datasetLabel)
+}
+
+function resolveErrorMessage(error) {
+    const status = error?.response?.status
+    if (status === 403) {
+        return 'Bạn không có quyền truy cập dashboard này.'
+    }
+    if (status === 404) {
+        return 'Không tìm thấy dữ liệu.'
+    }
+    if (status === 401) {
+        return 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.'
+    }
+    return error?.response?.data?.message || error?.message || 'Không thể tải dữ liệu dashboard.'
+}
+
+async function loadDashboard(role, { force = false } = {}) {
+    const key = cacheKeyForRole(role)
+    const service = serviceMap[role]
+    if (!service) return
+
+    if (!force) {
+        const cached = readCache(key)
+        if (cached) {
+            dashboardData.value = cached.data
+            lastUpdated.value = cached.timestamp
+            return
+        }
+    }
+
+    loading.value = true
+    errorMessage.value = ''
     try {
-        const res = await getProfitReport(start, end)
-        profitStats.value = res.data
-    } catch (err) {
-        toast.error('Lỗi tải báo cáo lợi nhuận')
+        const response = await service()
+        const data = response?.data ?? response
+        dashboardData.value = data
+        const { timestamp } = writeCache(key, data)
+        lastUpdated.value = timestamp
+    } catch (error) {
+        errorMessage.value = resolveErrorMessage(error)
+        toast.error(errorMessage.value)
     } finally {
-        loading.profit = false
-    }
-
-    // 2. Fetch Revenue by Date (Line Chart)
-    loading.revenue = true
-    try {
-        const res = await getRevenueByDateRange(start, end)
-        processRevenueData(res.data)
-    } catch (err) {
-        toast.error('Lỗi tải biểu đồ doanh thu')
-    } finally {
-        loading.revenue = false
-    }
-
-    // 3. Fetch Best Sellers (Bar Chart)
-    loading.bestSellers = true
-    try {
-        const res = await getBestSellers(start, end, 5, 'revenue')
-        processBestSellerData(res.data)
-    } catch (err) {
-        toast.error('Lỗi tải top sản phẩm')
-    } finally {
-        loading.bestSellers = false
+        loading.value = false
     }
 }
+
+async function loadSelfStaffDashboard({ force = false } = {}) {
+    if (!availableRoles.value.includes('STAFF')) {
+        selfStaffData.value = null
+        return
+    }
+
+    const key = cacheKeyForStaff('self')
+    if (!force) {
+        const cached = readCache(key)
+        if (cached) {
+            selfStaffData.value = cached.data
+            selfLastUpdated.value = cached.timestamp
+            return
+        }
+    }
+
+    try {
+        const response = await getStaffDashboard()
+        const data = response?.data ?? response
+        selfStaffData.value = data
+        const { timestamp } = writeCache(key, data)
+        selfLastUpdated.value = timestamp
+    } catch (error) {
+        console.warn('Không thể tải dashboard self staff', error)
+    }
+}
+
+function ensureAdvancedData({ force = false } = {}) {
+    if (!force && advancedInitialized.value && dashboardData.value) {
+        if (!selfStaffData.value) {
+            loadSelfStaffDashboard()
+        }
+        return
+    }
+    advancedInitialized.value = true
+    loadDashboard(activeRole.value, { force })
+    loadSelfStaffDashboard({ force })
+}
+
+function handleRoleChange() {
+    if (!showAdvanced.value) return
+    loadDashboard(activeRole.value)
+    loadSelfStaffDashboard()
+}
+
+function handleRefresh() {
+    if (!showAdvanced.value) {
+        toast.info('Bật Dashboard nâng cao để làm mới dữ liệu.')
+        return
+    }
+    ensureAdvancedData({ force: true })
+}
+
+async function handleFetchStaffDashboard() {
+    if (!canSubmitImpersonate.value) return
+    impersonate.loading = true
+    impersonate.error = ''
+    try {
+        const userId = impersonate.userId.trim()
+        const key = cacheKeyForStaff(userId)
+        const cached = readCache(key)
+        if (cached) {
+            impersonate.data = cached.data
+            impersonate.lastUpdated = cached.timestamp
+        } else {
+            const response = await getStaffDashboardByUserId(userId)
+            const data = response?.data ?? response
+            impersonate.data = data
+            const { timestamp } = writeCache(key, data)
+            impersonate.lastUpdated = timestamp
+        }
+        toast.success(`Đã tải dashboard nhân viên #${userId}`)
+    } catch (error) {
+        impersonate.error = resolveErrorMessage(error)
+        toast.error(impersonate.error)
+        impersonate.data = null
+        impersonate.lastUpdated = ''
+    } finally {
+        impersonate.loading = false
+    }
+}
+
+function resetImpersonation() {
+    impersonate.userId = ''
+    impersonate.data = null
+    impersonate.lastUpdated = ''
+    impersonate.error = ''
+}
+
+watch(showAdvanced, (value) => {
+    persistAdvancedView(value)
+    if (value) {
+        ensureAdvancedData()
+    }
+})
+
+watch(activeRole, (role) => {
+    if (!showAdvanced.value || !advancedInitialized.value) return
+    loadDashboard(role)
+    loadSelfStaffDashboard()
+})
 
 onMounted(() => {
-    fetchDashboardData()
+    if (showAdvanced.value) {
+        ensureAdvancedData()
+    }
 })
 </script>
 
 <style scoped>
-/* Thêm padding cho nội dung trang Dashboard */
-.dashboard-container {
-    padding: 20px;
-}
 
-.filter-card {
-    margin-bottom: 20px;
-}
-
-.filter-controls {
+.dashboard-page {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.view-toggle {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.advanced-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
     gap: 16px;
 }
 
-.date-filters {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.page-title {
+    font-size: 1.8rem;
+    font-weight: var(--font-semibold);
 }
 
-.date-separator {
-    font-weight: 600;
-    color: #757575;
-}
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.kpi-cards {
-    margin-bottom: 20px;
-}
-
-.kpi-card {
-    transition: all 0.3s ease;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-}
-
-.kpi-content {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-}
-
-.kpi-icon {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    border-radius: var(--radius-xl);
-    flex-shrink: 0;
-}
-
-.kpi-text {
-    flex: 1;
-}
-
-.kpi-title {
-    font-size: 0.875rem;
+.page-subtitle {
+    margin-top: 4px;
     color: var(--gray-600);
-    font-weight: var(--font-medium);
-    margin-bottom: var(--space-2);
 }
 
-.kpi-value {
-    font-size: 1.75rem;
-    font-weight: var(--font-bold);
-    margin-bottom: var(--space-1);
-}
-
-.kpi-value.revenue {
-    color: var(--info-600);
-}
-
-.kpi-value.cost {
-    color: var(--danger-600);
-}
-
-.kpi-value.profit {
-    color: var(--success-600);
-}
-
-.chart-card {
-    height: 450px;
-}
-
-.chart-container {
-    position: relative;
-    height: 350px;
-}
-
-.date-filters {
+.page-header__actions {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.date-separator {
-    font-weight: 600;
-    color: #757575;
-    padding: 0 8px;
+.updated-at {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+}
+
+.alert-block {
+    margin-bottom: 16px;
+}
+
+.mt-24 {
+    margin-top: 24px;
+}
+
+.impersonate-section {
+    margin-top: 16px;
+}
+
+.impersonate-card {
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.impersonate-form {
+    margin-top: 8px;
+}
+
+.impersonate-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-header__actions {
+        flex-wrap: wrap;
+    }
+
+    .impersonate-actions {
+        margin-top: 12px;
+        justify-content: flex-start;
+    }
 }
 </style>

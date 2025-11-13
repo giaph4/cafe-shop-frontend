@@ -1,0 +1,78 @@
+{
+    "shiftOverview": {
+        "scheduledToday": 4,
+        "inProgress": 2,
+        "completed": 9,
+        "cancelled": 0,
+        "upcomingShifts": [
+            {
+                "shiftId": 1001,
+                "shiftDate": "2025-11-15",
+                "timeRange": "07:00 - 11:00",
+                "status": "PLANNED",
+                "assignedStaff": 4,
+                "capacity": 6
+            }
+        ]
+    },
+    "teamPerformance": {
+        "totalRevenue": 12500000,
+        "totalOrders": 210,
+        "averageOrderValue": 59523,
+        "topStaff": [
+            {
+                "staffId": 201,
+                "staffName": "Nguyễn Văn A",
+                "orders": 70,
+                "revenue": 4200000,
+                "averageOrderValue": 60000
+            }
+        ]
+    },
+    "inventory": {
+        "lowStockItems": 3,
+        "criticalStockItems": 1,
+        "alerts": [
+            {
+                "ingredientId": 11,
+                "ingredientName": "Đường nâu",
+                "quantityOnHand": 4.5,
+                "reorderLevel": 10
+            }
+        ]
+    },
+    "payroll": {
+        "estimatedPayroll": 18500000,
+        "bonusTotal": 1500000,
+        "penaltyTotal": 200000,
+        "adjustmentNet": 250000,
+        "staffCount": 18
+    },
+    "pendingApprovals": [
+        {
+            "module": "PURCHASE_ORDER",
+            "description": "Phiếu nhập 781 - Công ty ABC",
+            "requestedBy": "manager1",
+            "requestedAt": "2025-11-13",
+            "status": "PENDING"
+        }
+    ],
+    "attendanceAlerts": [
+        {
+            "assignmentId": 5001,
+            "staffId": 301,
+            "staffName": "Trần Thị B",
+            "issueType": "LATE_CHECK_IN",
+            "note": "Check-in trễ 15 phút"
+        }
+    ],
+    "serviceIssues": [
+        {
+            "orderId": 12002,
+            "tableName": "B12",
+            "issue": "Đơn bị hủy",
+            "severity": "MEDIUM",
+            "createdDate": "2025-11-14"
+        }
+    ]
+}

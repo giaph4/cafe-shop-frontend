@@ -1,7 +1,4 @@
-// src/router/index.js (ĐÃ SỬA LỖI)
-
 import { createRouter, createWebHistory } from 'vue-router'
-// Sửa lỗi: Thêm .js
 import { useAuthStore } from '@/store/auth.js'
 
 const DefaultLayout = () => import('@/layouts/DefaultLayout.vue')
@@ -55,7 +52,7 @@ const routes = [
                 path: 'orders',
                 name: 'Orders',
                 component: Orders,
-                meta: { title: 'Lịch sử Đơn hàng', titleKey: 'routes.orders', icon: 'ShoppingCart', roles: [ROLES.MANAGER, ROLES.ADMIN, ROLES.MANAGER] }
+                meta: { title: 'Lịch sử Đơn hàng', titleKey: 'routes.orders', icon: 'ShoppingCart', roles: [ROLES.MANAGER, ROLES.ADMIN] }
             },
             {
                 path: 'tables',

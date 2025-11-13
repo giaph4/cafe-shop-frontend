@@ -81,6 +81,41 @@ Tất cả request đều đi qua `src/api/axios.js`, tự động gắn header 
 
 Các component này được re-use trong `ShiftManagement.vue` để giữ logic rõ ràng và dễ bảo trì.
 
+## Dashboard hai chế độ (Legacy & Advanced)
+
+Trang `/` cung cấp song song hai trải nghiệm:
+
+1. **Dashboard truyền thống (Legacy)** – hiển thị mặc định.
+   - Bộ lọc nhanh (hôm nay/7 ngày/30 ngày/tùy chỉnh).
+   - KPI (doanh thu, giá vốn, lợi nhuận).
+   - Biểu đồ doanh thu/Top sản phẩm sử dụng LineChart & BarChart.
+   - Sử dụng API `getProfitReport`, `getRevenueByDateRange`, `getBestSellers` (xem `src/components/dashboard/LegacyDashboard.vue`).
+
+2. **Dashboard nâng cao (Advanced)** – bật bằng công tắc "Dashboard nâng cao".
+   - Giao diện tùy vai trò (Admin/Manager/Staff) với EasyDataTable và biểu đồ.
+   - Dữ liệu lấy qua `src/api/dashboardService.js`:
+
+     ```js
+     import {
+         getAdminDashboard,
+         getManagerDashboard,
+         getStaffDashboard,
+         getStaffDashboardByUserId,
+     } from '@/api/dashboardService'
+     ```
+
+   - Admin: KPI doanh thu/đơn hàng/tồn kho, biểu đồ doanh thu, bảng top staff/products/customers.
+   - Manager: Tổng quan ca, biểu đồ phân bổ ca & hiệu suất đội nhóm, bảng tồn kho cảnh báo, approval, attendance/service issues.
+   - Staff: Dashboard cá nhân với biểu đồ hiệu suất, tóm tắt ca, attendance, payroll, nhắc việc.
+   - Manager/Admin có thể nhập `userId` để xem dashboard nhân viên bất kỳ (impersonation).
+   - Payload cache 60s (có nút "Tải lại"), lưu trạng thái toggle vào `localStorage`.
+
+Các component liên quan:
+
+- `Dashboard.vue` – chứa toggle, caching, mô tả quyền truy cập, impersonation.
+- `LegacyDashboard.vue` – giao diện dashboard truyền thống.
+- `AdminDashboardPanel.vue`, `ManagerDashboardPanel.vue`, `StaffDashboardPanel.vue` – giao diện theo vai trò, dùng EasyDataTable và chart helpers.
+
 ## Thiết lập & chạy
 
 ```bash

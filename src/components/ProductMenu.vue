@@ -40,48 +40,57 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue';
-import {useStore} from 'vuex';
-import {posStore} from '@/store/posStore.js'; // Import trực tiếp
-import {formatCurrency} from '@/utils/formatters.js';
+import { computed, ref, watchEffect } from 'vue'
+import { formatCurrency } from '@/utils/formatters.js'
 
-const store = useStore(posStore.key); // Sử dụng store đã import
-const selectedCategory = ref(null);
+const props = defineProps({
+    products: {
+        type: Array,
+        default: () => []
+    },
+    categories: {
+        type: Array,
+        default: () => []
+    }
+})
 
-// Lấy dữ liệu từ store
-const products = computed(() => store.getters.products);
-const categories = computed(() => store.getters.categories);
+const emit = defineEmits(['select'])
 
-// Lọc sản phẩm dựa trên category
+const selectedCategory = ref(null)
+const categories = computed(() => props.categories)
+
+const products = computed(() => props.products)
+
 const filteredProducts = computed(() => {
     if (!selectedCategory.value) {
-        return products.value;
+        return products.value
     }
-    return products.value.filter(
-        (p) => p.categoryId === selectedCategory.value
-    );
-});
+    return products.value.filter((product) => product.categoryId === selectedCategory.value)
+})
 
-// Hàm chọn category
+watchEffect(() => {
+    // Đảm bảo category đã chọn vẫn tồn tại sau khi dữ liệu thay đổi
+    const exists = categories.value.some((category) => category.id === selectedCategory.value)
+    if (!exists) {
+        selectedCategory.value = null
+    }
+})
+
 const selectCategory = (categoryId) => {
-    selectedCategory.value = categoryId;
-};
+    selectedCategory.value = categoryId
+}
 
-// Hàm xử lý khi click vào sản phẩm
 const handleProductClick = (product) => {
-    // Action này thêm vào currentCart (giỏ hàng tạm)
-    store.dispatch('addItemToCart', product);
-};
+    emit('select', product)
+}
 
-// Xử lý ảnh (nếu backend trả về đường dẫn tương đối)
 const getProductImageUrl = (imageUrl) => {
     if (!imageUrl) {
-        return 'https://via.placeholder.com/150'; // Ảnh mặc định
+        return 'https://via.placeholder.com/150'
     }
-    // Giả sử API_URL được định nghĩa trong .env
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-    return `${apiUrl}/api/files/products/${imageUrl}`;
-};
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+    return `${apiUrl}/api/files/products/${imageUrl}`
+}
 </script>
 
 <style scoped>

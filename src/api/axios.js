@@ -1,9 +1,15 @@
 import axios from 'axios'
 import { useAuthStore } from '@/store/auth'
-import router from '@/router' // Import router để xử lý 401
+import router from '@/router'
+
+const resolvedBaseUrl = import.meta.env.VITE_API_URL
+
+if (!resolvedBaseUrl && import.meta.env.DEV) {
+    console.warn('[axios] VITE_API_URL is not defined. Falling back to http://localhost:8088 for development.')
+}
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:8088', // URL backend của bạn
+    baseURL: resolvedBaseUrl || 'http://localhost:8088',
     headers: {
         'Content-Type': 'application/json'
     }
@@ -33,7 +39,10 @@ apiClient.interceptors.response.use(
         // Chỉ xử lý 401 tại đây
         if (error.response && error.response.status === 401) {
             const authStore = useAuthStore()
-            console.error('Unauthorized (401)! Token expired or invalid. Logging out.')
+
+            if (import.meta.env.DEV) {
+                console.warn('[axios] Unauthorized (401) received. Triggering logout sequence.')
+            }
 
             // Kiểm tra xem có phải đang ở trang login không
             // Nếu lỗi 401 mà không phải từ trang login (ví dụ: gõ sai pass)

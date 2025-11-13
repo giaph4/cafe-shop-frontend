@@ -5,23 +5,27 @@
             type="button"
             @click="emitToggleSidebar"
             :aria-label="isSidebarCollapsed ? t('navbar.sidebarExpand') : t('navbar.sidebarCollapse')"
+            :aria-expanded="!isSidebarCollapsed"
+            :title="isSidebarCollapsed ? t('navbar.sidebarExpand') : t('navbar.sidebarCollapse')"
         >
             <component :is="isSidebarCollapsed ? ChevronRight : ChevronLeft" class="sidebar-toggle-icon" />
         </button>
-        <div class="page-title">
+        <div class="page-title" :title="currentTitle">
             {{ currentTitle }}
         </div>
 
-        <div class="navbar-controls">
-            <div class="control-group">
+        <div class="navbar-controls" role="group" :aria-label="t('navbar.controlGroupLabel')">
+            <div class="control-group control-theme">
                 <el-icon class="control-icon">
                     <component :is="themeIcon" />
                 </el-icon>
+                <span class="control-label">{{ t('common.theme') }}</span>
                 <el-select
                     v-model="currentTheme"
                     size="small"
                     class="control-select"
                     :placeholder="t('common.theme')"
+                    :aria-label="t('common.theme')"
                 >
                     <el-option
                         v-for="option in themeOptions"
@@ -31,15 +35,17 @@
                     />
                 </el-select>
             </div>
-            <div class="control-group">
+            <div class="control-group control-language">
                 <el-icon class="control-icon">
                     <Languages />
                 </el-icon>
+                <span class="control-label">{{ t('common.language') }}</span>
                 <el-select
                     v-model="currentLocale"
                     size="small"
                     class="control-select"
                     :placeholder="t('common.language')"
+                    :aria-label="t('common.language')"
                 >
                     <el-option
                         v-for="option in languageOptions"
@@ -118,7 +124,6 @@ import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/store/auth'
 import { useSidebarStore } from '@/store/sidebar'
 import { buildShiftSummary } from '@/utils/shiftManager.js'
-import { formatCurrency } from '@/utils/formatters.js'
 import { UserCircle, ChevronDown, ChevronLeft, ChevronRight, Sun, Moon, Languages } from '@/components/icons'
 import { useShiftSummaryStore } from '@/store/shiftSummary.js'
 import { useI18n } from 'vue-i18n'
@@ -238,9 +243,10 @@ const handleCommand = (command) => {
 .navbar {
     height: 70px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 20px;
     background: var(--navbar-bg);
     border-bottom: 1px solid var(--navbar-border-color);
     padding: 0 32px;
@@ -264,6 +270,7 @@ const handleCommand = (command) => {
     color: #6F5B45;
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease;
+    outline: none;
 }
 
 .sidebar-toggle:hover {
@@ -281,24 +288,42 @@ const handleCommand = (command) => {
     font-weight: 700;
     color: var(--app-text-color);
     letter-spacing: -0.5px;
+    flex: 1 1 auto;
+    min-width: 200px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .navbar-controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    min-width: 280px;
 }
 
 .control-group {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
+    gap: 10px;
+    padding: 8px 12px;
     border-radius: 12px;
     background: var(--app-surface-muted);
     border: 1px solid var(--app-border-color);
     box-shadow: var(--card-shadow);
     transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.control-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--app-text-secondary);
+    white-space: nowrap;
 }
 
 .control-icon {
@@ -312,6 +337,7 @@ const handleCommand = (command) => {
 .user-menu {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
 }
 
 .el-dropdown-link {
@@ -352,6 +378,54 @@ const handleCommand = (command) => {
 
 .el-dropdown-link:hover .arrow-icon {
     transform: rotate(180deg);
+}
+
+@media (max-width: 1024px) {
+    .navbar {
+        padding: 0 24px;
+        gap: 16px;
+    }
+
+    .page-title {
+        flex: 1 1 100%;
+        white-space: normal;
+    }
+
+    .navbar-controls {
+        flex: 1 1 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .control-group {
+        flex: 1 1 240px;
+        justify-content: flex-start;
+    }
+
+    .user-menu {
+        flex: 1 1 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 640px) {
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .control-group {
+        flex: 1 1 100%;
+    }
+
+    .control-select {
+        width: 100%;
+    }
+
+    .el-dropdown-link {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 .logout-dialog-text {

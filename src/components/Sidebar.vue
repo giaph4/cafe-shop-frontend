@@ -10,11 +10,23 @@
             </router-link>
         </div>
 
-        <el-menu :default-active="activeMenu" class="sidebar-menu" :class="{ collapsed: isCollapsed }"
-            background-color="var(--sidebar-bg)" text-color="var(--sidebar-text)"
-            active-text-color="var(--sidebar-active-text)" router :collapse="isCollapsed" :collapse-transition="false">
+        <el-menu
+            :default-active="activeMenu"
+            class="sidebar-menu"
+            :class="{ collapsed: isCollapsed }"
+            background-color="var(--sidebar-bg)"
+            text-color="var(--sidebar-text)"
+            active-text-color="var(--sidebar-active-text)"
+            router
+            :collapse="isCollapsed"
+            :collapse-transition="false"
+        >
             <template v-for="route in menuRoutes" :key="route.path">
-                <el-menu-item v-if="shouldDisplayRoute(route)" :index="'/' + route.path">
+                <el-menu-item
+                    v-if="shouldDisplayRoute(route)"
+                    :index="resolveMenuIndex(route)"
+                    :aria-label="getTitle(route)"
+                >
                     <el-icon v-if="getIcon(route)" class="menu-icon">
                         <component :is="getIcon(route)" />
                     </el-icon>
@@ -48,16 +60,16 @@ const menuRoutes = computed(() => {
     return router.options.routes.find(r => r.path === '/')?.children || []
 })
 
-const userRoles = computed(() => authStore.user?.roles || [])
+const userRoles = computed(() => authStore.roles || [])
 
 const hasPermission = (route) => {
     if (route.meta?.hidden) {
         return false
     }
-    if (route.meta && route.meta.roles) {
+    if (route.meta && Array.isArray(route.meta.roles) && route.meta.roles.length > 0) {
         return route.meta.roles.some(role => userRoles.value.includes(role))
     }
-    return false
+    return true
 }
 
 const activeMenu = computed(() => {
@@ -83,6 +95,11 @@ const hasIcon = (route) => {
 const getIcon = (route) => {
     if (!hasIcon(route)) return null
     return icons[route.meta.icon]
+}
+
+const resolveMenuIndex = (route) => {
+    const basePath = route.redirect || route.path || '/'
+    return basePath.startsWith('/') ? basePath : `/${basePath}`
 }
 
 const shouldDisplayRoute = (route) => {
@@ -157,8 +174,11 @@ const shouldDisplayRoute = (route) => {
     border-right: none !important;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 12px;
+    padding: 12px 16px;
     background: var(--sidebar-bg) !important;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .sidebar-menu.collapsed {
@@ -166,6 +186,7 @@ const shouldDisplayRoute = (route) => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 10px;
 }
 
 .sidebar.collapsed .el-menu-item {
@@ -199,9 +220,10 @@ const shouldDisplayRoute = (route) => {
 .el-menu-item {
     font-weight: 500;
     border-radius: 12px !important;
-    margin-bottom: 6px;
+    min-height: 48px;
     color: var(--sidebar-text) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent !important;
 }
 
 .el-menu-item .menu-icon {
