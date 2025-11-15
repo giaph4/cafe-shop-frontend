@@ -6,7 +6,9 @@
                     <span class="section-title">{{ title }}</span>
                     <p v-if="subtitle" class="section-subtitle">{{ subtitle }}</p>
                 </div>
-                <span v-if="lastUpdated" class="updated-at">Cập nhật lúc {{ lastUpdated }}</span>
+                <el-tooltip v-if="lastUpdated" :content="`Cập nhật lần cuối: ${lastUpdated}`" placement="bottom">
+                    <span class="updated-at">Cập nhật lúc {{ lastUpdated }}</span>
+                </el-tooltip>
             </div>
         </template>
 
@@ -22,31 +24,36 @@
             <el-card shadow="never" class="metric-card">
                 <p class="metric-title">Tóm tắt ca</p>
                 <ul class="metric-list">
-                    <li><span>Ca tuần này</span><strong>{{ formatNumber(data.shiftSummary?.shiftsThisWeek ?? 0) }}</strong></li>
-                    <li><span>Hoàn thành</span><strong>{{ formatNumber(data.shiftSummary?.completedShifts ?? 0) }}</strong></li>
-                    <li><span>Chờ thực hiện</span><strong>{{ formatNumber(data.shiftSummary?.pendingShifts ?? 0) }}</strong></li>
-                    <li><span>Check-in trễ</span><strong>{{ formatNumber(data.shiftSummary?.lateCheckIns ?? 0) }}</strong></li>
-                    <li><span>Check-out sớm</span><strong>{{ formatNumber(data.shiftSummary?.earlyCheckOuts ?? 0) }}</strong></li>
+                    <li v-for="item in shiftMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                        <span>{{ item.label }}</span>
+                        <el-tooltip :content="item.tooltip" placement="top">
+                            <strong>{{ item.value }}</strong>
+                        </el-tooltip>
+                    </li>
                 </ul>
             </el-card>
 
             <el-card shadow="never" class="metric-card">
                 <p class="metric-title">Hiệu suất</p>
                 <ul class="metric-list">
-                    <li><span>Doanh thu</span><strong>{{ formatCurrency(data.performance?.totalRevenue ?? 0) }}</strong></li>
-                    <li><span>Tổng đơn</span><strong>{{ formatNumber(data.performance?.totalOrders ?? 0) }}</strong></li>
-                    <li><span>Đơn TB</span><strong>{{ formatCurrency(data.performance?.averageOrderValue ?? 0) }}</strong></li>
-                    <li><span>Feedback (+)</span><strong>{{ formatNumber(data.performance?.positiveFeedbacks ?? 0) }}</strong></li>
-                    <li><span>Feedback (−)</span><strong>{{ formatNumber(data.performance?.negativeFeedbacks ?? 0) }}</strong></li>
+                    <li v-for="item in performanceMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                        <span>{{ item.label }}</span>
+                        <el-tooltip :content="item.tooltip" placement="top">
+                            <strong>{{ item.value }}</strong>
+                        </el-tooltip>
+                    </li>
                 </ul>
             </el-card>
 
             <el-card shadow="never" class="metric-card">
                 <p class="metric-title">Chấm công</p>
                 <ul class="metric-list">
-                    <li><span>Check-in gần nhất</span><strong>{{ formatDateTimeDisplay(data.attendance?.lastCheckIn) }}</strong></li>
-                    <li><span>Check-out gần nhất</span><strong>{{ formatDateTimeDisplay(data.attendance?.lastCheckOut) }}</strong></li>
-                    <li><span>Ngày đúng giờ liên tiếp</span><strong>{{ formatNumber(data.attendance?.consecutiveOnTimeDays ?? 0) }}</strong></li>
+                    <li v-for="item in attendanceMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                        <span>{{ item.label }}</span>
+                        <el-tooltip :content="item.tooltip" placement="top">
+                            <strong>{{ item.value }}</strong>
+                        </el-tooltip>
+                    </li>
                 </ul>
                 <div class="attendance-status">
                     <el-tag :type="attendanceTagType" effect="light">
@@ -58,11 +65,12 @@
             <el-card shadow="never" class="metric-card">
                 <p class="metric-title">Payroll</p>
                 <ul class="metric-list">
-                    <li><span>Chu kỳ hiện tại</span><strong>{{ formatCurrency(data.payroll?.estimatedCurrentCycle ?? 0) }}</strong></li>
-                    <li><span>Thưởng</span><strong>{{ formatCurrency(data.payroll?.bonusTotal ?? 0) }}</strong></li>
-                    <li><span>Phạt</span><strong>{{ formatCurrency(data.payroll?.penaltyTotal ?? 0) }}</strong></li>
-                    <li><span>Điều chỉnh</span><strong>{{ formatCurrency(data.payroll?.adjustmentNet ?? 0) }}</strong></li>
-                    <li><span>Chu kỳ trước</span><strong>{{ formatCurrency(data.payroll?.lastCyclePaid ?? 0) }}</strong></li>
+                    <li v-for="item in payrollMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                        <span>{{ item.label }}</span>
+                        <el-tooltip :content="item.tooltip" placement="top">
+                            <strong>{{ item.value }}</strong>
+                        </el-tooltip>
+                    </li>
                 </ul>
             </el-card>
         </div>
@@ -150,11 +158,61 @@ const props = defineProps({
 
 const attendanceTagType = computed(() => (props.data.attendance?.currentlyCheckedIn ? 'success' : 'info'))
 const hasPerformanceChart = computed(() => (props.performanceChartData?.labels?.length ?? 0) > 0)
+
+const isLoading = computed(() => !props.data || Object.keys(props.data).length === 0)
+
+const buildMetric = (label, value, formatter = formatNumber) => ({
+    label,
+    value: formatter(value ?? 0),
+    tooltip: formatter(value ?? 0),
+    raw: Number(value ?? 0),
+})
+
+const applyHighlight = (metrics) => {
+    const maxValue = Math.max(...metrics.map(item => item.raw))
+    return metrics.map(item => ({
+        ...item,
+        highlight: maxValue > 0 && item.raw === maxValue,
+    }))
+}
+
+const shiftMetrics = computed(() => applyHighlight([
+    buildMetric('Ca tuần này', props.data.shiftSummary?.shiftsThisWeek),
+    buildMetric('Hoàn thành', props.data.shiftSummary?.completedShifts),
+    buildMetric('Chờ thực hiện', props.data.shiftSummary?.pendingShifts),
+    buildMetric('Check-in trễ', props.data.shiftSummary?.lateCheckIns),
+    buildMetric('Check-out sớm', props.data.shiftSummary?.earlyCheckOuts),
+]))
+
+const performanceMetrics = computed(() => applyHighlight([
+    buildMetric('Doanh thu', props.data.performance?.totalRevenue, formatCurrency),
+    buildMetric('Tổng đơn', props.data.performance?.totalOrders),
+    buildMetric('Đơn TB', props.data.performance?.averageOrderValue, formatCurrency),
+    buildMetric('Feedback (+)', props.data.performance?.positiveFeedbacks),
+    buildMetric('Feedback (−)', props.data.performance?.negativeFeedbacks),
+]))
+
+const attendanceMetrics = computed(() => applyHighlight([
+    buildMetric('Check-in gần nhất', props.data.attendance?.lastCheckIn, formatDateTimeDisplay),
+    buildMetric('Check-out gần nhất', props.data.attendance?.lastCheckOut, formatDateTimeDisplay),
+    buildMetric('Ngày đúng giờ liên tiếp', props.data.attendance?.consecutiveOnTimeDays),
+]))
+
+const payrollMetrics = computed(() => applyHighlight([
+    buildMetric('Chu kỳ hiện tại', props.data.payroll?.estimatedCurrentCycle, formatCurrency),
+    buildMetric('Thưởng', props.data.payroll?.bonusTotal, formatCurrency),
+    buildMetric('Phạt', props.data.payroll?.penaltyTotal, formatCurrency),
+    buildMetric('Điều chỉnh', props.data.payroll?.adjustmentNet, formatCurrency),
+    buildMetric('Chu kỳ trước', props.data.payroll?.lastCyclePaid, formatCurrency),
+]))
 </script>
 
 <style scoped>
 .staff-dashboard-panel {
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 6px 24px rgba(15, 23, 42, 0.08));
 }
 
 .card-header {
@@ -186,9 +244,11 @@ const hasPerformanceChart = computed(() => (props.performanceChartData?.labels?.
 }
 
 .chart-section {
-    border: 1px solid var(--el-border-color);
-    border-radius: var(--radius-lg);
+    border: 1px solid var(--app-border-color);
+    border-radius: 20px;
     padding: 16px;
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 4px 18px rgba(15, 23, 42, 0.06));
 }
 
 .chart-container {
@@ -199,7 +259,10 @@ const hasPerformanceChart = computed(() => (props.performanceChartData?.labels?.
 }
 
 .metric-card {
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 4px 18px rgba(15, 23, 42, 0.06));
 }
 
 .metric-title {
@@ -220,10 +283,17 @@ const hasPerformanceChart = computed(() => (props.performanceChartData?.labels?.
     justify-content: space-between;
     align-items: center;
     font-size: 0.95rem;
+    padding: 6px 10px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
 }
 
 .metric-list strong {
     font-weight: var(--font-bold);
+}
+
+.metric-highlight {
+    background: rgba(99, 102, 241, 0.14);
 }
 
 .attendance-status {

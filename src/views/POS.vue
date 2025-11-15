@@ -3,8 +3,8 @@
         <div class="page-header">
             <h1 class="page-title">Bán Hàng (POS)</h1>
             <div class="header-actions">
-                <el-button type="success" size="large" @click="openTakeAwayModal">
-                    <el-icon style="margin-right: 8px;">
+                <el-button type="success" size="large" class="take-away-btn" @click="openTakeAwayModal">
+                    <el-icon class="take-away-icon">
                         <ShoppingCart/>
                     </el-icon>
                     Đơn Mang đi (Take Away)
@@ -14,7 +14,7 @@
                     placeholder="Chọn khách hàng"
                     filterable
                     clearable
-                    style="width: 200px;"
+                    class="customer-select"
                 >
                     <el-option label="Khách vãng lai" :value="null"/>
                     <el-option
@@ -79,39 +79,22 @@
                         </div>
                     </div>
                     <div v-loading="loadingProducts" class="product-grid">
-                        <div
+                        <ProductCard
                             v-for="product in filteredProducts"
                             :key="product.id"
-                            class="product-card"
-                            @click="addProductToCart(product)"
-                        >
-                            <el-image
-                                :src="product.imageUrl"
-                                fit="cover"
-                                class="product-image"
-                            >
-                                <template #error>
-                                    <div class="image-placeholder">
-                                        <el-icon>
-                                            <Image/>
-                                        </el-icon>
-                                    </div>
-                                </template>
-                            </el-image>
-                            <div class="product-info">
-                                <h4 class="product-name">{{ product.name }}</h4>
-                                <div class="product-meta">
-                                    <span class="product-category">{{ product.categoryName || 'Chưa phân loại' }}</span>
-                                    <span class="product-price">{{ formatCurrency(product.price) }}</span>
-                                </div>
-                            </div>
-                        </div>
+                            :product="product"
+                            @add="addProductToCart"
+                        />
                     </div>
                 </section>
 
                 <section class="table-board">
                     <div class="table-board__header">
-                        <div>
+                        <div class="table-board__title">
+                            <h2>Quản lý bàn</h2>
+                            <p class="table-board__subtitle">
+                                Tổng {{ tableSummary.total }} bàn · Trống {{ tableSummary.EMPTY }} · Phục vụ {{ tableSummary.SERVING }} · Đặt trước {{ tableSummary.RESERVED }}
+                            </p>
                         </div>
                         <div class="table-board__actions">
                             <el-input
@@ -182,42 +165,21 @@
                         </div>
                     </template>
                     <div class="cart-items">
-                        <div v-for="(item, index) in tempCart" :key="index" class="cart-item">
-                            <div class="item-header">
-                                <span class="item-name">{{ item.name }}</span>
-                                <div class="item-actions">
-                                    <el-input-number
-                                        v-model="item.quantity"
-                                        :min="1"
-                                        size="small"
-                                        style="width: 100px;"
-                                    />
-                                    <el-button
-                                        type="danger"
-                                        size="small"
-                                        circle
-                                        @click="removeFromCart(index)"
-                                    >
-                                        <el-icon>
-                                            <X/>
-                                        </el-icon>
-                                    </el-button>
-                                </div>
-                            </div>
-                            <el-input
-                                v-model="item.notes"
-                                placeholder="Ghi chú (ít đá, nhiều đường...)"
-                                size="small"
-                                style="margin-top: 8px;"
-                            />
-                        </div>
+                        <TempCartItem
+                            v-for="(item, index) in tempCart"
+                            :key="index"
+                            :item="item"
+                            @update:quantity="(value) => updateTempCartQuantity(index, value)"
+                            @update:notes="(value) => updateTempCartNotes(index, value)"
+                            @remove="removeFromCart(index)"
+                        />
                     </div>
                     <div class="cart-total">
                         <span>Tổng cộng:</span>
                         <span class="total-amount">{{ formatCurrency(cartTotal) }}</span>
                     </div>
                     <div class="cart-actions">
-                        <el-button type="primary" size="large" @click="showTableSelection = true" style="width: 100%;">
+                        <el-button type="primary" size="large" class="cart-primary-btn" @click="showTableSelection = true">
                             Chọn bàn và Tạo đơn
                         </el-button>
                     </div>
@@ -236,7 +198,7 @@
                 <el-alert
                     type="info"
                     :closable="false"
-                    style="margin-bottom: 20px;"
+                    class="table-dialog-alert"
                 >
                     <template #title>
                         Bạn đã chọn {{ tempCart.length }} món ({{ formatCurrency(cartTotal) }}).
@@ -248,7 +210,7 @@
                     v-model="dialogTableSearch"
                     placeholder="Tìm bàn..."
                     clearable
-                    style="margin-bottom: 20px;"
+                    class="table-dialog-search"
                 >
                     <template #prefix>
                         <el-icon>
@@ -257,14 +219,17 @@
                     </template>
                 </el-input>
 
-                <div v-if="filteredEmptyTables.length === 0" style="text-align: center; padding: 40px; color: #909399;">
-                    <el-icon style="font-size: 48px; margin-bottom: 16px;">
-                        <InfoFilled/>
-                    </el-icon>
-                    <div style="font-size: 16px;">Không tìm thấy bàn trống</div>
-                    <div style="font-size: 14px; margin-top: 8px;">Vui lòng thử từ khóa khác hoặc chọn "Đơn Mang đi"
-                    </div>
-                </div>
+                <el-empty
+                    v-if="filteredEmptyTables.length === 0"
+                    description="Không tìm thấy bàn trống"
+                    class="table-dialog-empty"
+                >
+                    <template #extra>
+                        <div class="table-dialog-empty-extra">
+                            Vui lòng thử từ khóa khác hoặc chọn "Đơn Mang đi".
+                        </div>
+                    </template>
+                </el-empty>
 
                 <div v-else class="table-grid-dialog">
                     <el-card
@@ -289,7 +254,7 @@
 <script setup>
 import {ref, computed, onMounted, watch} from 'vue'
 import {useToast} from 'vue-toastification'
-import {ShoppingCart, Image, X, Search} from '@/components/icons'
+import {ShoppingCart, Search} from '@/components/icons'
 import {InfoFilled} from '@element-plus/icons-vue'
 import {getAllTables} from '@/api/tableService.js'
 import {getAvailableProducts} from '@/api/productService.js'
@@ -297,7 +262,9 @@ import {getAllCategories} from '@/api/categoryService.js'
 import {searchCustomers} from '@/api/customerService.js'
 import {usePosStore} from '@/store/posStore.js'
 import {formatCurrency} from '@/utils/formatters.js'
-import OrderEditorModal from '@/components/OrderEditorModal.vue'
+import OrderEditorModal from '@/components/pos/OrderEditorModal.vue'
+import ProductCard from '@/components/pos/ProductCard.vue'
+import TempCartItem from '@/components/pos/TempCartItem.vue'
 
 const toast = useToast()
 const posStore = usePosStore()
@@ -517,6 +484,18 @@ const clearTempCart = () => {
     toast.info('Đã xóa giỏ hàng')
 }
 
+const updateTempCartQuantity = (index, value) => {
+    const item = tempCart.value[index]
+    if (!item) return
+    item.quantity = value
+}
+
+const updateTempCartNotes = (index, value) => {
+    const item = tempCart.value[index]
+    if (!item) return
+    item.notes = value
+}
+
 const createOrderFromCart = async (table) => {
     if (tempCart.value.length === 0) {
         toast.warning('Giỏ hàng trống')
@@ -599,14 +578,45 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     display: flex;
     gap: 24px;
     align-items: flex-start;
+    width: 100%;
+    min-height: 0;
 }
 
 .pos-layout .menu-section {
-    flex: 1.6;
+    flex: 3;
+    min-width: 0;
 }
 
 .pos-layout .table-board {
-    flex: 1;
+    flex: 2;
+    min-width: 0;
+}
+
+.table-board {
+    display: flex;
+    flex-direction: column;
+    background: #fbfbff;
+    border-radius: 20px;
+    border: 1px solid #efe6da;
+    box-shadow: 0 12px 24px rgba(123, 86, 33, 0.04);
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-board__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.table-board__header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f2937;
 }
 
 .filter-control {
@@ -616,9 +626,12 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 .menu-section {
     background: #fefcf9;
     border-radius: 20px;
-    border: 1px solid #f0eae3;
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.04);
+    border: 1px solid #efe6da;
+    box-shadow: 0 12px 24px rgba(123, 86, 33, 0.04);
     padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .menu-header-bar {
@@ -637,7 +650,7 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 .menu-title {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #1f2937;
+    color: #4b3c2f;
 }
 
 .menu-filters {
@@ -650,46 +663,53 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 16px;
-    max-height: 68vh;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #c0c0c0 #f8f8f8;
 }
 
+.product-grid::-webkit-scrollbar,
+.board-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.product-grid::-webkit-scrollbar-thumb,
+.board-grid::-webkit-scrollbar-thumb {
+    background-color: #bdbdbd;
+    border-radius: 8px;
+}
+
+.product-grid::-webkit-scrollbar:horizontal {
+    display: none;
+}
 
 .product-card {
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid transparent;
-    padding: 12px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    background: #fffdfa;
+    border-radius: 14px;
+    border: 1px solid #f2e9dd;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-}
-
-.product-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 16px;
-    border: 1px solid rgba(139, 115, 85, 0.08);
-    pointer-events: none;
+    box-shadow: 0 6px 18px rgba(123, 86, 33, 0.08);
 }
 
 .product-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
-    border-color: rgba(139, 115, 85, 0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 18px 28px rgba(123, 86, 33, 0.12);
+    border-color: #e7d5be;
 }
 
 .product-image {
     width: 100%;
-    max-height: 140px;
-    min-height: 140px;
+    height: 140px;
     border-radius: 8px;
     overflow: hidden;
     display: block;
@@ -732,14 +752,6 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     color: #6b7280;
 }
 
-.product-category {
-    background: rgba(139, 115, 85, 0.1);
-    color: #8b7355;
-    padding: 2px 10px;
-    border-radius: 999px;
-    font-weight: 600;
-}
-
 .product-name {
     margin: 0 0 6px 0;
     font-weight: 600;
@@ -753,44 +765,11 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     -webkit-box-orient: vertical;
 }
 
-.product-grid, .board-grid {
-    scrollbar-width: thin;
-    scrollbar-color: #c0c0c0 #f8f8f8;
-}
-
-.product-grid::-webkit-scrollbar,
-.board-grid::-webkit-scrollbar {
-    width: 6px;
-}
-
-.product-grid::-webkit-scrollbar-thumb,
-.board-grid::-webkit-scrollbar-thumb {
-    background-color: #bdbdbd;
-    border-radius: 8px;
-}
-
-.product-grid::-webkit-scrollbar:horizontal {
-    display: none;
-}
-
-
 .product-price {
     margin: 0;
-    color: #8b7355 !important;
+    color: #6b4f2c !important;
     font-weight: 700;
     align-items: center;
-}
-
-.table-board__header h2 {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.table-board__header p {
-    margin: 4px 0 0;
-    color: #6b7280;
 }
 
 .table-board__actions {
@@ -809,27 +788,13 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 .summary-card {
     border-radius: 16px;
     padding: 16px;
-    box-shadow: 0 18px 30px rgba(15, 23, 42, 0.06);
-    color: #1f2937;
+    box-shadow: 0 10px 22px rgba(67, 56, 202, 0.08);
+    color: #1f1c3d;
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
-
-.summary-card.total {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-}
-
-.summary-card.empty {
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-}
-
-.summary-card.serving {
-    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
-}
-
-.summary-card.reserved {
-    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    border: 1px solid rgba(67, 56, 202, 0.08);
+    background: #ffffff;
 }
 
 .summary-label {
@@ -843,63 +808,74 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     font-weight: 700;
 }
 
-
 .board-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 16px;
-    max-height: 68vh;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #c0c0c0 #f8f8f8;
 }
+
 
 .board-card {
     border-radius: 18px;
     padding: 18px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    border: 1px solid transparent;
-    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+    border: 1px solid #ebe7f5;
+    box-shadow: 0 12px 28px rgba(47, 48, 87, 0.08);
     min-height: 180px;
+    justify-content: space-between;
+    background: #ffffff;
+    position: relative;
 }
 
 .board-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 34px rgba(47, 48, 87, 0.14);
+    border-color: rgba(99, 102, 241, 0.28);
 }
 
 .board-card--empty {
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: rgba(34, 197, 94, 0.25);
+    background: linear-gradient(150deg, rgba(34, 197, 94, 0.08) 0%, #ffffff 70%);
 }
 
 .board-card--serving {
-    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+    border-color: rgba(249, 115, 22, 0.25);
+    background: linear-gradient(150deg, rgba(249, 115, 22, 0.08) 0%, #ffffff 70%);
 }
 
 .board-card--reserved {
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border-color: rgba(79, 70, 229, 0.25);
+    background: linear-gradient(150deg, rgba(79, 70, 229, 0.08) 0%, #ffffff 70%);
 }
 
 .board-card__top {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
 }
 
 .board-card__name {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #1f2937;
+    color: #322f58;
 }
 
 .board-card__info {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    color: #374151;
+    color: #4c4a6f;
 }
 
 .board-card__info span {
@@ -913,12 +889,22 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 400px;
+    width: min(400px, calc(100vw - 32px));
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
     z-index: 1000;
+    pointer-events: none;
 }
 
 .temp-cart-card {
     box-shadow: var(--el-box-shadow-dark);
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    pointer-events: auto;
+    border-radius: 18px;
+    border: 1px solid #ece5da;
+    background: #fffcf7;
 }
 
 .cart-header {
@@ -931,11 +917,13 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
 .cart-title {
     font-weight: 600;
     font-size: 1.05rem;
+    color: #3c3123;
 }
 
 .cart-items {
     max-height: 300px;
     overflow-y: auto;
+    padding-right: 4px;
 }
 
 .cart-item {
@@ -967,13 +955,13 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     display: flex;
     justify-content: space-between;
     padding: 15px 0;
-    border-top: 2px solid #e4e7ed;
+    border-top: 2px solid #ede1cf;
     font-size: 1.1rem;
     font-weight: 600;
 }
 
 .total-amount {
-    color: var(--el-color-primary);
+    color: #1a9b63;
     font-size: 1.3rem;
 }
 
@@ -990,22 +978,24 @@ watch(() => posStore.isModalOpen, (newValue, oldValue) => {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
-    max-height: 400px;
+    max-height: min(400px, 50vh);
     overflow-y: auto;
 }
 
 .table-card-dialog {
     cursor: pointer;
     text-align: center;
-    transition: all 0.2s ease;
-    border: 2px solid var(--el-color-success-light-3);
-    background-color: var(--el-color-success-light-9);
+    transition: all 0.18s ease;
+    border: 1px solid #e9ecef;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
 }
 
 .table-card-dialog:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--el-box-shadow);
-    border-color: var(--el-color-success);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.32);
 }
 
 /* Animations */

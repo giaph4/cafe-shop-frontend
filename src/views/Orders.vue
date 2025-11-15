@@ -169,7 +169,7 @@ import {
     payOrder,
     getOrderById
 } from '@/api/orderService'
-import OrderDetailModal from '@/components/OrderDetailModal.vue'
+import OrderDetailModal from '@/components/orders/OrderDetailModal.vue'
 
 const toast = useToast()
 const authStore = useAuthStore()

@@ -40,7 +40,13 @@
                     <el-button type="primary" plain size="small" :loading="loading" @click="handleRefresh">
                         Tải lại
                     </el-button>
-                    <span v-if="formattedLastUpdated" class="updated-at">Cập nhật lúc {{ formattedLastUpdated }}</span>
+                    <el-tooltip
+                        v-if="formattedLastUpdated"
+                        :content="dashboardUpdatedTooltip"
+                        placement="bottom"
+                    >
+                        <span class="updated-at">Cập nhật lúc {{ formattedLastUpdated }}</span>
+                    </el-tooltip>
                 </div>
             </div>
 
@@ -54,34 +60,26 @@
 
             <el-skeleton v-if="loading && !dashboardData" :rows="6" animated/>
 
-            <AdminDashboardPanel
-                v-if="activeRole === 'ADMIN' && dashboardData"
-                :data="dashboardData"
-                :revenue-chart-data="adminRevenueChart"
-                :product-chart-data="adminProductChart"
-            />
-            <ManagerDashboardPanel
-                v-if="activeRole === 'MANAGER' && dashboardData"
-                :data="dashboardData"
-                :shift-chart-data="managerShiftChart"
-                :team-chart-data="managerTeamChart"
-            />
-            <StaffDashboardPanel
-                v-if="activeRole === 'STAFF' && dashboardData"
-                :data="dashboardData"
-                title="Dashboard nhân viên"
-                :last-updated="formattedLastUpdated"
-                :performance-chart-data="staffPerformanceChart"
+            <component
+                v-if="activePanel"
+                :is="activePanel.component"
+                v-bind="activePanel.props"
             />
 
+            <el-skeleton v-if="selfLoading" :rows="4" animated />
+
             <StaffDashboardPanel
-                v-if="shouldShowSelfStaffPanel"
-                :data="selfStaffData"
-                title="Dashboard cá nhân"
-                subtitle="Dữ liệu dành cho nhân viên"
-                :last-updated="formattedSelfUpdated"
-                :performance-chart-data="selfPerformanceChart"
-                class="mt-24"
+                v-if="shouldShowSelfStaffPanel && selfStaffPanelProps"
+                v-bind="selfStaffPanelProps"
+                class="mt-24 highlight-panel"
+            />
+
+            <el-alert
+                v-if="selfCacheHint"
+                type="info"
+                :title="selfCacheHint"
+                :closable="false"
+                class="alert-block"
             />
 
             <section v-if="canViewStaffDashboard" class="impersonate-section">
@@ -128,12 +126,16 @@
                     />
 
                     <StaffDashboardPanel
-                        v-if="impersonate.data"
-                        :data="impersonate.data"
-                        :title="`Dashboard nhân viên #${impersonate.userId}`"
-                        subtitle="Dữ liệu truy cập hộ"
-                        :last-updated="formattedImpersonateUpdated"
-                        :performance-chart-data="impersonatePerformanceChart"
+                        v-if="impersonatePanelProps"
+                        v-bind="impersonatePanelProps"
+                    />
+
+                    <el-alert
+                        v-if="impersonateCacheHint"
+                        type="info"
+                        :title="impersonateCacheHint"
+                        :closable="false"
+                        class="alert-block"
                     />
                 </el-card>
             </section>
@@ -189,6 +191,11 @@ const errorMessage = ref('')
 const lastUpdated = ref('')
 const selfLastUpdated = ref('')
 const dashboardCache = reactive({})
+const isDashboardCached = ref(false)
+const isSelfCached = ref(false)
+const isImpersonateCached = ref(false)
+const selfLoading = ref(false)
+const staffDashboardAvailable = ref(true)
 
 const impersonate = reactive({
     userId: '',
@@ -205,6 +212,8 @@ const switchStyle = computed(() => ({
     '--el-switch-on-color': SWITCH_COLORS.active,
     '--el-switch-off-color': SWITCH_COLORS.inactive,
 }))
+
+const hasSelfStaffRole = computed(() => (authStore.roles || []).includes('ROLE_STAFF'))
 
 const availableRoles = computed(() => {
     const roles = authStore.roles || []
@@ -280,14 +289,102 @@ const formattedLastUpdated = computed(() => (lastUpdated.value ? formatDateTimeD
 const formattedSelfUpdated = computed(() => (selfLastUpdated.value ? formatDateTimeDisplay(selfLastUpdated.value) : ''))
 const formattedImpersonateUpdated = computed(() => (impersonate.lastUpdated ? formatDateTimeDisplay(impersonate.lastUpdated) : ''))
 
-const shouldShowSelfStaffPanel = computed(() => activeRole.value !== 'STAFF' && !!selfStaffData.value)
+const dashboardUpdatedTooltip = computed(() => {
+    if (!formattedLastUpdated.value) return 'Chưa có dữ liệu.'
+    return isDashboardCached.value
+        ? `Dữ liệu hiển thị từ cache (cập nhật lúc ${formattedLastUpdated.value}).`
+        : `Dữ liệu đồng bộ từ máy chủ (cập nhật lúc ${formattedLastUpdated.value}).`
+})
+
+const selfCacheHint = computed(() => {
+    if (!isSelfCached.value) return ''
+    const timestamp = formattedSelfUpdated.value
+    return timestamp
+        ? `Dữ liệu cá nhân lấy từ cache (cập nhật lúc ${timestamp}).`
+        : 'Dữ liệu cá nhân lấy từ cache.'
+})
+
+const impersonateCacheHint = computed(() => {
+    if (!isImpersonateCached.value) return ''
+    const timestamp = formattedImpersonateUpdated.value
+    const target = impersonate.userId ? ` #${impersonate.userId}` : ''
+    return timestamp
+        ? `Dashboard nhân viên${target} lấy từ cache (cập nhật lúc ${timestamp}).`
+        : `Dashboard nhân viên${target} lấy từ cache.`
+})
+
+const activePanel = computed(() => {
+    if (!dashboardData.value) return null
+    switch (activeRole.value) {
+        case 'ADMIN':
+            return {
+                component: AdminDashboardPanel,
+                props: {
+                    data: dashboardData.value,
+                    revenueChartData: adminRevenueChart.value,
+                    productChartData: adminProductChart.value,
+                },
+            }
+        case 'MANAGER':
+            return {
+                component: ManagerDashboardPanel,
+                props: {
+                    data: dashboardData.value,
+                    shiftChartData: managerShiftChart.value,
+                    teamChartData: managerTeamChart.value,
+                },
+            }
+        case 'STAFF':
+        default:
+            return {
+                component: StaffDashboardPanel,
+                props: {
+                    data: dashboardData.value,
+                    title: 'Dashboard nhân viên',
+                    lastUpdated: formattedLastUpdated.value,
+                    performanceChartData: staffPerformanceChart.value,
+                },
+            }
+    }
+})
+
+const selfStaffPanelProps = computed(() => {
+    if (!selfStaffData.value) return null
+    return {
+        data: selfStaffData.value,
+        title: 'Dashboard cá nhân',
+        subtitle: 'Dữ liệu dành cho nhân viên',
+        lastUpdated: formattedSelfUpdated.value,
+        performanceChartData: selfPerformanceChart.value,
+    }
+})
+
+const impersonatePanelProps = computed(() => {
+    if (!impersonate.data) return null
+    return {
+        data: impersonate.data,
+        title: `Dashboard nhân viên #${impersonate.userId}`,
+        subtitle: 'Dữ liệu truy cập hộ',
+        lastUpdated: formattedImpersonateUpdated.value,
+        performanceChartData: impersonatePerformanceChart.value,
+    }
+})
+
+const shouldShowSelfStaffPanel = computed(() => hasSelfStaffRole.value && activeRole.value !== 'STAFF' && !!selfStaffPanelProps.value)
 const canViewStaffDashboard = computed(() => availableRoles.value.includes('MANAGER') || availableRoles.value.includes('ADMIN'))
 const canSubmitImpersonate = computed(() => !!impersonate.userId?.trim())
 
-const serviceMap = {
-    ADMIN: getAdminDashboard,
-    MANAGER: getManagerDashboard,
-    STAFF: getStaffDashboard,
+function serviceForRole(role) {
+    switch (role) {
+        case 'ADMIN':
+            return getAdminDashboard
+        case 'MANAGER':
+            return getManagerDashboard
+        case 'STAFF':
+            return hasSelfStaffRole.value && staffDashboardAvailable.value ? getStaffDashboard : null
+        default:
+            return null
+    }
 }
 
 const adminRevenueChart = computed(() => buildLineChart(
@@ -468,18 +565,28 @@ function resolveErrorMessage(error) {
 
 async function loadDashboard(role, { force = false } = {}) {
     const key = cacheKeyForRole(role)
-    const service = serviceMap[role]
-    if (!service) return
+    const service = serviceForRole(role)
+    if (!service) {
+        if (role === 'STAFF' && !hasSelfStaffRole.value) {
+            dashboardData.value = null
+            lastUpdated.value = ''
+            isDashboardCached.value = false
+            errorMessage.value = 'Dashboard nhân viên chỉ khả dụng cho tài khoản có quyền nhân viên.'
+        }
+        return
+    }
 
     if (!force) {
         const cached = readCache(key)
         if (cached) {
             dashboardData.value = cached.data
             lastUpdated.value = cached.timestamp
+            isDashboardCached.value = true
             return
         }
     }
 
+    isDashboardCached.value = false
     loading.value = true
     errorMessage.value = ''
     try {
@@ -488,17 +595,23 @@ async function loadDashboard(role, { force = false } = {}) {
         dashboardData.value = data
         const { timestamp } = writeCache(key, data)
         lastUpdated.value = timestamp
+        isDashboardCached.value = false
     } catch (error) {
         errorMessage.value = resolveErrorMessage(error)
         toast.error(errorMessage.value)
+        if (role === 'STAFF' && (error?.response?.status ?? 0) >= 500) {
+            staffDashboardAvailable.value = false
+        }
     } finally {
         loading.value = false
     }
 }
 
 async function loadSelfStaffDashboard({ force = false } = {}) {
-    if (!availableRoles.value.includes('STAFF')) {
+    if (!hasSelfStaffRole.value || !staffDashboardAvailable.value) {
         selfStaffData.value = null
+        selfLoading.value = false
+        isSelfCached.value = false
         return
     }
 
@@ -508,10 +621,14 @@ async function loadSelfStaffDashboard({ force = false } = {}) {
         if (cached) {
             selfStaffData.value = cached.data
             selfLastUpdated.value = cached.timestamp
+            isSelfCached.value = true
+            selfLoading.value = false
             return
         }
     }
 
+    selfLoading.value = true
+    isSelfCached.value = false
     try {
         const response = await getStaffDashboard()
         const data = response?.data ?? response
@@ -520,6 +637,12 @@ async function loadSelfStaffDashboard({ force = false } = {}) {
         selfLastUpdated.value = timestamp
     } catch (error) {
         console.warn('Không thể tải dashboard self staff', error)
+        if ((error?.response?.status ?? 0) >= 500) {
+            staffDashboardAvailable.value = false
+            toast.warning('Dashboard nhân viên tạm thời không khả dụng. Vui lòng thử lại sau.')
+        }
+    } finally {
+        selfLoading.value = false
     }
 }
 
@@ -553,6 +676,7 @@ async function handleFetchStaffDashboard() {
     if (!canSubmitImpersonate.value) return
     impersonate.loading = true
     impersonate.error = ''
+    isImpersonateCached.value = false
     try {
         const userId = impersonate.userId.trim()
         const key = cacheKeyForStaff(userId)
@@ -560,12 +684,14 @@ async function handleFetchStaffDashboard() {
         if (cached) {
             impersonate.data = cached.data
             impersonate.lastUpdated = cached.timestamp
+            isImpersonateCached.value = true
         } else {
             const response = await getStaffDashboardByUserId(userId)
             const data = response?.data ?? response
             impersonate.data = data
             const { timestamp } = writeCache(key, data)
             impersonate.lastUpdated = timestamp
+            isImpersonateCached.value = false
         }
         toast.success(`Đã tải dashboard nhân viên #${userId}`)
     } catch (error) {
@@ -573,6 +699,7 @@ async function handleFetchStaffDashboard() {
         toast.error(impersonate.error)
         impersonate.data = null
         impersonate.lastUpdated = ''
+        isImpersonateCached.value = false
     } finally {
         impersonate.loading = false
     }
@@ -583,12 +710,15 @@ function resetImpersonation() {
     impersonate.data = null
     impersonate.lastUpdated = ''
     impersonate.error = ''
+    isImpersonateCached.value = false
 }
 
 watch(showAdvanced, (value) => {
     persistAdvancedView(value)
     if (value) {
         ensureAdvancedData()
+    } else {
+        selfLoading.value = false
     }
 })
 
@@ -616,6 +746,35 @@ onMounted(() => {
 .view-toggle {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    background: var(--app-surface-muted);
+    border: 1px solid var(--app-border-color);
+    box-shadow: var(--card-shadow, 0 2px 6px rgba(15, 23, 42, 0.06));
+}
+
+.toggle-label {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--app-text-secondary, #4b5563);
+}
+
+.view-toggle :deep(.el-switch) {
+    --el-switch-width: 72px;
+    --el-switch-height: 32px;
+    box-shadow: none;
+    border-radius: 999px;
+}
+
+.view-toggle :deep(.el-switch__core) {
+    border-radius: inherit;
+}
+
+.view-toggle :deep(.el-switch__label.is-active) {
+    font-weight: 600;
 }
 
 .advanced-dashboard {
@@ -630,27 +789,55 @@ onMounted(() => {
     justify-content: space-between;
     align-items: flex-start;
     gap: 16px;
+    padding: 20px 24px;
+    border-radius: 20px;
+    background: var(--app-surface-muted);
+    border: 1px solid var(--app-border-color);
+    box-shadow: var(--card-shadow, 0 10px 30px rgba(31, 41, 55, 0.08));
 }
 
 .page-title {
     font-size: 1.8rem;
     font-weight: var(--font-semibold);
+    color: var(--app-text-color);
 }
 
 .page-subtitle {
     margin-top: 4px;
-    color: var(--gray-600);
+    color: var(--app-text-secondary, var(--gray-600));
+}
+
+.page-header__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .page-header__actions {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
+}
+
+.page-header__actions :deep(.el-radio-group) {
+    background: var(--app-surface-alt, rgba(255, 255, 255, 0.6));
+    border-radius: 999px;
+    padding: 4px;
+}
+
+.page-header__actions :deep(.el-radio-button__inner) {
+    min-width: 90px;
+}
+
+.page-header__actions :deep(.el-button.is-plain) {
+    border-radius: 999px;
+    padding-inline: 18px;
 }
 
 .updated-at {
     font-size: 0.85rem;
-    color: var(--gray-600);
+    color: var(--app-text-secondary, var(--gray-600));
 }
 
 .alert-block {
@@ -666,14 +853,36 @@ onMounted(() => {
 }
 
 .impersonate-card {
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 8px 24px rgba(15, 23, 42, 0.08));
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
 .impersonate-form {
-    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.impersonate-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.highlight-panel {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow, 0 6px 20px rgba(15, 23, 42, 0.08));
+}
+
+.alert-block {
+    margin-bottom: 16px;
+    border-radius: 16px;
 }
 
 .impersonate-actions {

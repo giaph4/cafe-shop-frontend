@@ -2,7 +2,7 @@
     <div class="admin-dashboard-panel">
         <el-row :gutter="16" class="chart-row">
             <el-col :xs="24" :md="16">
-                <el-card shadow="never" class="chart-card">
+                <el-card shadow="never" class="chart-card" v-loading="isLoading">
                     <template #header>
                         <span>Doanh thu theo ngày</span>
                     </template>
@@ -13,7 +13,7 @@
                 </el-card>
             </el-col>
             <el-col :xs="24" :md="8">
-                <el-card shadow="never" class="chart-card">
+                <el-card shadow="never" class="chart-card" v-loading="isLoading">
                     <template #header>
                         <span>Top sản phẩm (chart)</span>
                     </template>
@@ -27,40 +27,46 @@
 
         <el-row :gutter="16" class="admin-metric-row">
             <el-col :xs="24" :md="8">
-                <el-card shadow="never" class="metric-card">
+                <el-card shadow="never" class="metric-card" v-loading="isLoading">
                     <template #header>
                         <span>Doanh thu</span>
                     </template>
                     <ul class="metric-list">
-                        <li v-for="item in revenueMetrics" :key="item.label">
+                        <li v-for="item in revenueMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
                             <span>{{ item.label }}</span>
-                            <strong>{{ item.value }}</strong>
+                            <el-tooltip :content="item.tooltip" placement="top">
+                                <strong class="metric-value">{{ item.value }}</strong>
+                            </el-tooltip>
                         </li>
                     </ul>
                 </el-card>
             </el-col>
             <el-col :xs="24" :md="8">
-                <el-card shadow="never" class="metric-card">
+                <el-card shadow="never" class="metric-card" v-loading="isLoading">
                     <template #header>
                         <span>Đơn hàng</span>
                     </template>
                     <ul class="metric-list">
-                        <li v-for="item in orderMetrics" :key="item.label">
+                        <li v-for="item in orderMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
                             <span>{{ item.label }}</span>
-                            <strong>{{ item.value }}</strong>
+                            <el-tooltip :content="item.tooltip" placement="top">
+                                <strong class="metric-value">{{ item.value }}</strong>
+                            </el-tooltip>
                         </li>
                     </ul>
                 </el-card>
             </el-col>
             <el-col :xs="24" :md="8">
-                <el-card shadow="never" class="metric-card">
+                <el-card shadow="never" class="metric-card" v-loading="isLoading">
                     <template #header>
                         <span>Tồn kho & Nhà cung cấp</span>
                     </template>
                     <ul class="metric-list">
-                        <li v-for="item in inventoryMetrics" :key="item.label">
+                        <li v-for="item in inventoryMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
                             <span>{{ item.label }}</span>
-                            <strong>{{ item.value }}</strong>
+                            <el-tooltip :content="item.tooltip" placement="top">
+                                <strong class="metric-value">{{ item.value }}</strong>
+                            </el-tooltip>
                         </li>
                     </ul>
                 </el-card>
@@ -69,13 +75,14 @@
 
         <el-row :gutter="16">
             <el-col :xs="24" :md="8">
-                <el-card shadow="never" class="list-card">
+                <el-card shadow="never" class="list-card" v-loading="isLoading">
                     <template #header>
                         <span>Top nhân viên</span>
                     </template>
                     <EasyDataTable
                         :headers="staffHeaders"
                         :items="topStaff"
+                        :loading="isLoading"
                         table-class-name="data-table"
                         empty-message="Chưa có dữ liệu"
                     >
@@ -85,13 +92,14 @@
                 </el-card>
             </el-col>
             <el-col :xs="24" :md="8">
-                <el-card shadow="never" class="list-card">
+                <el-card shadow="never" class="list-card" v-loading="isLoading">
                     <template #header>
                         <span>Top sản phẩm</span>
                     </template>
                     <EasyDataTable
                         :headers="productHeaders"
                         :items="topProducts"
+                        :loading="isLoading"
                         table-class-name="data-table"
                         empty-message="Chưa có dữ liệu"
                     >
@@ -101,13 +109,14 @@
                 </el-card>
             </el-col>
             <el-col :xs="24" :md="8">
-                <el-card shadow="never" class="list-card">
+                <el-card shadow="never" class="list-card" v-loading="isLoading">
                     <template #header>
                         <span>Top khách hàng</span>
                     </template>
                     <EasyDataTable
                         :headers="customerHeaders"
                         :items="topCustomers"
+                        :loading="isLoading"
                         table-class-name="data-table"
                         empty-message="Chưa có dữ liệu"
                     >
@@ -122,6 +131,7 @@
             v-if="alerts.length"
             shadow="never"
             class="alert-card"
+            v-loading="isLoading"
         >
             <template #header>
                 <span>Cảnh báo</span>
@@ -183,36 +193,57 @@ const customerHeaders = [
     { text: 'Chi tiêu', value: 'spend', sortable: true },
 ]
 
+const isLoading = computed(() => !props.data || Object.keys(props.data).length === 0)
+
+const createMetric = (label, formatted, raw, formatFn = formatNumber) => ({
+    label,
+    value: formatted,
+    tooltip: formatFn(raw ?? 0),
+    highlight: Number(raw ?? 0) > 0 && raw === Math.max(raw ?? 0),
+    raw: raw ?? 0,
+})
+
+const applyHighlight = (metrics) => {
+    const maxValue = Math.max(...metrics.map(item => Number(item.raw ?? 0)))
+    return metrics.map(item => ({
+        ...item,
+        highlight: maxValue > 0 && Number(item.raw ?? 0) === maxValue,
+    }))
+}
+
 const revenueMetrics = computed(() => {
     const revenue = props.data.revenue ?? {}
-    return [
-        { label: 'Hôm nay', value: formatCurrency(revenue.today ?? 0) },
-        { label: 'Tháng', value: formatCurrency(revenue.month ?? 0) },
-        { label: 'Năm', value: formatCurrency(revenue.year ?? 0) },
-        { label: 'Giá trị đơn TB', value: formatCurrency(revenue.averageOrderValue ?? 0) },
-        { label: 'Lợi nhuận hôm nay', value: formatCurrency(revenue.todayProfit ?? 0) },
-        { label: 'Lợi nhuận tháng', value: formatCurrency(revenue.monthProfit ?? 0) },
+    const metrics = [
+        createMetric('Hôm nay', formatCurrency(revenue.today ?? 0), revenue.today ?? 0, formatCurrency),
+        createMetric('Tháng', formatCurrency(revenue.month ?? 0), revenue.month ?? 0, formatCurrency),
+        createMetric('Năm', formatCurrency(revenue.year ?? 0), revenue.year ?? 0, formatCurrency),
+        createMetric('Giá trị đơn TB', formatCurrency(revenue.averageOrderValue ?? 0), revenue.averageOrderValue ?? 0, formatCurrency),
+        createMetric('Lợi nhuận hôm nay', formatCurrency(revenue.todayProfit ?? 0), revenue.todayProfit ?? 0, formatCurrency),
+        createMetric('Lợi nhuận tháng', formatCurrency(revenue.monthProfit ?? 0), revenue.monthProfit ?? 0, formatCurrency),
     ]
+    return applyHighlight(metrics)
 })
 
 const orderMetrics = computed(() => {
     const orders = props.data.orders ?? {}
-    return [
-        { label: 'Đơn hôm nay', value: formatNumber(orders.today ?? 0) },
-        { label: 'Đơn tháng', value: formatNumber(orders.month ?? 0) },
-        { label: 'Đơn năm', value: formatNumber(orders.year ?? 0) },
-        { label: 'Hủy hôm nay', value: formatNumber(orders.cancelledToday ?? 0) },
-        { label: 'Hủy tháng', value: formatNumber(orders.cancelledMonth ?? 0) },
+    const metrics = [
+        createMetric('Đơn hôm nay', formatNumber(orders.today ?? 0), orders.today ?? 0),
+        createMetric('Đơn tháng', formatNumber(orders.month ?? 0), orders.month ?? 0),
+        createMetric('Đơn năm', formatNumber(orders.year ?? 0), orders.year ?? 0),
+        createMetric('Hủy hôm nay', formatNumber(orders.cancelledToday ?? 0), orders.cancelledToday ?? 0),
+        createMetric('Hủy tháng', formatNumber(orders.cancelledMonth ?? 0), orders.cancelledMonth ?? 0),
     ]
+    return applyHighlight(metrics)
 })
 
 const inventoryMetrics = computed(() => {
     const inventory = props.data.inventory ?? {}
-    return [
-        { label: 'Nguyên liệu thấp', value: formatNumber(inventory.lowStockItems ?? 0) },
-        { label: 'Nhà cung cấp', value: formatNumber(inventory.totalSuppliers ?? 0) },
-        { label: 'PO chờ duyệt', value: formatNumber(inventory.pendingPurchaseOrders ?? 0) },
+    const metrics = [
+        createMetric('Nguyên liệu thấp', formatNumber(inventory.lowStockItems ?? 0), inventory.lowStockItems ?? 0),
+        createMetric('Nhà cung cấp', formatNumber(inventory.totalSuppliers ?? 0), inventory.totalSuppliers ?? 0),
+        createMetric('PO chờ duyệt', formatNumber(inventory.pendingPurchaseOrders ?? 0), inventory.pendingPurchaseOrders ?? 0),
     ]
+    return applyHighlight(metrics)
 })
 
 const topStaff = computed(() => (Array.isArray(props.data.topStaff) ? props.data.topStaff.slice(0, 10) : []))
@@ -249,7 +280,10 @@ function severityTagType(severity) {
 }
 
 .chart-card {
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 6px 24px rgba(15, 23, 42, 0.08));
 }
 
 .chart-container {
@@ -262,7 +296,10 @@ function severityTagType(severity) {
 .metric-card,
 .list-card,
 .alert-card {
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 6px 24px rgba(15, 23, 42, 0.08));
 }
 
 .metric-list {
@@ -278,10 +315,17 @@ function severityTagType(severity) {
     justify-content: space-between;
     align-items: center;
     font-size: 0.95rem;
+    padding: 6px 10px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
 }
 
 .metric-list strong {
     font-weight: var(--font-bold);
+}
+
+.metric-highlight {
+    background: rgba(22, 163, 74, 0.12);
 }
 
 .alert-list {

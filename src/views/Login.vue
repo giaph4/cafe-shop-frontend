@@ -24,7 +24,7 @@
                     <el-form-item>
                         <label class="form-label">Tên đăng nhập</label>
                         <el-input
-                            v-model="username"
+                            v-model="form.username"
                             placeholder="Nhập tên đăng nhập"
                             size="large"
                             prefix-icon="User"
@@ -34,7 +34,7 @@
                     <el-form-item>
                         <label class="form-label">Mật khẩu</label>
                         <el-input
-                            v-model="password"
+                            v-model="form.password"
                             type="password"
                             placeholder="Nhập mật khẩu"
                             show-password
@@ -50,17 +50,22 @@
                         native-type="submit"
                         class="login-button"
                         :loading="loading"
+                        :disabled="!canSubmit"
                         size="large"
                     >
-                        {{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+                        {{ submitLabel }}
                     </el-button>
 
                     <div class="demo-accounts">
                         <p class="demo-title">Tài khoản demo:</p>
                         <div class="demo-list">
-                            <span class="demo-item">🏆messi / password1wc8bld</span>
-                            <span class="demo-item">🗣️ronaldo / 0wc3/5</span>
-                            <span class="demo-item">📜hẹ hẹ/ password123</span>
+                            <span
+                                v-for="account in demoAccounts"
+                                :key="account.id"
+                                class="demo-item"
+                            >
+                                {{ account.display }}
+                            </span>
                         </div>
                     </div>
                 </el-form>
@@ -70,36 +75,67 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {useAuthStore} from '@/store/auth'
-import {useToast} from 'vue-toastification'
+import { computed, reactive, ref, watch } from 'vue'
+import { useAuthStore } from '@/store/auth'
+import { useToast } from 'vue-toastification'
+
+defineOptions({ name: 'LoginView' })
 
 const authStore = useAuthStore()
 const toast = useToast()
 
-const username = ref('')
-const password = ref('')
+const form = reactive({
+    username: '',
+    password: '',
+})
 const loading = ref(false)
-const errorMsg = ref(null)
+const errorMsg = ref('')
+
+const demoAccounts = Object.freeze([
+    { id: 'messi', display: '🏆 messi / password1wc8bld' },
+    { id: 'ronaldo', display: '🗣️ ronaldo / 0wc3/5' },
+    { id: 'he-he', display: '📜 hẹ hẹ / password123' },
+])
+
+const submitLabel = computed(() => (loading.value ? 'Đang đăng nhập...' : 'Đăng nhập'))
+const hasCredentials = computed(() =>
+    form.username.trim().length > 0 && form.password.trim().length > 0,
+)
+const canSubmit = computed(() => hasCredentials.value && !loading.value)
+
+watch(
+    () => [form.username, form.password],
+    () => {
+        if (errorMsg.value) {
+            errorMsg.value = ''
+        }
+    },
+)
 
 const handleLogin = async () => {
+    if (!canSubmit.value) {
+        if (!hasCredentials.value) {
+            errorMsg.value = 'Vui lòng nhập tên đăng nhập và mật khẩu.'
+        }
+        return
+    }
+
     loading.value = true
-    errorMsg.value = null
+    errorMsg.value = ''
+
+    const payload = {
+        username: form.username.trim(),
+        password: form.password,
+    }
+
     try {
-        await authStore.login({
-            username: username.value,
-            password: password.value,
-        })
-
-        // Auth store (đã sửa) sẽ tự động giải mã token và lấy tên
-        toast.success(`Chào mừng trở lại, ${authStore.userFullName}! hẹ hẹ`)
-        // Điều hướng đã được xử lý trong authStore
-
+        await authStore.login(payload)
+        toast.success(`Chào mừng trở lại, ${authStore.userFullName}!`)
     } catch (error) {
-        console.error(error);
-        const apiError = error.response?.data?.message || 'Lỗi đăng nhập. Vui lòng thử lại.';
-        errorMsg.value = apiError;
-        toast.error(apiError);
+        console.error('Login error:', error)
+        const apiError = error.response?.data?.message ?? 'Lỗi đăng nhập. Vui lòng thử lại.'
+        errorMsg.value = apiError
+        toast.error(apiError)
     } finally {
         loading.value = false
     }

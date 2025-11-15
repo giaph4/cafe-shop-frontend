@@ -1,25 +1,34 @@
 import apiClient from './axios'
 
-export const getPayrollCycles = (params = {}) => {
-    return apiClient.get('/api/v1/shifts/payroll/cycles', { params })
-}
+const PAYROLL_BASE_URL = '/api/v1/shifts/payroll'
 
-export const getPayrollCycleById = (id) => {
-    return apiClient.get(`/api/v1/shifts/payroll/cycles/${id}`)
-}
+const normalizeParams = (params = {}) =>
+    Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined && value !== null),
+    )
 
-export const createPayrollCycle = (payload) => {
-    return apiClient.post('/api/v1/shifts/payroll/cycles', payload)
-}
+const normalizePayload = (payload = {}) =>
+    Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined),
+    )
 
-export const updatePayrollCycle = (id, payload) => {
-    return apiClient.put(`/api/v1/shifts/payroll/cycles/${id}`, payload)
-}
+const get = (path = '', params) =>
+    apiClient.get(`${PAYROLL_BASE_URL}${path}`, { params: normalizeParams(params) })
 
-export const regeneratePayrollCycle = (id) => {
-    return apiClient.post(`/api/v1/shifts/payroll/cycles/${id}/regenerate`)
-}
+const post = (path = '', payload) =>
+    apiClient.post(`${PAYROLL_BASE_URL}${path}`, normalizePayload(payload))
 
-export const getPayrollSummaries = (params = {}) => {
-    return apiClient.get('/api/v1/shifts/payroll/summaries', { params })
-}
+const put = (path = '', payload) =>
+    apiClient.put(`${PAYROLL_BASE_URL}${path}`, normalizePayload(payload))
+
+export const getPayrollCycles = (params = {}) => get('/cycles', params)
+
+export const getPayrollCycleById = (id) => get(`/cycles/${id}`)
+
+export const createPayrollCycle = (payload) => post('/cycles', payload)
+
+export const updatePayrollCycle = (id, payload) => put(`/cycles/${id}`, payload)
+
+export const regeneratePayrollCycle = (id) => post(`/cycles/${id}/regenerate`)
+
+export const getPayrollSummaries = (params = {}) => get('/summaries', params)

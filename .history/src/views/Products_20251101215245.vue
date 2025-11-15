@@ -127,7 +127,7 @@
   
   // Import 2 modal
   import ProductFormModal from '@/components/ProductFormModal.vue'
-  import ProductDetailModal from '@/components/ProductDetailModal.vue'
+  import ProductDetailModal from '@/components/orders/ProductDetailModal.vue'
   
   const toast = useToast()
   

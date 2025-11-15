@@ -2,7 +2,7 @@
     <div class="manager-dashboard-panel">
         <el-row :gutter="16" class="chart-row">
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="chart-card">
+                <el-card shadow="never" class="chart-card" v-loading="isLoading">
                     <template #header>
                         <span>Phân bổ ca trong tuần</span>
                     </template>
@@ -13,7 +13,7 @@
                 </el-card>
             </el-col>
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="chart-card">
+                <el-card shadow="never" class="chart-card" v-loading="isLoading">
                     <template #header>
                         <span>Hiệu suất đội nhóm</span>
                     </template>
@@ -27,15 +27,17 @@
 
         <el-row :gutter="16">
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="metric-card">
+                <el-card shadow="never" class="metric-card" v-loading="isLoading">
                     <template #header>
                         <span>Tổng quan ca</span>
                     </template>
                     <ul class="metric-list">
-                        <li><span>Lên lịch hôm nay</span><strong>{{ formatNumber(shiftOverview.scheduledToday ?? 0) }}</strong></li>
-                        <li><span>Đang diễn ra</span><strong>{{ formatNumber(shiftOverview.inProgress ?? 0) }}</strong></li>
-                        <li><span>Hoàn tất</span><strong>{{ formatNumber(shiftOverview.completed ?? 0) }}</strong></li>
-                        <li><span>Hủy</span><strong>{{ formatNumber(shiftOverview.cancelled ?? 0) }}</strong></li>
+                        <li v-for="item in shiftMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                            <span>{{ item.label }}</span>
+                            <el-tooltip :content="item.tooltip" placement="top">
+                                <strong>{{ item.value }}</strong>
+                            </el-tooltip>
+                        </li>
                     </ul>
                     <div v-if="upcomingShifts.length" class="timeline-wrapper">
                         <p class="section-title">Ca sắp tới</p>
@@ -57,18 +59,22 @@
                 </el-card>
             </el-col>
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="metric-card">
+                <el-card shadow="never" class="metric-card" v-loading="isLoading">
                     <template #header>
                         <span>Hiệu suất đội nhóm</span>
                     </template>
                     <ul class="metric-list">
-                        <li><span>Doanh thu</span><strong>{{ formatCurrency(teamPerformance.totalRevenue ?? 0) }}</strong></li>
-                        <li><span>Tổng đơn</span><strong>{{ formatNumber(teamPerformance.totalOrders ?? 0) }}</strong></li>
-                        <li><span>Giá trị đơn TB</span><strong>{{ formatCurrency(teamPerformance.averageOrderValue ?? 0) }}</strong></li>
+                        <li v-for="item in performanceMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                            <span>{{ item.label }}</span>
+                            <el-tooltip :content="item.tooltip" placement="top">
+                                <strong>{{ item.value }}</strong>
+                            </el-tooltip>
+                        </li>
                     </ul>
                     <EasyDataTable
                         :headers="teamHeaders"
                         :items="topStaff"
+                        :loading="isLoading"
                         table-class-name="data-table"
                         empty-message="Chưa có dữ liệu"
                     >
@@ -82,17 +88,22 @@
 
         <el-row :gutter="16">
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="metric-card">
+                <el-card shadow="never" class="metric-card" v-loading="isLoading">
                     <template #header>
                         <span>Tồn kho trọng điểm</span>
                     </template>
                     <ul class="metric-list">
-                        <li><span>Hàng thấp</span><strong>{{ formatNumber(inventory.lowStockItems ?? 0) }}</strong></li>
-                        <li><span>Hàng nguy cấp</span><strong>{{ formatNumber(inventory.criticalStockItems ?? 0) }}</strong></li>
+                        <li v-for="item in inventoryMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                            <span>{{ item.label }}</span>
+                            <el-tooltip :content="item.tooltip" placement="top">
+                                <strong>{{ item.value }}</strong>
+                            </el-tooltip>
+                        </li>
                     </ul>
                     <EasyDataTable
                         :headers="inventoryHeaders"
                         :items="inventoryAlerts"
+                        :loading="isLoading"
                         table-class-name="data-table"
                         empty-message="Không có cảnh báo"
                     >
@@ -102,22 +113,24 @@
                 </el-card>
             </el-col>
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="metric-card">
+                <el-card shadow="never" class="metric-card" v-loading="isLoading">
                     <template #header>
                         <span>Payroll & Phê duyệt</span>
                     </template>
                     <ul class="metric-list">
-                        <li><span>Payroll ước tính</span><strong>{{ formatCurrency(payroll.estimatedPayroll ?? 0) }}</strong></li>
-                        <li><span>Thưởng</span><strong>{{ formatCurrency(payroll.bonusTotal ?? 0) }}</strong></li>
-                        <li><span>Phạt</span><strong>{{ formatCurrency(payroll.penaltyTotal ?? 0) }}</strong></li>
-                        <li><span>Điều chỉnh</span><strong>{{ formatCurrency(payroll.adjustmentNet ?? 0) }}</strong></li>
-                        <li><span>Số nhân viên</span><strong>{{ formatNumber(payroll.staffCount ?? 0) }}</strong></li>
+                        <li v-for="item in payrollMetrics" :key="item.label" :class="{ 'metric-highlight': item.highlight }">
+                            <span>{{ item.label }}</span>
+                            <el-tooltip :content="item.tooltip" placement="top">
+                                <strong>{{ item.value }}</strong>
+                            </el-tooltip>
+                        </li>
                     </ul>
                     <div class="timeline-wrapper">
                         <p class="section-title">Yêu cầu chờ duyệt</p>
                         <EasyDataTable
                             :headers="approvalHeaders"
                             :items="pendingApprovals"
+                            :loading="isLoading"
                             table-class-name="data-table"
                             empty-message="Không có yêu cầu chờ duyệt"
                         />
@@ -128,13 +141,14 @@
 
         <el-row :gutter="16">
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="list-card">
+                <el-card shadow="never" class="list-card" v-loading="isLoading">
                     <template #header>
                         <span>Cảnh báo chấm công</span>
                     </template>
                     <EasyDataTable
                         :headers="attendanceHeaders"
                         :items="attendanceAlerts"
+                        :loading="isLoading"
                         table-class-name="data-table"
                         empty-message="Không có cảnh báo"
                     >
@@ -143,13 +157,14 @@
                 </el-card>
             </el-col>
             <el-col :xs="24" :lg="12">
-                <el-card shadow="never" class="list-card">
+                <el-card shadow="never" class="list-card" v-loading="isLoading">
                     <template #header>
                         <span>Sự cố dịch vụ</span>
                     </template>
                     <EasyDataTable
                         :headers="serviceHeaders"
                         :items="serviceIssues"
+                        :loading="isLoading"
                         table-class-name="data-table"
                         empty-message="Không có sự cố"
                     >
@@ -185,6 +200,8 @@ const props = defineProps({
         default: () => ({ labels: [], datasets: [] }),
     },
 })
+
+const isLoading = computed(() => !props.data || Object.keys(props.data).length === 0)
 
 const shiftOverview = computed(() => props.data.shiftOverview ?? {})
 const upcomingShifts = computed(() => Array.isArray(shiftOverview.value.upcomingShifts) ? shiftOverview.value.upcomingShifts.slice(0, 10) : [])
@@ -234,6 +251,47 @@ const serviceHeaders = [
 const hasShiftChart = computed(() => (props.shiftChartData?.labels?.length ?? 0) > 0)
 const hasTeamChart = computed(() => (props.teamChartData?.labels?.length ?? 0) > 0)
 
+const buildMetric = (label, value, formatter = formatNumber) => ({
+    label,
+    value: formatter(value ?? 0),
+    tooltip: formatter(value ?? 0),
+    raw: Number(value ?? 0),
+})
+
+const applyHighlight = (metrics) => {
+    const maxValue = Math.max(...metrics.map(item => item.raw))
+    return metrics.map(item => ({
+        ...item,
+        highlight: maxValue > 0 && item.raw === maxValue,
+    }))
+}
+
+const shiftMetrics = computed(() => applyHighlight([
+    buildMetric('Lên lịch hôm nay', shiftOverview.value.scheduledToday),
+    buildMetric('Đang diễn ra', shiftOverview.value.inProgress),
+    buildMetric('Hoàn tất', shiftOverview.value.completed),
+    buildMetric('Hủy', shiftOverview.value.cancelled),
+]))
+
+const performanceMetrics = computed(() => applyHighlight([
+    buildMetric('Doanh thu', teamPerformance.value.totalRevenue, formatCurrency),
+    buildMetric('Tổng đơn', teamPerformance.value.totalOrders),
+    buildMetric('Giá trị đơn TB', teamPerformance.value.averageOrderValue, formatCurrency),
+]))
+
+const inventoryMetrics = computed(() => applyHighlight([
+    buildMetric('Hàng thấp', inventory.value.lowStockItems),
+    buildMetric('Hàng nguy cấp', inventory.value.criticalStockItems),
+]))
+
+const payrollMetrics = computed(() => applyHighlight([
+    buildMetric('Payroll ước tính', payroll.value.estimatedPayroll, formatCurrency),
+    buildMetric('Thưởng', payroll.value.bonusTotal, formatCurrency),
+    buildMetric('Phạt', payroll.value.penaltyTotal, formatCurrency),
+    buildMetric('Điều chỉnh', payroll.value.adjustmentNet, formatCurrency),
+    buildMetric('Số nhân viên', payroll.value.staffCount),
+]))
+
 function attendanceIssueLabel(issue) {
     switch ((issue ?? '').toUpperCase()) {
         case 'NO_CHECK_IN':
@@ -256,11 +314,16 @@ function attendanceIssueLabel(issue) {
 }
 
 .chart-row {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
-.chart-card {
-    border-radius: var(--radius-lg);
+.chart-card,
+.metric-card,
+.list-card {
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 6px 24px rgba(15, 23, 42, 0.08));
 }
 
 .chart-container {
@@ -288,10 +351,17 @@ function attendanceIssueLabel(issue) {
     justify-content: space-between;
     align-items: center;
     font-size: 0.95rem;
+    padding: 6px 10px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
 }
 
 .metric-list strong {
     font-weight: var(--font-bold);
+}
+
+.metric-highlight {
+    background: rgba(59, 130, 246, 0.14);
 }
 
 .section-title {

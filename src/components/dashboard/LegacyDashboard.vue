@@ -239,17 +239,24 @@ onMounted(() => {
     gap: 24px;
 }
 
+
 .page-header {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 16px;
     align-items: flex-start;
+    padding: 20px 24px;
+    border-radius: 20px;
+    background: var(--app-surface-muted);
+    border: 1px solid var(--app-border-color);
+    box-shadow: var(--card-shadow, 0 10px 30px rgba(31, 41, 55, 0.08));
 }
 
 .page-title {
     font-size: 1.8rem;
     font-weight: var(--font-semibold);
+    color: var(--app-text-color);
 }
 
 .filter-controls {
@@ -274,13 +281,18 @@ onMounted(() => {
     margin-bottom: 8px;
 }
 
+
 .kpi-card {
-    border-radius: var(--radius-lg);
-    transition: transform 0.2s ease;
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--card-shadow, 0 6px 24px rgba(15, 23, 42, 0.08));
 }
 
 .kpi-card:hover {
     transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
 
 .kpi-content {
@@ -341,8 +353,12 @@ onMounted(() => {
     color: var(--success-600);
 }
 
+
 .chart-card {
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
+    border: 1px solid var(--app-border-color);
+    background: var(--app-surface-muted);
+    box-shadow: var(--card-shadow, 0 6px 24px rgba(15, 23, 42, 0.08));
 }
 
 .chart-header {

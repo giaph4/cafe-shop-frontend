@@ -1,56 +1,39 @@
 import apiClient from './axios'
 
-/**
- * Lấy danh sách khách hàng (phân trang, tìm kiếm)
- * @param {object} params - { page, size, keyword }
- */
-export const searchCustomers = (params) => {
-    return apiClient.get('/api/v1/customers', { params })
-}
+const CUSTOMERS_BASE_URL = '/api/v1/customers'
 
-/**
- * Tạo khách hàng mới
- * @param {object} customerData - { fullName, phone, email }
- */
-export const createCustomer = (customerData) => {
-    return apiClient.post('/api/v1/customers', customerData)
-}
+const normalizeParams = (params = {}) =>
+    Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined && value !== null),
+    )
 
-/**
- * Cập nhật thông tin khách hàng
- * @param {number} id - ID khách hàng
- * @param {object} customerData - { fullName, phone, email }
- */
-export const updateCustomer = (id, customerData) => {
-    return apiClient.put(`/api/v1/customers/${id}`, customerData)
-}
+const normalizePayload = (payload = {}) =>
+    Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined),
+    )
 
-/**
- * Xóa khách hàng
- * @param {number} id - ID khách hàng
- */
-export const deleteCustomer = (id) => {
-    return apiClient.delete(`/api/v1/customers/${id}`)
-}
+const get = (path = '', params) =>
+    apiClient.get(`${CUSTOMERS_BASE_URL}${path}`, { params: normalizeParams(params) })
 
-/**
- * Tìm kiếm khách hàng (đơn giản, cho POS)
- * @param {string} keyword - Tên hoặc SĐT
- */
-export const searchCustomersSimple = (keyword) => {
-    const params = {
-        page: 0,
-        size: 20, // Giới hạn 20 kết quả
-        keyword: keyword
-    }
-    return apiClient.get('/api/v1/customers', { params })
-}
+const post = (path = '', payload) =>
+    apiClient.post(`${CUSTOMERS_BASE_URL}${path}`, normalizePayload(payload))
 
-/**
- * Lấy lịch sử mua hàng của khách hàng
- * @param {number} id - ID khách hàng
- * @param {object} params - { startDate, endDate, status, page, size }
- */
-export const getCustomerPurchaseHistory = (id, params) => {
-    return apiClient.get(`/api/v1/customers/${id}/purchase-history`, { params })
-}
+const put = (path = '', payload) =>
+    apiClient.put(`${CUSTOMERS_BASE_URL}${path}`, normalizePayload(payload))
+
+const remove = (path = '', params) =>
+    apiClient.delete(`${CUSTOMERS_BASE_URL}${path}`, { params: normalizeParams(params) })
+
+export const searchCustomers = (params) => get('', params)
+
+export const createCustomer = (customerData) => post('', customerData)
+
+export const updateCustomer = (id, customerData) => put(`/${id}`, customerData)
+
+export const deleteCustomer = (id) => remove(`/${id}`)
+
+export const searchCustomersSimple = (keyword) =>
+    get('', { page: 0, size: 20, keyword })
+
+export const getCustomerPurchaseHistory = (id, params) =>
+    get(`/${id}/purchase-history`, params)

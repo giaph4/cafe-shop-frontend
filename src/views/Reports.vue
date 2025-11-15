@@ -43,81 +43,21 @@
                     </template>
                 </el-alert>
 
-                <el-row :gutter="20" class="kpi-cards" v-loading="loading.profit || loading.financialTotals">
-                    <el-col :span="8">
-                        <el-card shadow="hover" class="kpi-card">
+                <el-row :gutter="20" class="kpi-cards" v-loading="kpiLoading">
+                    <el-col
+                        v-for="kpi in overviewKpis"
+                        :key="kpi.id"
+                        :span="8"
+                    >
+                        <el-card shadow="hover" class="kpi-card" :class="{ 'kpi-card--highlight': kpi.highlight }">
                             <div class="kpi-content">
-                                <div class="kpi-icon revenue-icon">💰</div>
+                                <div :class="['kpi-icon', kpi.iconClass]">{{ kpi.icon }}</div>
                                 <div class="kpi-text">
-                                    <div class="kpi-title">Tổng Doanh thu</div>
-                                    <div class="kpi-value revenue">{{ formatCurrency(profitStats.totalRevenue) }}</div>
-                                    <div class="kpi-desc">Tổng tiền thu được từ bán hàng</div>
-                                </div>
-                            </div>
-                        </el-card>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-card shadow="hover" class="kpi-card">
-                            <div class="kpi-content">
-                                <div class="kpi-icon cost-icon">📦</div>
-                                <div class="kpi-text">
-                                    <div class="kpi-title">Giá vốn hàng bán</div>
-                                    <div class="kpi-value cost">{{
-                                            formatCurrency(profitStats.totalCostOfGoodsSold)
-                                        }}
-                                    </div>
-                                    <div class="kpi-desc">Chưa tính chi phí và tiền nguyên vật liệu</div>
-                                </div>
-                            </div>
-                        </el-card>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-card shadow="hover" class="kpi-card">
-                            <div class="kpi-content">
-                                <div class="kpi-icon profit-icon">📈</div>
-                                <div class="kpi-text">
-                                    <div class="kpi-title">Lợi nhuận gộp</div>
-                                    <div class="kpi-value profit">{{ formatCurrency(profitStats.totalProfit) }}</div>
-                                    <div class="kpi-desc">Doanh thu - Giá vốn</div>
-                                </div>
-                            </div>
-                        </el-card>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-card shadow="hover" class="kpi-card">
-                            <div class="kpi-content">
-                                <div class="kpi-icon expense-icon">🧾</div>
-                                <div class="kpi-text">
-                                    <div class="kpi-title">Tổng Chi phí vận hành</div>
-                                    <div class="kpi-value expense">{{ formatCurrency(totalExpenses) }}</div>
-                                    <div class="kpi-desc">Bao gồm lương, thuê mặt bằng, marketing...</div>
-                                </div>
-                            </div>
-                        </el-card>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-card shadow="hover" class="kpi-card">
-                            <div class="kpi-content">
-                                <div class="kpi-icon import-icon">🚚</div>
-                                <div class="kpi-text">
-                                    <div class="kpi-title">Chi phí nhập nguyên liệu</div>
-                                    <div class="kpi-value import">{{
-                                            formatCurrency(totalImportedIngredientCost)
-                                        }}
-                                    </div>
-                                    <div class="kpi-desc">Các đơn nhập kho đã hoàn tất</div>
-                                </div>
-                            </div>
-                        </el-card>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-card shadow="hover" class="kpi-card">
-                            <div class="kpi-content">
-                                <div class="kpi-icon margin-icon">📊</div>
-                                <div class="kpi-text">
-                                    <div class="kpi-title">Tỷ suất lợi nhuận</div>
-                                    <div class="kpi-value margin">{{ profitMarginDisplay }}</div>
-                                    <div class="kpi-desc">Sau khi trừ chi phí vận hành & nhập nguyên liệu</div>
+                                    <div class="kpi-title">{{ kpi.title }}</div>
+                                    <el-tooltip :content="kpi.tooltip" placement="top">
+                                        <div :class="['kpi-value', kpi.valueClass]">{{ kpi.display }}</div>
+                                    </el-tooltip>
+                                    <div class="kpi-desc">{{ kpi.description }}</div>
                                 </div>
                             </div>
                         </el-card>
@@ -215,14 +155,18 @@
                                         <el-tag type="primary" size="small">API</el-tag>
                                     </div>
                                     <div class="product-summary-totals">
-                                        <div class="summary-pill">
-                                            <span class="pill-label">Tổng lượng bán</span>
-                                            <span class="pill-value">{{ totalQuantitySoldDisplay }}</span>
-                                        </div>
-                                        <div class="summary-pill">
-                                            <span class="pill-label">Tổng doanh thu</span>
-                                            <span class="pill-value">{{ totalRevenueGeneratedDisplay }}</span>
-                                        </div>
+                                        <el-tooltip :content="`Tổng số sản phẩm bán ra trong khoảng ${startDate} - ${endDate}`" placement="top">
+                                            <div class="summary-pill">
+                                                <span class="pill-label">Tổng lượng bán</span>
+                                                <span class="pill-value">{{ totalQuantitySoldDisplay }}</span>
+                                            </div>
+                                        </el-tooltip>
+                                        <el-tooltip :content="`Tổng doanh thu bán hàng giai đoạn ${startDate} - ${endDate}`" placement="top">
+                                            <div class="summary-pill">
+                                                <span class="pill-label">Tổng doanh thu</span>
+                                                <span class="pill-value">{{ totalRevenueGeneratedDisplay }}</span>
+                                            </div>
+                                        </el-tooltip>
                                     </div>
                                 </div>
                             </template>
@@ -360,7 +304,7 @@
                             </template>
                             <EasyDataTable :headers="topCustomersHeaders" :items="topCustomers"
                                            :loading="loading.customers" table-class-name="data-table" max-height="500"
-                                           show-index>
+                                           show-index :row-class-name="topCustomerRowClass">
                                 <template #item-index="{ index }">
                                     <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
                                     <span v-else>{{ index }}</span>
@@ -374,7 +318,9 @@
                                 </template>
 
                                 <template #item-totalSpent="{ totalSpent }">
-                                    <strong style="color: #8B7355;">{{ formatCurrency(totalSpent) }}</strong>
+                                    <el-tooltip :content="formatCurrency(totalSpent)" placement="top">
+                                        <strong class="table-highlight revenue">{{ formatCurrency(totalSpent) }}</strong>
+                                    </el-tooltip>
                                 </template>
 
                                 <template #item-averageOrderValue="{ averageOrderValue }">
@@ -393,7 +339,7 @@
                                 </div>
                             </template>
                             <EasyDataTable :headers="staffHeaders" :items="staffPerformance" :loading="loading.staff"
-                                           table-class-name="data-table" max-height="500" show-index>
+                                           table-class-name="data-table" max-height="500" show-index :row-class-name="staffRowClass">
                                 <template #item-index="{ index }">
                                     <el-tag v-if="index === 0" type="danger" size="small">⭐</el-tag>
                                     <span v-else>{{ index + 1 }}</span>
@@ -407,7 +353,9 @@
                                 </template>
 
                                 <template #item-totalRevenue="{ totalRevenue }">
-                                    <strong style="color: #67C23A;">{{ formatCurrency(totalRevenue) }}</strong>
+                                    <el-tooltip :content="formatCurrency(totalRevenue)" placement="top">
+                                        <strong class="table-highlight revenue">{{ formatCurrency(totalRevenue) }}</strong>
+                                    </el-tooltip>
                                 </template>
 
                                 <template #item-averageOrderValue="{ averageOrderValue }">
@@ -720,6 +668,85 @@ const productSummaryHeaders = [
     {text: 'Số lượng đã bán', value: 'totalQuantitySold', width: 160, sortable: true},
     {text: 'Doanh thu', value: 'totalRevenueGenerated', width: 180, sortable: true}
 ]
+
+const kpiLoading = computed(() => loading.profit || loading.financialTotals)
+
+const overviewKpis = computed(() => {
+    const kpis = [
+        {
+            id: 'revenue',
+            title: 'Tổng Doanh thu',
+            icon: '💰',
+            iconClass: 'revenue-icon',
+            value: Number(profitStats.value.totalRevenue) || 0,
+            display: formatCurrency(profitStats.value.totalRevenue || 0),
+            description: 'Tổng tiền thu được từ bán hàng',
+            valueClass: 'revenue',
+            tooltip: `Tổng doanh thu trong giai đoạn ${startDate.value} đến ${endDate.value}.`,
+        },
+        {
+            id: 'cogs',
+            title: 'Giá vốn hàng bán',
+            icon: '📦',
+            iconClass: 'cost-icon',
+            value: Number(profitStats.value.totalCostOfGoodsSold) || 0,
+            display: formatCurrency(profitStats.value.totalCostOfGoodsSold || 0),
+            description: 'Chi phí nguyên liệu, chưa gồm vận hành.',
+            valueClass: 'cost',
+            tooltip: 'Giá vốn hàng bán đã ghi nhận trong kỳ.',
+        },
+        {
+            id: 'gross-profit',
+            title: 'Lợi nhuận gộp',
+            icon: '📈',
+            iconClass: 'profit-icon',
+            value: Number(profitStats.value.totalProfit) || 0,
+            display: formatCurrency(profitStats.value.totalProfit || 0),
+            description: 'Doanh thu trừ giá vốn.',
+            valueClass: 'profit',
+            tooltip: 'Lợi nhuận gộp trước chi phí vận hành.',
+        },
+        {
+            id: 'operating-cost',
+            title: 'Tổng Chi phí vận hành',
+            icon: '🧾',
+            iconClass: 'expense-icon',
+            value: Number(totalExpenses.value) || 0,
+            display: formatCurrency(totalExpenses.value || 0),
+            description: 'Bao gồm lương, thuê mặt bằng, marketing...',
+            valueClass: 'expense',
+            tooltip: 'Tổng chi phí vận hành ghi nhận trong kỳ.',
+        },
+        {
+            id: 'import-cost',
+            title: 'Chi phí nhập nguyên liệu',
+            icon: '🚚',
+            iconClass: 'import-icon',
+            value: Number(totalImportedIngredientCost.value) || 0,
+            display: formatCurrency(totalImportedIngredientCost.value || 0),
+            description: 'Các đơn nhập kho đã hoàn tất.',
+            valueClass: 'import',
+            tooltip: 'Chi phí nhập nguyên liệu từ các phiếu nhập hoàn thành.',
+        },
+        {
+            id: 'margin',
+            title: 'Tỷ suất lợi nhuận',
+            icon: '📊',
+            iconClass: 'margin-icon',
+            value: Number(profitMargin.value) || 0,
+            display: profitMarginDisplay.value,
+            description: 'Sau khi trừ chi phí vận hành & nhập nguyên liệu.',
+            valueClass: 'margin',
+            tooltip: `Biên lợi nhuận gộp: ${profitMarginDisplay.value}.`,
+        },
+    ]
+
+    const maxValue = Math.max(...kpis.map(kpi => kpi.value))
+    return kpis.map(kpi => ({
+        ...kpi,
+        highlight: maxValue > 0 && kpi.value === maxValue,
+    }))
+})
 
 const netProfit = computed(() => {
     const grossProfit = Number(profitStats.value?.totalProfit) || 0
@@ -1115,6 +1142,17 @@ const productSummaryRowClass = ({row}) => {
     if (productRankSets.value.bottom.has(key)) {
         return 'row-bottom-product'
     }
+    return ''
+}
+
+const topCustomerRowClass = ({ rowIndex }) => {
+    if (rowIndex === 0) return 'row-top-ranked'
+    if (rowIndex >= topCustomers.value.length - 1) return 'row-bottom-ranked'
+    return ''
+}
+
+const staffRowClass = ({ rowIndex }) => {
+    if (rowIndex === 0) return 'row-top-ranked'
     return ''
 }
 

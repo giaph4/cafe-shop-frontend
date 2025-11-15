@@ -1,20 +1,23 @@
 import apiClient from './axios'
 
-export const getAdminDashboard = (params = {}) => {
-    return apiClient.get('/api/admin/dashboard', { params })
-}
+const DASHBOARD_BASE_URL = '/api'
 
-export const getManagerDashboard = (params = {}) => {
-    return apiClient.get('/api/manager/dashboard', { params })
-}
+const normalizeParams = (params = {}) =>
+    Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined && value !== null),
+    )
 
-export const getStaffDashboard = (params = {}) => {
-    return apiClient.get('/api/staff/dashboard', { params })
-}
+const get = (path, params) => apiClient.get(`${DASHBOARD_BASE_URL}${path}`, {params: normalizeParams(params)})
+
+export const getAdminDashboard = (params = {}) => get('/admin/dashboard', params)
+
+export const getManagerDashboard = (params = {}) => get('/manager/dashboard', params)
+
+export const getStaffDashboard = (params = {}) => get('/staff/dashboard', params)
 
 export const getStaffDashboardByUserId = (userId, params = {}) => {
     if (!userId) {
         throw new Error('userId is required to fetch staff dashboard by user')
     }
-    return apiClient.get(`/api/staff/dashboard/${userId}`, { params })
+    return get(`/staff/dashboard/${userId}`, params)
 }

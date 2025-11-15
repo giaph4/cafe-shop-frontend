@@ -1,116 +1,65 @@
 // src/api/orderService.js
 import apiClient from './axios'
 
-/**
- * [ADMIN] Lấy tất cả đơn hàng (phân trang)
- */
-export const getAllOrders = (params) => {
-    return apiClient.get('/api/v1/orders', { params })
+const ORDERS_BASE_URL = '/api/v1/orders'
+
+const normalizeParams = (params = {}) =>
+    Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined && value !== null),
+    )
+
+const normalizePayload = (payload = {}) =>
+    Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined),
+    )
+
+const buildPayload = (payload) => {
+    if (payload === undefined) return undefined
+    if (payload instanceof FormData) return payload
+    return normalizePayload(payload)
 }
 
-/**
- * [ADMIN] Lấy đơn hàng theo trạng thái (phân trang)
- */
-export const getOrdersByStatus = (status, params) => {
-    return apiClient.get(`/api/v1/orders/status/${status}`, { params })
-}
+const get = (path = '', params) =>
+    apiClient.get(`${ORDERS_BASE_URL}${path}`, {params: normalizeParams(params)})
 
-/**
- * [ADMIN] Lấy đơn hàng theo khoảng ngày (phân trang)
- */
-export const getOrdersByDateRange = (startDate, endDate, params) => {
-    return apiClient.get('/api/v1/orders/date-range', {
-        params: { ...params, startDate, endDate }
-    })
-}
+const post = (path = '', payload) =>
+    apiClient.post(`${ORDERS_BASE_URL}${path}`, buildPayload(payload))
 
-/**
- * [ADMIN] Hủy một đơn hàng PENDING
- * @param {number} orderId ID đơn hàng
- */
-export const cancelOrder = (orderId) => {
-    return apiClient.post(`/api/v1/orders/${orderId}/cancel`)
-}
+const put = (path = '', payload) =>
+    apiClient.put(`${ORDERS_BASE_URL}${path}`, buildPayload(payload))
 
-/**
- * [STAFF] Lấy chi tiết 1 đơn hàng (dùng cho cả admin và staff)
- * @param {number} orderId ID đơn hàng
- */
-export const getOrderById = (orderId) => {
-    return apiClient.get(`/api/v1/orders/${orderId}`)
-}
+const patch = (path = '', payload) =>
+    apiClient.patch(`${ORDERS_BASE_URL}${path}`, buildPayload(payload))
 
-/**
- * [STAFF] Lấy đơn hàng PENDING theo Bàn
- * @param {number} tableId ID của bàn
- */
-export const getPendingOrderByTable = (tableId) => {
-    return apiClient.get(`/api/v1/orders/table/${tableId}/pending`)
-}
+const remove = (path = '', params) =>
+    apiClient.delete(`${ORDERS_BASE_URL}${path}`, {params: normalizeParams(params)})
 
-/**
- * [STAFF] Tạo đơn hàng mới
- * @param {object} orderData - OrderCreateRequestDTO
- */
-export const createOrder = async (orderData) => {
-    try {
-        const response = await apiClient.post('/api/v1/orders', orderData)
-        return response
-    } catch (error) {
-        throw error
-    }
-}
+export const getAllOrders = (params) => get('', params)
 
-/**
- * [STAFF] Thêm món vào đơn hàng PENDING
- * @param {number} orderId ID đơn hàng
- * @param {object} itemData - OrderDetailRequestDTO { productId, quantity, notes }
- */
-export const addItemToOrder = (orderId, itemData) => {
-    return apiClient.post(`/api/v1/orders/${orderId}/items`, itemData)
-}
+export const getOrdersByStatus = (status, params) => get(`/status/${status}`, params)
 
-/**
- * [STAFF] Cập nhật món trong đơn hàng PENDING
- * @param {number} orderId ID đơn hàng
- * @param {number} orderDetailId ID của dòng chi tiết
- * @param {object} itemData - OrderDetailUpdateRequestDTO { quantity, notes }
- */
-export const updateItemInOrder = (orderId, orderDetailId, itemData) => {
-    return apiClient.put(`/api/v1/orders/${orderId}/items/${orderDetailId}`, itemData)
-}
+export const getOrdersByDateRange = (startDate, endDate, params) =>
+    get('/date-range', {...params, startDate, endDate})
 
-/**
- * [STAFF] Xóa món khỏi đơn hàng PENDING
- * @param {number} orderId ID đơn hàng
- * @param {number} orderDetailId ID của dòng chi tiết
- */
-export const removeItemFromOrder = (orderId, orderDetailId) => {
-    return apiClient.delete(`/api/v1/orders/${orderId}/items/${orderDetailId}`)
-}
+export const cancelOrder = (orderId) => post(`/${orderId}/cancel`)
 
-/**
- * [STAFF] Áp dụng Voucher
- * @param {number} orderId ID đơn hàng
- * @param {string} voucherCode Mã voucher
- */
-export const applyVoucher = (orderId, voucherCode) => {
-    return apiClient.post(`/api/v1/orders/${orderId}/voucher`, { voucherCode })
-}
+export const getOrderById = (orderId) => get(`/${orderId}`)
 
-/**
- * [STAFF] Gỡ bỏ Voucher
- * @param {number} orderId ID đơn hàng
- */
-export const removeVoucher = (orderId) => {
-    return apiClient.delete(`/api/v1/orders/${orderId}/voucher`)
-}
+export const getPendingOrderByTable = (tableId) => get(`/table/${tableId}/pending`)
 
-/**
- * [STAFF] Thanh toán đơn hàng PENDING
- * @param {number} orderId ID đơn hàng
- * @param {object} paymentData - PaymentRequestDTO { paymentMethod }
- */
-export const payOrder = (orderId, paymentData) => {
-    return apiClient.post(`/api/v1/orders/${orderId}/payment`, paymentData)
-}
+export const createOrder = (orderData) => post('', orderData)
+
+export const addItemToOrder = (orderId, itemData) => post(`/${orderId}/items`, itemData)
+
+export const updateItemInOrder = (orderId, orderDetailId, itemData) =>
+    put(`/${orderId}/items/${orderDetailId}`, itemData)
+
+export const removeItemFromOrder = (orderId, orderDetailId) =>
+    remove(`/${orderId}/items/${orderDetailId}`)
+
+export const applyVoucher = (orderId, voucherCode) =>
+    post(`/${orderId}/voucher`, {voucherCode})
+
+export const removeVoucher = (orderId) => remove(`/${orderId}/voucher`)
+
+export const payOrder = (orderId, paymentData) => post(`/${orderId}/payment`, paymentData)

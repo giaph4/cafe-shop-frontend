@@ -12,7 +12,8 @@ const apiClient = axios.create({
     baseURL: resolvedBaseUrl || 'http://localhost:8088',
     headers: {
         'Content-Type': 'application/json'
-    }
+    },
+    timeout: 15000,
 })
 
 apiClient.interceptors.request.use(
@@ -36,20 +37,33 @@ apiClient.interceptors.response.use(
         return response
     },
     (error) => {
-        // Chỉ xử lý 401 tại đây
-        if (error.response && error.response.status === 401) {
+        const status = error.response?.status
+
+        if (status === 401) {
             const authStore = useAuthStore()
 
             if (import.meta.env.DEV) {
                 console.warn('[axios] Unauthorized (401) received. Triggering logout sequence.')
             }
 
-            // Kiểm tra xem có phải đang ở trang login không
-            // Nếu lỗi 401 mà không phải từ trang login (ví dụ: gõ sai pass)
-            // thì mới thực hiện logout
             if (router.currentRoute.value.name !== 'Login') {
-                authStore.logout() // Gọi action logout
+                authStore.logout()
             }
+        }
+
+        if (status === 403) {
+            if (import.meta.env.DEV) {
+                console.warn('[axios] Forbidden (403) received. Redirecting to dashboard.')
+            }
+            if (router.hasRoute && router.hasRoute('Forbidden')) {
+                router.replace({ name: 'Forbidden' }).catch(() => {})
+            } else {
+                router.replace({ name: 'Dashboard' }).catch(() => {})
+            }
+        }
+
+        if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+            console.error('[axios] Request timed out after 15s:', error.config?.url)
         }
         return Promise.reject(error)
     }

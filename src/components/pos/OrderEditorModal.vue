@@ -228,6 +228,7 @@ import {getAllCategories} from '@/api/categoryService.js'
 import {searchCustomersSimple} from '@/api/customerService.js'
 import {getAllTables} from '@/api/tableService.js'
 import {formatCurrency} from '@/utils/formatters.js'
+import { mapCustomers, upsertCustomerOption } from '@/utils/customer.js'
 import {useToast} from 'vue-toastification'
 import {Search, Trash2, Ticket, DollarSign, Landmark, CreditCard} from '@/components/icons/index.js'
 import {Picture, Plus, Close} from '@element-plus/icons-vue'
@@ -248,28 +249,6 @@ const selectedCustomerId = ref(null)
 const voucherInput = ref('')
 const selectedPaymentMethod = ref(null)
 const availableTables = ref([])
-
-const normalizeCustomer = (raw) => {
-    if (!raw) return null
-    const id = raw.id ?? raw.customerId
-    if (!id) return null
-    return {
-        id,
-        fullName: raw.fullName || raw.name || raw.customerName || 'Khách hàng',
-        phone: raw.phone || raw.customerPhone || ''
-    }
-}
-
-const upsertCustomerOption = (raw) => {
-    const normalized = normalizeCustomer(raw)
-    if (!normalized) return
-    const existingIndex = customers.value.findIndex((item) => item.id === normalized.id)
-    if (existingIndex === -1) {
-        customers.value.push(normalized)
-    } else {
-        customers.value.splice(existingIndex, 1, normalized)
-    }
-}
 
 onMounted(async () => {
     try {
@@ -361,9 +340,7 @@ const searchCustomers = (query) => {
                 : Array.isArray(response?.data)
                     ? response.data
                     : []
-            customers.value = rawList
-                .map(normalizeCustomer)
-                .filter(Boolean)
+            customers.value = mapCustomers(rawList)
         } catch (e) {
             toast.error('Lỗi tìm khách hàng')
             customers.value = []
@@ -376,7 +353,7 @@ const searchCustomers = (query) => {
 watch(() => posStore.activeOrder, (order) => {
     if (order?.customerId) {
         selectedCustomerId.value = order.customerId
-        upsertCustomerOption({
+        upsertCustomerOption(customers, {
             id: order.customerId,
             fullName: order.customerName || order.customer?.fullName,
             phone: order.customerPhone || order.customer?.phone,
@@ -661,29 +638,33 @@ const downloadBill = (content, filename) => {
 
 <style>
 :deep(.order-editor-drawer .el-drawer__body) {
-    padding: 20px;
-    background: #F8F9FA;
+    padding: 22px;
+    background: #faf9f6;
     overflow-y: auto;
 }
 
 :deep(.order-editor-drawer .el-drawer__header) {
-    padding: 20px;
-    border-bottom: 2px solid #E0E0E0;
+    padding: 22px;
+    border-bottom: 1px solid #e7dfd3;
     margin-bottom: 0;
-    background: #FFFFFF;
+    background: #fffdf9;
 }
 
 :deep(.order-editor-drawer .el-drawer__title) {
-    font-size: 1.5rem;
-    font-weight: var(--font-bold);
-    color: var(--primary-700);
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #463a2d;
+    letter-spacing: 0.01em;
 }
 
 .menu-card {
     height: auto;
     min-height: 600px;
-    border-radius: var(--radius-xl);
+    border-radius: 18px;
     overflow: hidden;
+    border: 1px solid #f0e4d6;
+    background: linear-gradient(180deg, rgba(255, 253, 248, 0.92), #fffaf1);
+    box-shadow: 0 12px 26px rgba(137, 98, 51, 0.08);
 }
 
 .menu-card-header,
@@ -694,14 +675,15 @@ const downloadBill = (content, filename) => {
 }
 
 .section-title {
-    font-size: 1.25rem;
-    font-weight: var(--font-bold);
-    color: var(--primary-700);
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: #4c3a2a;
 }
 
 .menu-header {
-    padding: var(--space-4);
-    background: var(--gray-50);
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.7);
+    border-bottom: 1px solid #f1e6dc;
 }
 
 .product-list {
@@ -719,17 +701,18 @@ const downloadBill = (content, filename) => {
 .product-item {
     display: flex;
     align-items: center;
-    border: 2px solid #E0E0E0;
+    border: 1px solid #eadfd1;
     border-radius: 12px;
-    padding: 12px;
+    padding: 12px 14px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #FFFFFF;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    background: #fffdf8;
+    gap: 14px;
 }
 
 .product-item:hover {
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
-    border-color: #2196F3;
+    box-shadow: 0 10px 22px rgba(137, 98, 51, 0.12);
+    border-color: #e0cdb6;
     transform: translateY(-2px);
 }
 
@@ -760,7 +743,7 @@ const downloadBill = (content, filename) => {
 }
 
 .product-item-info {
-    margin-left: 12px;
+    margin-left: 0;
     overflow: hidden;
     flex: 1;
 }
@@ -786,8 +769,11 @@ const downloadBill = (content, filename) => {
     min-height: 600px;
     display: flex;
     flex-direction: column;
-    border-radius: var(--radius-xl);
+    border-radius: 18px;
     overflow: hidden;
+    border: 1px solid #e8e0d2;
+    background: #ffffff;
+    box-shadow: 0 16px 30px rgba(70, 62, 45, 0.16);
 }
 
 :deep(.cart-card .el-card__body) {
@@ -796,7 +782,7 @@ const downloadBill = (content, filename) => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: #F8F9FA;
+    background: #fefcf8;
 }
 
 :deep(.el-tabs) {
@@ -809,8 +795,8 @@ const downloadBill = (content, filename) => {
 :deep(.el-tabs__header) {
     margin: 0;
     padding: 0 20px;
-    background: #FFFFFF;
-    border-bottom: 2px solid #E0E0E0;
+    background: #fffdf9;
+    border-bottom: 1px solid #e8ddcf;
 }
 
 :deep(.el-tabs__nav-wrap::after) {
@@ -818,22 +804,22 @@ const downloadBill = (content, filename) => {
 }
 
 :deep(.el-tabs__item) {
-    font-size: 1rem;
+    font-size: 0.98rem;
     font-weight: 600;
-    color: #757575;
+    color: #6b6256;
     padding: 0 24px;
     height: 50px;
     line-height: 50px;
 }
 
 :deep(.el-tabs__item.is-active) {
-    color: #2196F3;
+    color: #433826;
     font-weight: 700;
 }
 
 :deep(.el-tabs__active-bar) {
     height: 3px;
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    background: linear-gradient(135deg, #8f6b3f 0%, #5d4629 100%);
 }
 
 :deep(.el-tabs__content) {
@@ -846,93 +832,104 @@ const downloadBill = (content, filename) => {
 }
 
 .item-list {
-    max-height: 500px;
+    max-height: 520px;
     overflow-y: auto;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.empty-cart {
-    padding-top: 50px;
-}
+
 
 .cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: var(--space-4);
-    border-bottom: 1px solid var(--gray-200);
-    background: #FFFFFF;
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--space-2);
-    transition: all 0.2s ease;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    column-gap: 24px;
+    align-items: start;
+    padding: 22px 30px 24px 40px;
+    background: linear-gradient(180deg, rgba(255, 250, 242, 0.72), #ffffff 88%);
+    border-radius: 20px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .cart-item:hover {
-    background: var(--gray-50);
-    box-shadow: var(--shadow-sm);
+    background: linear-gradient(180deg, rgba(255, 245, 229, 0.85), #ffffff 88%);
+    box-shadow: 0 18px 34px rgba(110, 74, 45, 0.18);
+    transform: translateY(-2px);
 }
 
-.cart-item-index {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--primary-100);
-    color: var(--primary-700);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: var(--font-bold);
-    font-size: 0.875rem;
-    margin-right: var(--space-3);
-    flex-shrink: 0;
-}
 
 .cart-item-info {
     flex: 1;
-    margin-right: var(--space-4);
+    margin-right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.cart-item-index {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(137, 98, 51, 0.18);
+    color: #6c4c2b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-right: 0;
+    margin-left: 4px;
+    flex-shrink: 0;
+    align-self: start;
+    box-shadow: 0 6px 14px rgba(137, 98, 51, 0.14);
 }
 
 .cart-item-name {
-    font-weight: var(--font-bold);
+    font-weight: 700;
     font-size: 1rem;
-    color: var(--gray-900);
-    margin-bottom: var(--space-2);
+    color: #2f2c40;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: 12px;
 }
 
 .item-icon {
-    color: var(--primary-500);
+    color: #8e6a3d;
 }
 
 .cart-item-price {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #2196F3;
-    margin-bottom: 8px;
+    color: #356f4c;
 }
 
 .cart-item-notes {
-    margin-top: 8px;
-    width: 500px;
+    margin-top: 0;
+    width: 100%;
 }
 
 :deep(.cart-item-notes .el-input__wrapper) {
-    background: #F8F9FA;
-    border: 1px solid #E0E0E0;
-    font-size: 0.9rem;
-    color: #424242;
+    background: #f6f0e6;
+    border-color: transparent;
+    transition: border-color 0.18s ease;
+}
+
+:deep(.cart-item-notes .el-input__wrapper.is-focus) {
+    border-color: rgba(137, 98, 51, 0.4);
 }
 
 .cart-item-actions {
     display: flex;
     align-items: center;
+    gap: 12px;
 }
 
 .cart-item-qty {
     width: 100px;
-    margin-right: var(--space-2);
 }
 
 .delete-btn {
@@ -995,24 +992,32 @@ const downloadBill = (content, filename) => {
     color: var(--success-700);
 }
 
+
 .payment-methods {
-    display: flex;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
     margin-top: 16px;
 }
 
 .payment-methods .el-button {
-    flex: 1;
-    height: 70px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    border-radius: 12px;
-    border: 2px solid #E0E0E0;
+    height: 66px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border-radius: 14px;
+    border: 1px solid #dfd7ca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    white-space: normal;
+    padding: 0 20px;
 }
 
 .payment-methods .el-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    box-shadow: 0 12px 22px rgba(94, 80, 63, 0.18);
 }
 
 .w-100 {

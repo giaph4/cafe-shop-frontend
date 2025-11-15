@@ -126,7 +126,7 @@ import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/store/auth'
 import { formatCurrency, formatDateISO } from '@/utils/formatters'
 import { getAllOrders, getOrdersByStatus, getOrdersByDateRange, cancelOrder, payOrder } from '@/api/orderService'
-import OrderDetailModal from '@/components/OrderDetailModal.vue'
+import OrderDetailModal from '@/components/orders/OrderDetailModal.vue'
 
 const toast = useToast()
 const authStore = useAuthStore()

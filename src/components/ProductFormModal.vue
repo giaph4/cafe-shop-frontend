@@ -1,9 +1,9 @@
 <template>
-    <el-dialog 
-        :model-value="visible" 
+    <el-dialog
+        :model-value="visible"
         @update:model-value="$emit('update:visible', $event)"
-        :title="isEditMode ? 'Chỉnh sửa Sản phẩm' : 'Thêm Sản phẩm mới'" 
-        width="600px" 
+        :title="isEditMode ? 'Chỉnh sửa Sản phẩm' : 'Thêm Sản phẩm mới'"
+        width="600px"
         @close="onClose"
         :close-on-click-modal="false"
         destroy-on-close
@@ -12,29 +12,29 @@
             <el-row :gutter="20">
                 <el-col :span="14">
                     <el-form-item label="Tên Sản phẩm" prop="name">
-                        <el-input v-model="formData.name" placeholder="Cà phê sữa" />
+                        <el-input v-model="formData.name" placeholder="Cà phê sữa"/>
                     </el-form-item>
 
                     <el-form-item label="Mã Sản phẩm (Code)" prop="code">
-                        <el-input v-model="formData.code" placeholder="CF-SUA" :disabled="isEditMode" />
+                        <el-input v-model="formData.code" placeholder="CF-SUA" :disabled="isEditMode"/>
                     </el-form-item>
 
                     <el-form-item label="Danh mục" prop="categoryId">
                         <el-select v-model="formData.categoryId" placeholder="Chọn danh mục" class="w-100">
                             <el-option v-for="category in categories" :key="category.id" :label="category.name"
-                                :value="category.id" />
+                                       :value="category.id"/>
                         </el-select>
                     </el-form-item>
 
                     <el-row :gutter="20">
                         <el-col :span="12">
                             <el-form-item label="Giá bán (VND)" prop="price">
-                                <el-input-number v-model="formData.price" :min="0" :step="1000" class="w-100" />
+                                <el-input-number v-model="formData.price" :min="0" :step="1000" class="w-100"/>
                             </el-form-item>
                         </el-col>
                         <el-col :span="12">
                             <el-form-item label="Giá vốn (VND)" prop="cost">
-                                <el-input-number v-model="formData.cost" :min="0" :step="1000" class="w-100" />
+                                <el-input-number v-model="formData.cost" :min="0" :step="1000" class="w-100"/>
                             </el-form-item>
                         </el-col>
                     </el-row>
@@ -43,14 +43,14 @@
                 <el-col :span="10">
                     <el-form-item label="Hình ảnh" prop="imageUrl">
                         <el-upload class="product-uploader" action="#" :show-file-list="false" :auto-upload="false"
-                            :on-change="handleImageChange" accept="image/png, image/jpeg, image/webp">
-                            <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="product-image" alt="Preview" />
+                                   :on-change="handleImageChange" accept="image/png, image/jpeg, image/webp">
+                            <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="product-image" alt="Preview"/>
                             <el-icon v-else class="uploader-icon">
-                                <Plus />
+                                <Plus/>
                             </el-icon>
                         </el-upload>
                         <el-button v-if="imagePreviewUrl" type="danger" plain @click.stop="removeImage" class="w-100"
-                            style="margin-top: 10px;">
+                                   style="margin-top: 10px;">
                             Xóa ảnh
                         </el-button>
                     </el-form-item>
@@ -59,7 +59,7 @@
 
             <el-form-item label="Mô tả" prop="description">
                 <el-input v-model="formData.description" type="textarea" :rows="3"
-                    placeholder="Mô tả ngắn về sản phẩm..." />
+                          placeholder="Mô tả ngắn về sản phẩm..."/>
             </el-form-item>
         </el-form>
 
@@ -75,10 +75,10 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
-import { useToast } from 'vue-toastification'
-import { createProduct, updateProduct } from '@/api/productService'
+import {ref, watch, computed} from 'vue'
+import {Plus} from '@element-plus/icons-vue'
+import {useToast} from 'vue-toastification'
+import {createProduct, updateProduct} from '@/api/productService'
 
 const props = defineProps({
     visible: Boolean,
@@ -101,17 +101,17 @@ const defaultFormData = {
     categoryId: null,
     imageUrl: null,
 }
-const formData = ref({ ...defaultFormData })
+const formData = ref({...defaultFormData})
 const imageFile = ref(null) // File ảnh mới
 const imagePreviewUrl = ref(null) // URL để preview
 
 const isEditMode = computed(() => !!props.product)
 
 const formRules = {
-    name: [{ required: true, message: 'Tên sản phẩm là bắt buộc', trigger: 'blur' }],
-    code: [{ required: true, message: 'Mã sản phẩm là bắt buộc', trigger: 'blur' }],
-    price: [{ required: true, message: 'Giá bán là bắt buộc', trigger: 'blur' }],
-    categoryId: [{ required: true, message: 'Danh mục là bắt buộc', trigger: 'change' }],
+    name: [{required: true, message: 'Tên sản phẩm là bắt buộc', trigger: 'blur'}],
+    code: [{required: true, message: 'Mã sản phẩm là bắt buộc', trigger: 'blur'}],
+    price: [{required: true, message: 'Giá bán là bắt buộc', trigger: 'blur'}],
+    categoryId: [{required: true, message: 'Danh mục là bắt buộc', trigger: 'change'}],
 }
 
 const handleImageChange = (file) => {
@@ -149,11 +149,11 @@ const submitForm = async () => {
                 }
 
                 if (isEditMode.value) {
-                                        // API của bạn dùng PUT cho cả update info và ảnh
+                    // API của bạn dùng PUT cho cả update info và ảnh
                     await updateProduct(props.product.id, productData, imageFile.value)
                     toast.success('Cập nhật sản phẩm thành công!')
                 } else {
-                                        await createProduct(productData, imageFile.value)
+                    await createProduct(productData, imageFile.value)
                     toast.success('Tạo sản phẩm mới thành công!')
                 }
 
@@ -171,7 +171,7 @@ const submitForm = async () => {
 }
 
 const onClose = () => {
-    formData.value = { ...defaultFormData }
+    formData.value = {...defaultFormData}
     imageFile.value = null
     imagePreviewUrl.value = null
     formRef.value?.resetFields()
@@ -179,7 +179,7 @@ const onClose = () => {
 
 watch(() => props.product, (newProduct) => {
     if (newProduct) {
-                // Tìm categoryId từ categoryName (vì bảng chỉ trả về categoryName)
+        // Tìm categoryId từ categoryName (vì bảng chỉ trả về categoryName)
         const category = props.categories.find(c => c.name === newProduct.categoryName)
 
         formData.value = {
@@ -193,39 +193,39 @@ watch(() => props.product, (newProduct) => {
         }
         imagePreviewUrl.value = newProduct.imageUrl || null
     } else {
-                onClose()
+        onClose()
     }
 })
 </script>
 
 <style>
- /* Bỏ 'scoped' để tùy chỉnh el-upload bên trong */
- .product-uploader .el-upload {
-     border: 1px dashed var(--el-border-color);
-     border-radius: 6px;
-     cursor: pointer;
-     position: relative;
-     overflow: hidden;
-     transition: var(--el-transition-duration-fast);
-     width: 100%;
-     aspect-ratio: 1 / 1;
-     display: flex;
-     justify-content: center;
-     align-items: center;
- }
+/* Bỏ 'scoped' để tùy chỉnh el-upload bên trong */
+.product-uploader .el-upload {
+    border: 1px dashed var(--el-border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--el-transition-duration-fast);
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
- .product-uploader .el-upload:hover {
-     border-color: var(--el-color-primary);
- }
+.product-uploader .el-upload:hover {
+    border-color: var(--el-color-primary);
+}
 
- .uploader-icon {
-     font-size: 28px;
-     color: #8c939d;
- }
+.uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+}
 
- .product-image {
-     width: 100%;
-     height: 100%;
-     object-fit: cover;
- }
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 </style>

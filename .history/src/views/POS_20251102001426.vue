@@ -34,7 +34,7 @@ import { useToast } from 'vue-toastification'
 import { ShoppingCart } from '@/components/icons'
 import { getAllTables } from '@/api/tableService.js' // Thêm .js
 import { usePosStore } from '@/store/posStore.js' // SỬA LỖI Ở ĐÂY (thêm .js)
-import OrderEditorModal from '@/components/OrderEditorModal.vue' // Thêm .js
+import OrderEditorModal from '@/components/pos/OrderEditorModal.vue' // Thêm .js
 
 const toast = useToast()
 const posStore = usePosStore() // Khởi tạo store

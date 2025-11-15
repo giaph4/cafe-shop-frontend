@@ -1,13 +1,38 @@
 // src/store/auth.js (Đã nâng cấp)
 import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { useToast } from 'vue-toastification'
 import router from '@/router'
 import { jwtDecode } from 'jwt-decode'
-import * as authService from '@/api/authService.js' // <-- THAY ĐỔI: Import service mới
+import * as authService from '@/api/authService.js'
 import * as userService from '@/api/userService.js'
 import { normalizeRoles } from '@/utils/roles'
 import { startShiftSession, clearShiftSession } from '@/utils/shiftManager.js'
+import { createTaskManager } from '@/utils/storeHelpers.js'
 
+const TOKEN_STORAGE_KEY = 'token'
 const USER_STORAGE_KEY = 'user'
+
+const persistToken = (token) => {
+    if (token) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, token)
+    } else {
+        localStorage.removeItem(TOKEN_STORAGE_KEY)
+    }
+}
+
+const persistUser = (user) => {
+    if (user && Object.keys(user).length > 0) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+    } else {
+        localStorage.removeItem(USER_STORAGE_KEY)
+    }
+}
+
+const clearStoredSession = () => {
+    persistToken(null)
+    persistUser(null)
+}
 
 // Hàm helper giải mã token (giữ nguyên)
 function decodeToken(token) {
@@ -22,8 +47,8 @@ function decodeToken(token) {
         }
     } catch (error) {
         console.error('Invalid token:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        localStorage.removeItem(TOKEN_STORAGE_KEY)
+        localStorage.removeItem(USER_STORAGE_KEY)
         return null
     }
 }
@@ -38,129 +63,109 @@ const getStoredUser = () => {
             localStorage.removeItem(USER_STORAGE_KEY)
         }
     }
-    return decodeToken(localStorage.getItem('token'))
+    return decodeToken(localStorage.getItem(TOKEN_STORAGE_KEY))
 }
 
-export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        token: localStorage.getItem('token') || null,
-        user: getStoredUser(),
-    }),
+export const useAuthStore = defineStore('auth', () => {
+    const toast = useToast()
+    const token = ref(localStorage.getItem(TOKEN_STORAGE_KEY) || null)
+    const user = ref(getStoredUser())
 
-    getters: {
-        isAuthenticated: (state) => !!state.token,
-        roles: (state) => normalizeRoles(state.user?.roles || []),
-        isAdmin() {
-            return this.roles.includes('ROLE_ADMIN')
-        },
-        isManager() {
-            return this.roles.includes('ROLE_MANAGER') || this.roles.includes('ROLE_ADMIN')
-        },
-        isStaff() {
-            return this.roles.includes('ROLE_STAFF') || this.roles.includes('ROLE_MANAGER') || this.roles.includes('ROLE_ADMIN')
-        },
-        userFullName: (state) => state.user?.fullName || state.user?.username || 'User',
-    },
+    const { loadingAction, lastError, isLoading, runTask } = createTaskManager({ toast })
 
-    actions: {
-        /**
-         * Xử lý sau khi login/register thành công
-         */
-        async _handleAuthSuccess(tokenString) { // Renamed argument for clarity
-            // 1. Lưu token vào state và localStorage
-            this.token = tokenString
-            localStorage.setItem('token', tokenString)
+    const isAuthenticated = computed(() => !!token.value)
+    const roles = computed(() => normalizeRoles(user.value?.roles || []))
+    const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN'))
+    const isManager = computed(() => roles.value.some((role) => ['ROLE_MANAGER', 'ROLE_ADMIN'].includes(role)))
+    const isStaff = computed(() => roles.value.length > 0)
+    const userFullName = computed(() => user.value?.fullName || user.value?.username || 'User')
 
-            // 2. Cài đặt token cho Axios (Đã được xử lý bởi Request Interceptor trong axios.js)
+    const setSession = (tokenString, userPayload) => {
+        token.value = tokenString
+        persistToken(tokenString)
 
-            // 3. Giải mã token và lưu thông tin user vào state và localStorage
-            this.user = decodeToken(tokenString)
-            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(this.user))
+        user.value = userPayload || null
+        persistUser(user.value)
+    }
 
-            // 4. Đồng bộ hồ sơ đầy đủ (bao gồm avatar, địa chỉ)
-            await this.fetchUserProfile()
+    const clearSessionState = () => {
+        token.value = null
+        user.value = null
+        clearStoredSession()
+    }
 
-            // 5. Khởi tạo ca làm việc cho người dùng
-            startShiftSession(this.user)
+    const fetchUserProfile = async () => {
+        const userId = user.value?.userId
+        if (!userId) return null
 
-            // 6. Điều hướng về trang chủ
-            router.push('/')
-        },
+        return await runTask('auth-fetch-profile', async () => {
+            const response = await userService.getUserById(userId)
+            const profile = response.data
 
-        /**
-         * Action Đăng nhập
-         */
-        async login(credentials) {
-            try {
-                const response = await authService.login(credentials)
-                const { token } = response.data
-
-                await this._handleAuthSuccess(token) // Gọi hàm xử lý chung
-
-                return response
-            } catch (error) {
-                console.error('Login failed:', error)
-                this.logout()
-                throw error
+            user.value = {
+                ...user.value,
+                ...profile,
+                userId: profile.id ?? user.value?.userId,
+                roles: profile.roles ?? user.value?.roles,
             }
-        },
 
-        /**
-         * Action Đăng ký
-         */
-        async register(userData) {
-            try {
-                // 1. Gọi API register
-                const response = await authService.register(userData)
+            persistUser(user.value)
+            return profile
+        }, { notify: false })
+    }
 
-                const { token } = response.data
-                // 2. Xử lý thành công (coi như đã login)
-                await this._handleAuthSuccess(token)
+    const handleAuthSuccess = async (tokenString) => {
+        setSession(tokenString, decodeToken(tokenString))
+        await fetchUserProfile()
+        startShiftSession(user.value)
+        router.push('/')
+    }
 
-                return response
-            } catch (error) {
-                console.error('Register failed:', error)
-                throw error
-            }
-        },
+    const login = async (credentials) => {
+        try {
+            const response = await runTask('auth-login', async () => authService.login(credentials), { notify: false })
+            const { token: tokenString } = response.data
+            await handleAuthSuccess(tokenString)
+            return response
+        } catch (error) {
+            clearSessionState()
+            throw error
+        }
+    }
 
-        async fetchUserProfile() {
-            try {
-                const userId = this.user?.userId
-                if (!userId) return null
+    const register = async (userData) => {
+        const response = await runTask('auth-register', async () => authService.register(userData), { notify: false })
+        const { token: tokenString } = response.data
+        await handleAuthSuccess(tokenString)
+        return response
+    }
 
-                const response = await userService.getUserById(userId)
-                const profile = response.data
+    const logout = () => {
+        const userId = user.value?.userId
+        clearSessionState()
+        if (userId) {
+            clearShiftSession(userId)
+        }
+        router.replace('/login')
+    }
 
-                // Gộp dữ liệu token và hồ sơ để giữ nguyên các quyền/ID đã giải mã
-                this.user = {
-                    ...this.user,
-                    ...profile,
-                    userId: profile.id ?? this.user?.userId,
-                    roles: profile.roles ?? this.user?.roles,
-                }
-
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(this.user))
-                return profile
-            } catch (error) {
-                console.error('Không thể tải thông tin hồ sơ người dùng:', error)
-                return null
-            }
-        },
-
-        /**
-         * Action Đăng xuất
-         */
-        logout() {
-            const userId = this.user?.userId
-            this.token = null
-            this.user = null
-            localStorage.removeItem('token')
-            localStorage.removeItem(USER_STORAGE_KEY)
-            if (userId) {
-                clearShiftSession(userId)
-            }
-            router.replace('/login')
-        },
+    return {
+        token,
+        user,
+        loadingAction,
+        lastError,
+        isLoading,
+        isAuthenticated,
+        roles,
+        isAdmin,
+        isManager,
+        isStaff,
+        userFullName,
+        setSession,
+        clearSession: clearSessionState,
+        fetchUserProfile,
+        login,
+        register,
+        logout,
     }
 })

@@ -3,52 +3,37 @@
         <button
             class="sidebar-toggle"
             type="button"
-            @click="emitToggleSidebar"
-            :aria-label="isSidebarCollapsed ? t('navbar.sidebarExpand') : t('navbar.sidebarCollapse')"
-            :aria-expanded="!isSidebarCollapsed"
-            :title="isSidebarCollapsed ? t('navbar.sidebarExpand') : t('navbar.sidebarCollapse')"
+            @click="toggleSidebar"
+            :aria-label="sidebarToggleLabel"
+            :aria-expanded="sidebarToggleExpanded"
+            :title="sidebarToggleLabel"
         >
-            <component :is="isSidebarCollapsed ? ChevronRight : ChevronLeft" class="sidebar-toggle-icon" />
+            <component :is="sidebarToggleIcon" class="sidebar-toggle-icon" />
         </button>
         <div class="page-title" :title="currentTitle">
             {{ currentTitle }}
         </div>
 
         <div class="navbar-controls" role="group" :aria-label="t('navbar.controlGroupLabel')">
-            <div class="control-group control-theme">
+            <div
+                v-for="control in selectControls"
+                :key="control.id"
+                :class="['control-group', control.class]"
+            >
                 <el-icon class="control-icon">
-                    <component :is="themeIcon" />
+                    <component :is="control.icon" />
                 </el-icon>
-                <span class="control-label">{{ t('common.theme') }}</span>
+                <span class="control-label">{{ control.label }}</span>
                 <el-select
-                    v-model="currentTheme"
-                    size="small"
                     class="control-select"
-                    :placeholder="t('common.theme')"
-                    :aria-label="t('common.theme')"
+                    size="small"
+                    :placeholder="control.placeholder"
+                    :aria-label="control.ariaLabel"
+                    :model-value="control.value"
+                    @update:model-value="control.onChange"
                 >
                     <el-option
-                        v-for="option in themeOptions"
-                        :key="option.value"
-                        :value="option.value"
-                        :label="option.label"
-                    />
-                </el-select>
-            </div>
-            <div class="control-group control-language">
-                <el-icon class="control-icon">
-                    <Languages />
-                </el-icon>
-                <span class="control-label">{{ t('common.language') }}</span>
-                <el-select
-                    v-model="currentLocale"
-                    size="small"
-                    class="control-select"
-                    :placeholder="t('common.language')"
-                    :aria-label="t('common.language')"
-                >
-                    <el-option
-                        v-for="option in languageOptions"
+                        v-for="option in control.options"
                         :key="option.value"
                         :value="option.value"
                         :label="option.label"
@@ -61,7 +46,7 @@
                         <el-avatar :size="34" :src="userAvatar" class="user-avatar">
                             <UserCircle class="user-icon" />
                         </el-avatar>
-                        <span class="user-name">{{ authStore.user?.fullName || authStore.user?.username || 'User' }}</span>
+                        <span class="user-name">{{ userDisplayName }}</span>
                         <ChevronDown class="arrow-icon" />
                     </span>
                     <template #dropdown>
@@ -169,6 +154,8 @@ const themeIcon = computed(() => (currentTheme.value === 'dark' ? Moon : Sun))
 
 const userAvatar = computed(() => getUserAvatar(authStore.user))
 
+const userDisplayName = computed(() => authStore.userFullName)
+
 const currentTitle = computed(() => {
     const meta = route.meta || {}
     if (meta.titleKey) {
@@ -177,9 +164,42 @@ const currentTitle = computed(() => {
     return meta.title || t('navbar.defaultTitle')
 })
 
-const emitToggleSidebar = () => {
+const toggleSidebar = () => {
     sidebarStore.toggle()
 }
+
+const sidebarToggleLabel = computed(() =>
+    isSidebarCollapsed.value ? t('navbar.sidebarExpand') : t('navbar.sidebarCollapse'),
+)
+
+const sidebarToggleExpanded = computed(() => !isSidebarCollapsed.value)
+
+const sidebarToggleIcon = computed(() => (isSidebarCollapsed.value ? ChevronRight : ChevronLeft))
+
+const selectControls = computed(() => [
+    {
+        id: 'theme',
+        class: 'control-theme',
+        icon: themeIcon.value,
+        label: t('common.theme'),
+        placeholder: t('common.theme'),
+        ariaLabel: t('common.theme'),
+        value: currentTheme.value,
+        options: themeOptions.value,
+        onChange: (val) => currentTheme.value = val,
+    },
+    {
+        id: 'language',
+        class: 'control-language',
+        icon: Languages,
+        label: t('common.language'),
+        placeholder: t('common.language'),
+        ariaLabel: t('common.language'),
+        value: currentLocale.value,
+        options: languageOptions.value,
+        onChange: (val) => currentLocale.value = val,
+    },
+])
 
 const openLogoutDialog = () => {
     if (!authStore.user?.userId) {

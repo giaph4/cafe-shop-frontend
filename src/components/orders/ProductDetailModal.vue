@@ -68,8 +68,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import { getProductById } from '@/api/productService'
-import { formatCurrency } from '@/utils/formatters'
+import { getProductById } from '@/api/productService.js'
+import { formatCurrency } from '@/utils/formatters.js'
 import { Picture } from '@element-plus/icons-vue'
 import { useToast } from 'vue-toastification'
 

@@ -97,7 +97,7 @@ import { getAllCategories } from '@/api/categoryService'
 
 // Import cả 3 modal
 import ProductFormModal from '@/components/ProductFormModal.vue'
-import ProductDetailModal from '@/components/ProductDetailModal.vue'
+import ProductDetailModal from '@/components/orders/ProductDetailModal.vue'
 import ProductRecipeModal from '@/components/ProductRecipeModal.vue' // (MỚI)
 
 const toast = useToast()

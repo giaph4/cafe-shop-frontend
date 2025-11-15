@@ -1,203 +1,70 @@
-// src/api/reportService.js
 import apiClient from './axios'
 
-/**
- * Lấy báo cáo Lợi nhuận (Revenue, COGS, Profit)
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getProfitReport = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/profit', {
-        params: { startDate, endDate },
-    })
-}
+const REPORTS_BASE_URL = '/api/v1/reports'
 
-/**
- * Lấy báo cáo Doanh thu theo từng ngày (cho Line Chart)
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getRevenueByDateRange = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/revenue-by-date', {
-        params: { startDate, endDate },
-    })
-}
+const normalizeParams = (params = {}) =>
+    Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined && value !== null),
+    )
 
-/**
- * Lấy Top Sản phẩm Bán chạy (cho Bar Chart)
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- * @param {number} top - Số lượng top
- * @param {string} sortBy - 'quantity' hoặc 'revenue'
- */
-export const getBestSellers = (startDate, endDate, top = 5, sortBy = 'revenue') => {
-    return apiClient.get('/api/v1/reports/best-sellers', {
-        params: { startDate, endDate, top, sortBy },
-    })
-}
+const buildConfig = (params, config = {}) => ({
+    params: normalizeParams(params),
+    ...config,
+})
 
-/**
- * Lấy báo cáo Chi phí theo ngày và loại (cho Pie Chart)
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getExpensesByDateRange = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/expenses-by-date', {
-        params: { startDate, endDate },
-    })
-}
+const get = (path = '', params, config) =>
+    apiClient.get(`${REPORTS_BASE_URL}${path}`, buildConfig(params, config))
 
-/**
- * [MỚI] Lấy báo cáo tồn kho (tất cả hoặc sắp hết)
- * @param {boolean} lowStock - true (chỉ lấy hàng sắp hết), false (lấy tất cả)
- */
-export const getInventoryReport = (lowStock = false) => {
-    return apiClient.get('/api/v1/reports/inventory', {
-        params: { lowStock }
-    })
-}
+export const getProfitReport = (startDate, endDate) =>
+    get('/profit', { startDate, endDate })
 
-/**
- * [MỚI] Xuất file Excel danh sách đơn hàng
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const exportOrdersToExcel = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/orders/export', {
-        params: { startDate, endDate },
-        responseType: 'blob' // !! Quan trọng: Yêu cầu Axios trả về dạng file Blob
-    })
-}
+export const getRevenueByDateRange = (startDate, endDate) =>
+    get('/revenue-by-date', { startDate, endDate })
 
-/**
- * Lấy Top Khách hàng (theo doanh thu)
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- * @param {number} top - Số lượng top (default: 10)
- */
-export const getTopCustomers = (startDate, endDate, top = 10) => {
-    return apiClient.get('/api/v1/reports/top-customers', {
-        params: { startDate, endDate, top }
-    })
-}
+export const getBestSellers = (startDate, endDate, top = 5, sortBy = 'revenue') =>
+    get('/best-sellers', { startDate, endDate, top, sortBy })
 
-/**
- * Lấy Hiệu suất Nhân viên
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- * @param {number} top - Số lượng top (default: 10)
- */
-export const getStaffPerformance = (startDate, endDate, top = 10) => {
-    return apiClient.get('/api/v1/reports/staff-performance', {
-        params: { startDate, endDate, top }
-    })
-}
+export const getExpensesByDateRange = (startDate, endDate) =>
+    get('/expenses-by-date', { startDate, endDate })
 
-/**
- * Lấy Doanh thu theo Danh mục
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getCategorySales = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/category-sales', {
-        params: { startDate, endDate }
-    })
-}
+export const getInventoryReport = (lowStock = false) =>
+    get('/inventory', { lowStock })
 
-/**
- * Lấy báo cáo tổng quan bán hàng theo sản phẩm
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getProductSalesSummary = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/product-sales-summary', {
-        params: { startDate, endDate }
-    })
-}
+export const exportOrdersToExcel = (startDate, endDate) =>
+    get('/orders/export', { startDate, endDate }, { responseType: 'blob' })
 
-/**
- * Lấy Doanh thu theo Giờ (24 giờ)
- * @param {string} date - "YYYY-MM-DD"
- */
-export const getHourlySales = (date) => {
-    return apiClient.get('/api/v1/reports/hourly-sales', {
-        params: { date }
-    })
-}
+export const getTopCustomers = (startDate, endDate, top = 10) =>
+    get('/top-customers', { startDate, endDate, top })
 
-/**
- * Lấy Thống kê Phương thức Thanh toán
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getPaymentMethodStats = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/payment-method-stats', {
-        params: { startDate, endDate }
-    })
-}
+export const getStaffPerformance = (startDate, endDate, top = 10) =>
+    get('/staff-performance', { startDate, endDate, top })
 
-/**
- * Lấy tổng chi phí vận hành trong khoảng ngày
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getTotalExpenses = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/total-expenses', {
-        params: { startDate, endDate }
-    })
-}
+export const getCategorySales = (startDate, endDate) =>
+    get('/category-sales', { startDate, endDate })
 
-/**
- * Lấy tổng chi phí nhập nguyên liệu đã hoàn tất trong khoảng ngày
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const getTotalImportedIngredientCost = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/total-imported-ingredients', {
-        params: { startDate, endDate }
-    })
-}
+export const getProductSalesSummary = (startDate, endDate) =>
+    get('/product-sales-summary', { startDate, endDate })
 
-/**
- * So sánh Doanh thu 2 kỳ
- * @param {string} currentStart - "YYYY-MM-DD"
- * @param {string} currentEnd - "YYYY-MM-DD"
- * @param {string} previousStart - "YYYY-MM-DD"
- * @param {string} previousEnd - "YYYY-MM-DD"
- */
-export const getSalesComparison = (currentStart, currentEnd, previousStart, previousEnd) => {
-    return apiClient.get('/api/v1/reports/sales-comparison', {
-        params: { currentStart, currentEnd, previousStart, previousEnd }
-    })
-}
+export const getHourlySales = (date) =>
+    get('/hourly-sales', { date })
 
-/**
- * Lấy Doanh thu theo Ngày (single day)
- * @param {string} date - "YYYY-MM-DD"
- */
-export const getDailyRevenue = (date) => {
-    return apiClient.get('/api/v1/reports/daily-revenue', {
-        params: { date }
-    })
-}
+export const getPaymentMethodStats = (startDate, endDate) =>
+    get('/payment-method-stats', { startDate, endDate })
 
-/**
- * Xuất file Excel Tồn kho
- */
-export const exportInventoryToExcel = () => {
-    return apiClient.get('/api/v1/reports/inventory/export', {
-        responseType: 'blob'
-    })
-}
+export const getTotalExpenses = (startDate, endDate) =>
+    get('/total-expenses', { startDate, endDate })
 
-/**
- * Xuất file Excel Chi phí
- * @param {string} startDate - "YYYY-MM-DD"
- * @param {string} endDate - "YYYY-MM-DD"
- */
-export const exportExpensesToExcel = (startDate, endDate) => {
-    return apiClient.get('/api/v1/reports/expenses/export', {
-        params: { startDate, endDate },
-        responseType: 'blob'
-    })
-}
+export const getTotalImportedIngredientCost = (startDate, endDate) =>
+    get('/total-imported-ingredients', { startDate, endDate })
+
+export const getSalesComparison = (currentStart, currentEnd, previousStart, previousEnd) =>
+    get('/sales-comparison', { currentStart, currentEnd, previousStart, previousEnd })
+
+export const getDailyRevenue = (date) =>
+    get('/daily-revenue', { date })
+
+export const exportInventoryToExcel = () =>
+    get('/inventory/export', undefined, { responseType: 'blob' })
+
+export const exportExpensesToExcel = (startDate, endDate) =>
+    get('/expenses/export', { startDate, endDate }, { responseType: 'blob' })
